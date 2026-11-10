@@ -4,6 +4,7 @@ import dev.codeclarity.core.AnalysisService;
 import dev.codeclarity.core.LanguageRegistry;
 import dev.codeclarity.git.GitRepository;
 import dev.codeclarity.languages.java.JavaLanguageSupport;
+import dev.codeclarity.languages.python.PythonLanguageSupport;
 
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpServer;
@@ -17,6 +18,7 @@ import io.modelcontextprotocol.spec.McpSchema.ToolAnnotations;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,36 +28,41 @@ public final class Main {
     private static final Map<String, String> STRING = Map.of("type", "string");
 
     public static void main(String[] args) throws IOException {
-        var service = new AnalysisService(new GitRepository(repositoryPath(args)),
-                new LanguageRegistry(List.of(new JavaLanguageSupport())), "java");
+        var git = new GitRepository(repositoryPath(args));
+        var languages = new LanguageRegistry(List.of(new JavaLanguageSupport(), new PythonLanguageSupport()));
+        List<SyncToolSpecification> tools = new ArrayList<>();
+        tools.addAll(languageTools(new AnalysisService(git, languages, "java"), "java", "Java", "method"));
+        tools.addAll(languageTools(new AnalysisService(git, languages, "python"), "python", "Python", "function"));
         var transport = new StdioServerTransportProvider(McpJsonDefaults.getMapper());
 
         McpServer.sync(transport)
                 .serverInfo("codeclarity", "0.1.1")
                 .capabilities(ServerCapabilities.builder().tools(false).build())
-                .tools(
-                        tool("list_java_changes",
-                                "Find changed Java files and line ranges between the merge base and target commit. "
-                                        + "Call first to resolve branch names into commit SHAs.",
-                                Map.of("baseRef", STRING, "headRef", STRING), List.of("baseRef", "headRef"),
-                                input -> service.listChanges(required(input, "baseRef"), required(input, "headRef"))),
-                        tool("analyze_java_changes",
-                                "Compare PMD method-complexity findings on the two commit SHAs returned by "
-                                        + "list_java_changes. For larger comparisons, pass paths in batches of up to "
-                                        + AnalysisService.MAX_ANALYSIS_FILES + " changed files with the same SHAs.",
-                                Map.of("baseSha", STRING, "headSha", STRING,
-                                        "paths", Map.of("type", "array", "items", STRING, "minItems", 1,
-                                                "maxItems", AnalysisService.MAX_ANALYSIS_FILES)),
-                                List.of("baseSha", "headSha"),
-                                input -> service.analyzeChanges(required(input, "baseSha"), required(input, "headSha"), paths(input))),
-                        tool("inspect_java_method",
-                                "Show the Java method or constructor containing the given line, including its calls "
-                                        + "and enclosing if branches in the selected commit.",
-                                Map.of("commitSha", STRING, "path", STRING,
-                                        "line", Map.of("type", "integer", "minimum", 1)),
-                                List.of("commitSha", "path", "line"),
-                                input -> service.inspectEntity(required(input, "commitSha"), required(input, "path"), line(input))))
+                .tools(tools.toArray(SyncToolSpecification[]::new))
                 .build();
+    }
+
+    private static List<SyncToolSpecification> languageTools(AnalysisService service, String id,
+                                                            String label, String entity) {
+        return List.of(
+                tool("list_" + id + "_changes",
+                        "Find changed " + label + " files and line ranges between the merge base and target commit. "
+                                + "Call first to resolve branch names into commit SHAs.",
+                        Map.of("baseRef", STRING, "headRef", STRING), List.of("baseRef", "headRef"),
+                        input -> service.listChanges(required(input, "baseRef"), required(input, "headRef"))),
+                tool("analyze_" + id + "_changes",
+                        "Compare " + label + " complexity rule findings on the SHAs returned by list_" + id
+                                + "_changes. Pass paths in batches of up to " + AnalysisService.MAX_ANALYSIS_FILES + " files.",
+                        Map.of("baseSha", STRING, "headSha", STRING,
+                                "paths", Map.of("type", "array", "items", STRING, "minItems", 1,
+                                        "maxItems", AnalysisService.MAX_ANALYSIS_FILES)),
+                        List.of("baseSha", "headSha"),
+                        input -> service.analyzeChanges(required(input, "baseSha"), required(input, "headSha"), paths(input))),
+                tool("inspect_" + id + "_" + entity,
+                        "Show the " + label + " " + entity + " containing the given line, its calls and enclosing if branches.",
+                        Map.of("commitSha", STRING, "path", STRING, "line", Map.of("type", "integer", "minimum", 1)),
+                        List.of("commitSha", "path", "line"),
+                        input -> service.inspectEntity(required(input, "commitSha"), required(input, "path"), line(input))));
     }
 
     private static SyncToolSpecification tool(String name, String description, Map<String, ?> properties,

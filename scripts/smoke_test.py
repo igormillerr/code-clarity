@@ -132,7 +132,8 @@ def main():
                 assert hello["serverInfo"]["name"] == "codeclarity", hello
                 client.send("notifications/initialized", notification=True)
                 assert {tool["name"] for tool in client.send("tools/list")["tools"]} == {
-                    "list_java_changes", "analyze_java_changes", "inspect_java_method"
+                    "list_java_changes", "analyze_java_changes", "inspect_java_method",
+                    "list_python_changes", "analyze_python_changes", "inspect_python_function"
                 }
                 changes = client.tool("list_java_changes", {"baseRef": "main", "headRef": "HEAD"})
                 files = {file["newPath"]: file for file in changes["files"]}
@@ -159,7 +160,7 @@ def main():
             finally:
                 if process.poll() is None:
                     process.kill()
-    print("Passed: MCP handshake, three tools, Git snapshot, rename, PMD comparison, parse error, "
+    print("Passed: MCP handshake, Java and Python tool discovery, Git snapshot, rename, PMD comparison, parse error, "
           "method context and 94-file comparison analyzed in two batches.")
 
 
