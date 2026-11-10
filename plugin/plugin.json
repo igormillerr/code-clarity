@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codeclarity",
+  "version": "0.1.1",
+  "description": "Java readability tools for Git changes, PMD findings, and method context"
+}

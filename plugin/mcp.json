@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "codeclarity": {
+      "type": "stdio",
+      "command": "java",
+      "args": ["-jar", "${PLUGIN_ROOT}/server/codeclarity-mcp.jar"],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}
