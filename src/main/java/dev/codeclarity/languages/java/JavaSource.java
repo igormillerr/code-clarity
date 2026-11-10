@@ -1,4 +1,9 @@
-package dev.codeclarity;
+package dev.codeclarity.languages.java;
+
+import dev.codeclarity.core.model.SourceRange;
+import dev.codeclarity.core.model.EntityContext;
+import dev.codeclarity.core.model.EntityContext.Call;
+import dev.codeclarity.core.model.EntityContext.Guard;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -15,13 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 
 final class JavaSource {
-    record Method(String signature, GitRepository.Lines lines, CallableDeclaration<?> node) {}
-
-    record Guard(int line, String condition, String branch) {}
-
-    record Call(int line, String expression, List<Guard> enclosingIfs) {}
-
-    record MethodContext(String signature, GitRepository.Lines lines, List<Call> calls, boolean truncated) {}
+    record Method(String signature, SourceRange lines, CallableDeclaration<?> node) {}
 
     static List<Method> methods(String source) {
         var configuration = new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
@@ -37,7 +36,7 @@ final class JavaSource {
                 .map(node -> {
                     var range = node.getRange().orElseThrow();
                     return new Method(packagePrefix + owner(node) + "#" + node.getSignature().asString(),
-                            new GitRepository.Lines(range.begin.line, range.end.line), node);
+                            new SourceRange(range.begin.line, range.end.line), node);
                 })
                 .sorted(Comparator.comparing(method -> method.node.getBegin().orElseThrow()))
                 .toList();
@@ -70,13 +69,13 @@ final class JavaSource {
         return candidates.getFirst();
     }
 
-    static MethodContext context(Method method) {
+    static EntityContext context(Method method) {
         var calls = method.node.findAll(MethodCallExpr.class).stream()
                 .filter(call -> belongsTo(call, method.node))
                 .limit(101)
                 .map(call -> new Call(call.getBegin().orElseThrow().line, abbreviate(call.toString()), guards(call, method.node)))
                 .toList();
-        return new MethodContext(method.signature, method.lines, calls.stream().limit(100).toList(), calls.size() > 100);
+        return new EntityContext(method.signature, method.lines, calls.stream().limit(100).toList(), calls.size() > 100);
     }
 
     private static boolean belongsTo(Node node, Node method) {

@@ -1,5 +1,10 @@
 package dev.codeclarity;
 
+import dev.codeclarity.core.AnalysisService;
+import dev.codeclarity.core.LanguageRegistry;
+import dev.codeclarity.git.GitRepository;
+import dev.codeclarity.languages.java.JavaLanguageSupport;
+
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
@@ -21,7 +26,8 @@ public final class Main {
     private static final Map<String, String> STRING = Map.of("type", "string");
 
     public static void main(String[] args) throws IOException {
-        var service = new CodeClarity(new GitRepository(repositoryPath(args)));
+        var service = new AnalysisService(new GitRepository(repositoryPath(args)),
+                new LanguageRegistry(List.of(new JavaLanguageSupport())), "java");
         var transport = new StdioServerTransportProvider(McpJsonDefaults.getMapper());
 
         McpServer.sync(transport)
@@ -36,10 +42,10 @@ public final class Main {
                         tool("analyze_java_changes",
                                 "Compare PMD method-complexity findings on the two commit SHAs returned by "
                                         + "list_java_changes. For larger comparisons, pass paths in batches of up to "
-                                        + CodeClarity.MAX_ANALYSIS_FILES + " changed files with the same SHAs.",
+                                        + AnalysisService.MAX_ANALYSIS_FILES + " changed files with the same SHAs.",
                                 Map.of("baseSha", STRING, "headSha", STRING,
                                         "paths", Map.of("type", "array", "items", STRING, "minItems", 1,
-                                                "maxItems", CodeClarity.MAX_ANALYSIS_FILES)),
+                                                "maxItems", AnalysisService.MAX_ANALYSIS_FILES)),
                                 List.of("baseSha", "headSha"),
                                 input -> service.analyzeChanges(required(input, "baseSha"), required(input, "headSha"), paths(input))),
                         tool("inspect_java_method",
@@ -48,7 +54,7 @@ public final class Main {
                                 Map.of("commitSha", STRING, "path", STRING,
                                         "line", Map.of("type", "integer", "minimum", 1)),
                                 List.of("commitSha", "path", "line"),
-                                input -> service.inspectMethod(required(input, "commitSha"), required(input, "path"), line(input))))
+                                input -> service.inspectEntity(required(input, "commitSha"), required(input, "path"), line(input))))
                 .build();
     }
 
@@ -103,11 +109,11 @@ public final class Main {
             return List.of();
         }
         if (input.get("paths") instanceof List<?> values && !values.isEmpty()
-                && values.size() <= CodeClarity.MAX_ANALYSIS_FILES
+                && values.size() <= AnalysisService.MAX_ANALYSIS_FILES
                 && values.stream().allMatch(value -> value instanceof String path && !path.isBlank())) {
             return values.stream().map(String.class::cast).toList();
         }
-        throw new IllegalArgumentException("paths must contain 1 to " + CodeClarity.MAX_ANALYSIS_FILES + " non-empty paths.");
+        throw new IllegalArgumentException("paths must contain 1 to " + AnalysisService.MAX_ANALYSIS_FILES + " non-empty paths.");
     }
 
     private static Path repositoryPath(String[] args) throws IOException {

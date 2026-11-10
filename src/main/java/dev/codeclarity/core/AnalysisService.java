@@ -1,4 +1,10 @@
-package dev.codeclarity;
+package dev.codeclarity.core;
+
+import dev.codeclarity.git.GitRepository;
+import dev.codeclarity.core.model.SourceRange;
+import dev.codeclarity.core.model.SourceEntity;
+import dev.codeclarity.core.model.Finding;
+import dev.codeclarity.core.model.EntityContext;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -7,32 +13,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-final class CodeClarity {
-    static final int MAX_ANALYSIS_FILES = 50;
+public final class AnalysisService {
+    public static final int MAX_ANALYSIS_FILES = 50;
 
     private final GitRepository git;
-    private final PmdAnalyzer pmd = new PmdAnalyzer();
+    private final LanguageSupport language;
 
-    CodeClarity(GitRepository git) {
+    public AnalysisService(GitRepository git, LanguageRegistry languages, String languageId) {
         this.git = git;
+        this.language = languages.require(languageId);
     }
 
-    record Changes(String baseSha, String headSha, List<GitRepository.Change> files) {}
+    public record Changes(String baseSha, String headSha, List<GitRepository.Change> files) {}
 
-    record Diagnostic(String method, String rule, String status, PmdAnalyzer.Finding before, PmdAnalyzer.Finding after) {}
+    public record Diagnostic(String method, String rule, String status, Finding before, Finding after) {}
 
-    record FileAnalysis(String oldPath, String newPath, List<String> changedMethods, List<Diagnostic> findings) {}
+    public record FileAnalysis(String oldPath, String newPath, List<String> changedMethods, List<Diagnostic> findings) {}
 
-    record Review(String baseSha, String headSha, String status, List<FileAnalysis> files, List<String> warnings) {}
+    public record Review(String baseSha, String headSha, String status, List<FileAnalysis> files, List<String> warnings) {}
 
-    private record Version(List<JavaSource.Method> methods, List<PmdAnalyzer.Finding> findings, boolean complete) {
+    private record Version(List<SourceEntity> entities, List<Finding> findings, boolean complete) {
         static Version empty(boolean complete) {
             return new Version(List.of(), List.of(), complete);
         }
 
-        Set<String> touched(List<GitRepository.Lines> ranges) {
+        Set<String> touched(List<SourceRange> ranges) {
             Set<String> signatures = new LinkedHashSet<>();
-            for (var method : methods) {
+            for (var method : entities) {
                 if (ranges.stream().anyMatch(method.lines()::overlaps)) {
                     signatures.add(method.signature());
                 }
@@ -40,14 +47,14 @@ final class CodeClarity {
             return signatures;
         }
 
-        Map<String, PmdAnalyzer.Finding> rules(String signature) {
-            Map<String, PmdAnalyzer.Finding> rules = new LinkedHashMap<>();
-            var matches = methods.stream().filter(method -> method.signature().equals(signature)).toList();
+        Map<String, Finding> rules(String signature) {
+            Map<String, Finding> rules = new LinkedHashMap<>();
+            var matches = entities.stream().filter(method -> method.signature().equals(signature)).toList();
             if (matches.size() == 1) {
                 var method = matches.getFirst();
                 for (var finding : findings) {
                     if (method.lines().contains(finding.line())) {
-                        var owner = methods.stream()
+                        var owner = entities.stream()
                                 .filter(candidate -> candidate.lines().contains(finding.line()))
                                 .min(java.util.Comparator.comparingInt(candidate ->
                                         candidate.lines().endLine() - candidate.lines().startLine()));
@@ -60,27 +67,36 @@ final class CodeClarity {
             return rules;
         }
 
-        long methodCount(String signature) {
-            return methods.stream().filter(method -> method.signature().equals(signature)).count();
+        long entityCount(String signature) {
+            return entities.stream().filter(method -> method.signature().equals(signature)).count();
         }
     }
 
-    Changes listChanges(String baseRef, String headRef) {
+    private List<GitRepository.ChangedFile> changedFiles(GitRepository.Snapshot snapshot) {
+        return git.changedFiles(snapshot).stream()
+                .map(file -> new GitRepository.ChangedFile(
+                        file.oldPath() != null && language.supports(file.oldPath()) ? file.oldPath() : null,
+                        file.newPath() != null && language.supports(file.newPath()) ? file.newPath() : null))
+                .filter(file -> file.oldPath() != null || file.newPath() != null)
+                .toList();
+    }
+
+    public Changes listChanges(String baseRef, String headRef) {
         var snapshot = git.snapshot(baseRef, headRef);
-        var changes = git.changedFiles(snapshot).stream().map(file -> git.ranges(snapshot, file)).toList();
+        var changes = changedFiles(snapshot).stream().map(file -> git.ranges(snapshot, file)).toList();
         return new Changes(snapshot.baseSha(), snapshot.headSha(), changes);
     }
 
-    Review analyzeChanges(String baseSha, String headSha, List<String> paths) {
+    public Review analyzeChanges(String baseSha, String headSha, List<String> paths) {
         var snapshot = new GitRepository.Snapshot(git.commit(baseSha), git.commit(headSha));
-        var changedFiles = git.changedFiles(snapshot);
+        var changedFiles = changedFiles(snapshot);
         var selected = changedFiles.stream().filter(file -> paths.isEmpty() || paths.contains(file.path())).toList();
         var selectedPaths = selected.stream().map(GitRepository.ChangedFile::path).toList();
         if (!selectedPaths.containsAll(paths)) {
-            throw new IllegalArgumentException("paths must identify changed Java files from list_java_changes.");
+            throw new IllegalArgumentException("paths must identify changed files for the selected language.");
         }
         if (selected.size() > MAX_ANALYSIS_FILES) {
-            throw new IllegalArgumentException("Analysis selected " + selected.size() + " changed Java files. "
+            throw new IllegalArgumentException("Analysis selected " + selected.size() + " changed files. "
                     + "Use paths to analyze up to " + MAX_ANALYSIS_FILES + " files per call with the same commit SHAs.");
         }
 
@@ -92,9 +108,12 @@ final class CodeClarity {
         return new Review(baseSha, headSha, warnings.isEmpty() ? "ok" : "partial", files, warnings);
     }
 
-    JavaSource.MethodContext inspectMethod(String sha, String path, int line) {
+    public EntityContext inspectEntity(String sha, String path, int line) {
         String source = git.source(git.commit(sha), path);
-        return JavaSource.context(JavaSource.methodAt(JavaSource.methods(source), line));
+        if (!language.supports(path)) {
+            throw new IllegalArgumentException("Unsupported path for " + language.languageId() + ": " + path);
+        }
+        return language.inspect(path, source, line);
     }
 
     private FileAnalysis analyzeFile(GitRepository.Snapshot snapshot, GitRepository.ChangedFile file, List<String> warnings) {
@@ -106,8 +125,8 @@ final class CodeClarity {
 
         List<Diagnostic> findings = new ArrayList<>();
         for (String signature : touched) {
-            if (before.methodCount(signature) > 1 || after.methodCount(signature) > 1) {
-                warnings.add(file.path() + ": ambiguous method signature " + signature);
+            if (before.entityCount(signature) > 1 || after.entityCount(signature) > 1) {
+                warnings.add(file.path() + ": ambiguous entity signature " + signature);
                 continue;
             }
             var oldRules = before.rules(signature);
@@ -121,10 +140,10 @@ final class CodeClarity {
                 if (!before.complete || !after.complete) {
                     status = "UNVERIFIED";
                 } else if (oldFinding == null) {
-                    status = change.oldPath() == null || before.methodCount(signature) == 1
+                    status = change.oldPath() == null || before.entityCount(signature) == 1
                             ? "INTRODUCED" : "NO_BASE_MATCH";
                 } else if (newFinding == null) {
-                    status = after.methodCount(signature) == 1 ? "RESOLVED" : "NO_HEAD_MATCH";
+                    status = after.entityCount(signature) == 1 ? "RESOLVED" : "NO_HEAD_MATCH";
                 } else {
                     status = oldFinding.message().equals(newFinding.message()) ? "EXISTING" : "CHANGED";
                 }
@@ -141,10 +160,12 @@ final class CodeClarity {
         String label = side + " " + path + ": ";
         try {
             String source = git.source(sha, path);
-            var methods = JavaSource.methods(source);
-            var result = pmd.analyze(path, source);
+            var result = language.analyze(path, source);
             result.warnings().forEach(message -> warnings.add(label + message));
-            return new Version(methods, result.findings(), result.warnings().isEmpty());
+            if (!result.complete() && result.warnings().isEmpty()) {
+                warnings.add(label + "Incomplete language analysis.");
+            }
+            return new Version(result.entities(), result.findings(), result.complete());
         } catch (IllegalArgumentException exception) {
             warnings.add(label + exception.getMessage());
             return Version.empty(false);

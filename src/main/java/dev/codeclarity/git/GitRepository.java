@@ -1,4 +1,6 @@
-package dev.codeclarity;
+package dev.codeclarity.git;
+
+import dev.codeclarity.core.model.SourceRange;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-final class GitRepository {
+public final class GitRepository {
     private static final int MAX_OUTPUT = 4 * 1024 * 1024;
     private static final int MAX_SOURCE_CHARS = 250_000;
     private static final Pattern SHA = Pattern.compile("[a-f0-9]{40}|[a-f0-9]{64}");
@@ -21,7 +23,7 @@ final class GitRepository {
 
     private final Path root;
 
-    GitRepository(Path path) throws IOException {
+    public GitRepository(Path path) throws IOException {
         root = path.toRealPath();
         if (!git("rev-parse", "--is-inside-work-tree").strip().equals("true")
                 || !Path.of(git("rev-parse", "--show-toplevel").strip()).toRealPath().equals(root)) {
@@ -29,33 +31,23 @@ final class GitRepository {
         }
     }
 
-    record Lines(int startLine, int endLine) {
-        boolean overlaps(Lines other) {
-            return startLine <= other.endLine && other.startLine <= endLine;
-        }
-
-        boolean contains(int line) {
-            return startLine <= line && line <= endLine;
-        }
-    }
-
-    record ChangedFile(String oldPath, String newPath) {
-        String path() {
+    public record ChangedFile(String oldPath, String newPath) {
+        public String path() {
             return newPath != null ? newPath : oldPath;
         }
     }
 
-    record Change(String oldPath, String newPath, List<Lines> baseLines, List<Lines> headLines) {}
+    public record Change(String oldPath, String newPath, List<SourceRange> baseLines, List<SourceRange> headLines) {}
 
-    record Snapshot(String baseSha, String headSha) {}
+    public record Snapshot(String baseSha, String headSha) {}
 
-    Snapshot snapshot(String baseRef, String headRef) {
+    public Snapshot snapshot(String baseRef, String headRef) {
         String head = resolve(headRef);
         String base = resolve(baseRef);
         return new Snapshot(git("merge-base", base, head).strip(), head);
     }
 
-    String commit(String sha) {
+    public String commit(String sha) {
         if (!SHA.matcher(sha).matches() || !resolve(sha).equals(sha)) {
             throw new IllegalArgumentException("Expected a full Git commit SHA.");
         }
@@ -66,7 +58,7 @@ final class GitRepository {
         return git("rev-parse", "--verify", "--end-of-options", ref + "^{commit}").strip();
     }
 
-    List<ChangedFile> changedFiles(Snapshot snapshot) {
+    public List<ChangedFile> changedFiles(Snapshot snapshot) {
         String status = git("diff", "--no-ext-diff", "--no-textconv", "--find-renames",
                 "--name-status", "-z", snapshot.baseSha, snapshot.headSha, "--");
         if (status.isEmpty()) {
@@ -77,11 +69,11 @@ final class GitRepository {
         for (int i = 0; i < fields.length; ) {
             char kind = fields[i++].charAt(0);
             String path = fields[i++];
-            String oldPath = kind == 'A' ? null : javaPath(path);
+            String oldPath = kind == 'A' ? null : path;
             String newPath = switch (kind) {
                 case 'D' -> null;
-                case 'R', 'C' -> javaPath(fields[i++]);
-                default -> javaPath(path);
+                case 'R', 'C' -> fields[i++];
+                default -> path;
             };
             if (oldPath != null || newPath != null) {
                 files.add(new ChangedFile(oldPath, newPath));
@@ -90,11 +82,11 @@ final class GitRepository {
         return files;
     }
 
-    Change ranges(Snapshot snapshot, ChangedFile file) {
+    public Change ranges(Snapshot snapshot, ChangedFile file) {
         String oldPath = file.oldPath();
         String newPath = file.newPath();
-        List<Lines> before = new ArrayList<>();
-        List<Lines> after = new ArrayList<>();
+        List<SourceRange> before = new ArrayList<>();
+        List<SourceRange> after = new ArrayList<>();
         if (oldPath == null) {
             addRange(after, 1, Math.toIntExact(source(snapshot.headSha, newPath).lines().count()));
         } else if (newPath == null) {
@@ -115,27 +107,23 @@ final class GitRepository {
         return group == null ? 1 : Integer.parseInt(group);
     }
 
-    private static void addRange(List<Lines> ranges, int start, int count) {
+    private static void addRange(List<SourceRange> ranges, int start, int count) {
         if (count > 0) {
-            ranges.add(new Lines(start, start + count - 1));
+            ranges.add(new SourceRange(start, start + count - 1));
         }
     }
 
-    String source(String commit, String path) {
-        if (javaPath(path) == null || path.startsWith("/") || path.indexOf('\u0000') >= 0
+    public String source(String commit, String path) {
+        if (path == null || path.isEmpty() || path.startsWith("/") || path.indexOf('\u0000') >= 0
                 || Arrays.stream(path.split("/", -1)).anyMatch(part ->
                         part.isEmpty() || part.equals(".") || part.equals(".."))) {
-            throw new IllegalArgumentException("Expected a repository-relative Java file path.");
+            throw new IllegalArgumentException("Expected a repository-relative file path.");
         }
         String source = git("cat-file", "blob", commit + ":" + path);
         if (source.length() > MAX_SOURCE_CHARS) {
-            throw new IllegalArgumentException("Java source exceeds 250,000 characters: " + path);
+            throw new IllegalArgumentException("Source exceeds 250,000 characters: " + path);
         }
         return source;
-    }
-
-    private static String javaPath(String path) {
-        return path.endsWith(".java") ? path : null;
     }
 
     private String git(String... arguments) {

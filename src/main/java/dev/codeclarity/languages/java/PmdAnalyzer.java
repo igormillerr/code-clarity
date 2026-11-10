@@ -1,4 +1,6 @@
-package dev.codeclarity;
+package dev.codeclarity.languages.java;
+
+import dev.codeclarity.core.model.Finding;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
@@ -9,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class PmdAnalyzer {
-    record Finding(String rule, int line, int column, String message) {}
-
     record Result(List<Finding> findings, List<String> warnings) {}
 
     Result analyze(String path, String source) {
