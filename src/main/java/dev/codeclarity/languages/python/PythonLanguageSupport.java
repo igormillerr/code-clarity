@@ -2,6 +2,7 @@ package dev.codeclarity.languages.python;
 
 import dev.codeclarity.core.LanguageSupport;
 import dev.codeclarity.core.model.EntityContext;
+import dev.codeclarity.core.model.MetricDefinition;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +33,13 @@ public final class PythonLanguageSupport implements LanguageSupport {
 
     @Override
     public String languageId() { return "python"; }
+
+    @Override
+    public List<MetricDefinition> metricDefinitions() {
+        return List.of(new MetricDefinition("cyclomatic_complexity", "python", "codeclarity-python-ast/1",
+                        "codeclarity/python-cyclo/v1"),
+                new MetricDefinition("cognitive_complexity", "python", "codeclarity-python-ast/1", "unsupported"));
+    }
 
     @Override
     public boolean supports(String path) { return path != null && path.endsWith(".py"); }

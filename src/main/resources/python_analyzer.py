@@ -116,15 +116,21 @@ def handle(request):
         return {"context": context(*candidates[0], source)}
     if request["operation"] != "analyze":
         raise ValueError("Unknown operation.")
-    entities, findings = [], []
+    entities, findings, metrics = [], [], []
     for node, key in functions:
         entities.append({"signature": key, "lines": source_range(node)})
         score = complexity(node)
+        for metric_id, algorithm, status, value, reason in (
+                ("cyclomatic_complexity", "codeclarity/python-cyclo/v1", "AVAILABLE", score, None),
+                ("cognitive_complexity", "unsupported", "UNSUPPORTED", None, "Not implemented for Python.")):
+            metrics.append({"entity": key, "metric": {
+                "definition": {"id": metric_id, "language": "python", "analyzer": "codeclarity-python-ast/1",
+                               "algorithm": algorithm}, "status": status, "value": value, "reason": reason}})
         if score >= THRESHOLD:
             findings.append({"rule": "PythonCyclomaticComplexity", "line": node.lineno,
                              "column": node.col_offset + 1,
                              "message": f"Function {key} has cyclomatic complexity {score} (threshold {THRESHOLD})."})
-    return {"analysis": {"entities": entities, "findings": findings, "complete": True, "warnings": []}}
+    return {"analysis": {"entities": entities, "findings": findings, "complete": True, "warnings": [], "metrics": metrics}}
 
 
 if __name__ == "__main__":

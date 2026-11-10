@@ -64,6 +64,15 @@ class WorkerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.inspect("x = 1\n", 1)
 
+    def test_numeric_metrics_below_threshold_and_unsupported(self):
+        result = self.analyze("def f():\n    if flag: pass\n")
+        self.assertEqual(result["findings"], [])
+        values = {m["metric"]["definition"]["id"]: m["metric"] for m in result["metrics"]}
+        self.assertEqual(values["cyclomatic_complexity"]["value"], 2)
+        self.assertEqual(values["cyclomatic_complexity"]["status"], "AVAILABLE")
+        self.assertEqual(values["cognitive_complexity"]["status"], "UNSUPPORTED")
+        self.assertIsNone(values["cognitive_complexity"]["value"])
+
 
 if __name__ == "__main__":
     unittest.main()

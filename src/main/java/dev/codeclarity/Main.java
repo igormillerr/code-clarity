@@ -51,7 +51,7 @@ public final class Main {
                         Map.of("baseRef", STRING, "headRef", STRING), List.of("baseRef", "headRef"),
                         input -> service.listChanges(required(input, "baseRef"), required(input, "headRef"))),
                 tool("analyze_" + id + "_changes",
-                        "Compare " + label + " complexity rule findings on the SHAs returned by list_" + id
+                        "Compare " + label + " numeric complexity metrics (before, after, delta) and rule findings on the SHAs returned by list_" + id
                                 + "_changes. Pass paths in batches of up to " + AnalysisService.MAX_ANALYSIS_FILES + " files.",
                         Map.of("baseSha", STRING, "headSha", STRING,
                                 "paths", Map.of("type", "array", "items", STRING, "minItems", 1,

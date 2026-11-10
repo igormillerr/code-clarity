@@ -147,6 +147,11 @@ def main():
                 found = {(f["method"], f["rule"]): f["status"] for f in report["files"][0]["findings"]}
                 assert found["Example#changed()", "CognitiveComplexity"] == "INTRODUCED", found
                 assert found["Example#existing()", "CognitiveComplexity"] == "EXISTING", found
+                metrics = {(m["entity"], m["metric"]): m for m in report["files"][0]["metrics"]}
+                for metric_id, before, after in [("cyclomatic_complexity", 2, 7), ("cognitive_complexity", 1, 21)]:
+                    value = metrics[("Example#changed()", metric_id)]
+                    assert value["status"] == "COMPARED" and value["before"]["value"] == before and value["after"]["value"] == after, value
+                    assert value["delta"] == after - before, value
                 partial = client.tool("analyze_java_changes", shas)
                 assert partial["status"] == "partial" and any("Invalid.java" in w for w in partial["warnings"]), partial
                 request = {"commitSha": changes["headSha"], "path": "Example file.java", "line": call_line}

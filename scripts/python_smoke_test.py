@@ -28,6 +28,15 @@ def check(client, root):
                 "changed(value)": "CHANGED", "resolved(value)": "RESOLVED"}
     assert {key: value["status"] for key, value in findings.items()} == expected, findings
     assert "10" in findings["introduced(value)"]["after"]["message"], findings
+    metrics = {(m["entity"], m["metric"]): m for m in report["files"][0]["metrics"]}
+    for entity, before, after in [("introduced", 2, 10), ("existing", 10, 10), ("changed", 10, 11), ("resolved", 10, 2),
+                                  ("below", 2, 3)]:
+        value = metrics[(entity + "(value)", "cyclomatic_complexity")]
+        assert value["status"] == "COMPARED" and value["before"]["value"] == before and value["after"]["value"] == after, value
+        assert value["delta"] == after - before, value
+    cognitive = metrics[("below(value)", "cognitive_complexity")]
+    assert cognitive["status"] == "UNAVAILABLE" and cognitive.get("delta") is None, cognitive
+    assert cognitive["after"]["status"] == "UNSUPPORTED", cognitive
     partial = client.tool("analyze_python_changes", shas)
     assert partial["status"] == "partial" and any("invalid.py" in w for w in partial["warnings"]), partial
     context = client.tool("inspect_python_function", {"commitSha": changes["headSha"],
@@ -69,13 +78,13 @@ def main():
         git(root, "config", "user.name", "Python test")
         git(root, "config", "user.email", "python@example.test")
         (root / "example.py").write_text("".join(function(n, c) for n, c in
-            [("introduced", 1), ("existing", 9), ("changed", 9), ("resolved", 9)]), encoding="utf-8")
+            [("introduced", 1), ("existing", 9), ("changed", 9), ("resolved", 9), ("below", 1)]), encoding="utf-8")
         (root / "rename.py").write_text("def renamed():\n    pass\n", encoding="utf-8")
         git(root, "add", ".")
         git(root, "commit", "-m", "base")
         git(root, "switch", "-c", "feature")
         (root / "example.py").write_text("".join(function(n, c) for n, c in
-            [("introduced", 9), ("existing", 9), ("changed", 10), ("resolved", 1)]).replace(
+            [("introduced", 9), ("existing", 9), ("changed", 10), ("resolved", 1), ("below", 2)]).replace(
                 "def existing(value):", "def existing(value): # touched"), encoding="utf-8")
         (root / "invalid.py").write_text("def broken(:\n", encoding="utf-8")
         (root / "Example.java").write_text("class Example {}\n", encoding="utf-8")

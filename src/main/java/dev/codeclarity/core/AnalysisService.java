@@ -5,6 +5,10 @@ import dev.codeclarity.core.model.SourceRange;
 import dev.codeclarity.core.model.SourceEntity;
 import dev.codeclarity.core.model.Finding;
 import dev.codeclarity.core.model.EntityContext;
+import dev.codeclarity.core.model.MetricDefinition;
+import dev.codeclarity.core.model.MetricMeasurement;
+import dev.codeclarity.core.model.MetricValue;
+import static dev.codeclarity.core.model.MetricValue.Status.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,13 +32,14 @@ public final class AnalysisService {
 
     public record Diagnostic(String method, String rule, String status, Finding before, Finding after) {}
 
-    public record FileAnalysis(String oldPath, String newPath, List<String> changedMethods, List<Diagnostic> findings) {}
+    public record FileAnalysis(String oldPath, String newPath, List<String> changedMethods, List<Diagnostic> findings,
+                               List<MetricComparison> metrics) {}
 
     public record Review(String baseSha, String headSha, String status, List<FileAnalysis> files, List<String> warnings) {}
 
-    private record Version(List<SourceEntity> entities, List<Finding> findings, boolean complete) {
+    private record Version(List<SourceEntity> entities, List<Finding> findings, boolean complete, List<MetricMeasurement> metrics) {
         static Version empty(boolean complete) {
-            return new Version(List.of(), List.of(), complete);
+            return new Version(List.of(), List.of(), complete, List.of());
         }
 
         Set<String> touched(List<SourceRange> ranges) {
@@ -65,6 +70,26 @@ public final class AnalysisService {
                 }
             }
             return rules;
+        }
+
+        MetricValue metric(String entity, MetricDefinition definition) {
+            if (!complete) {
+                return MetricValue.unavailable(definition, ERROR, "Incomplete source analysis.");
+            }
+            long count = entityCount(entity);
+            if (count == 0) {
+                return MetricValue.unavailable(definition, ENTITY_ABSENT, "No matching entity in this version.");
+            }
+            if (count > 1) {
+                return MetricValue.unavailable(definition, ERROR, "Ambiguous entity signature.");
+            }
+            var values = metrics.stream().filter(value -> value.entity().equals(entity)
+                    && value.metric().definition().id().equals(definition.id())).toList();
+            if (values.size() != 1) {
+                return MetricValue.unavailable(definition, values.isEmpty() ? MISSING : ERROR,
+                        values.isEmpty() ? "Analyzer returned no measurement." : "Duplicate metric measurements.");
+            }
+            return values.getFirst().metric();
         }
 
         long entityCount(String signature) {
@@ -124,7 +149,17 @@ public final class AnalysisService {
         touched.addAll(after.touched(change.headLines()));
 
         List<Diagnostic> findings = new ArrayList<>();
+        List<MetricComparison> metrics = new ArrayList<>();
         for (String signature : touched) {
+            Map<String, MetricDefinition> definitions = new LinkedHashMap<>();
+            language.metricDefinitions().forEach(definition -> definitions.put(definition.id(), definition));
+            java.util.stream.Stream.concat(before.metrics.stream(), after.metrics.stream())
+                    .filter(value -> value.entity().equals(signature))
+                    .forEach(value -> definitions.putIfAbsent(value.metric().definition().id(), value.metric().definition()));
+            for (var definition : definitions.values()) {
+                metrics.add(MetricComparison.compare(signature, definition.id(),
+                        before.metric(signature, definition), after.metric(signature, definition)));
+            }
             if (before.entityCount(signature) > 1 || after.entityCount(signature) > 1) {
                 warnings.add(file.path() + ": ambiguous entity signature " + signature);
                 continue;
@@ -150,7 +185,7 @@ public final class AnalysisService {
                 findings.add(new Diagnostic(signature, rule, status, oldFinding, newFinding));
             }
         }
-        return new FileAnalysis(change.oldPath(), change.newPath(), List.copyOf(touched), findings);
+        return new FileAnalysis(change.oldPath(), change.newPath(), List.copyOf(touched), findings, metrics);
     }
 
     private Version load(String sha, String path, String side, List<String> warnings) {
@@ -165,7 +200,7 @@ public final class AnalysisService {
             if (!result.complete() && result.warnings().isEmpty()) {
                 warnings.add(label + "Incomplete language analysis.");
             }
-            return new Version(result.entities(), result.findings(), result.complete());
+            return new Version(result.entities(), result.findings(), result.complete(), result.metrics());
         } catch (IllegalArgumentException exception) {
             warnings.add(label + exception.getMessage());
             return Version.empty(false);
