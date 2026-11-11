@@ -1,6 +1,6 @@
 """Check specification fixtures and optionally the isolated complexipy reference.
 
-Structural metric numbers are acceptance targets, not verified implementations.
+Checks all five implemented metrics against manually specified acceptance values.
 This script does not execute fixture code or change the application analyzer.
 """
 import argparse
@@ -55,10 +55,13 @@ def main():
         compile(item["source"],item["id"],"exec",dont_inherit=True)
         assert len(item["expected"])==6 and all(type(value) is int and value>=0 for value in item["expected"].values()),item["id"]
         result=worker["handle"](dict(operation="analyze",path="fixture.py",source=item["source"]))["analysis"]
-        measurements=[m["metric"]["value"] for m in result["metrics"]
-                      if m["entity"].split("(")[0]==item["target"] and m["metric"]["definition"]["id"]=="cyclomatic_complexity"]
-        assert measurements==[item["expected"]["cyclomatic_complexity"]],item["id"]
-    print(f"Passed: {len(data['cases'])} fixture syntax checks and existing CC values. Structural expectations await implementation.")
+        measurements={m["metric"]["definition"]["id"]:m["metric"] for m in result["metrics"]
+                      if m["entity"].split("(")[0]==item["target"]}
+        for name,expected in item["expected"].items():
+            if name!="cognitive_complexity":
+                assert measurements[name]["status"]=="AVAILABLE",(item["id"],name)
+                assert measurements[name]["value"]==expected,(item["id"],name,measurements[name]["value"],expected)
+    print(f"Passed: {len(data['cases'])} fixture syntax checks and all five implemented metric values per case.")
     if args.complexipy_path:
         sys.path.insert(0,str(args.complexipy_path.resolve()))
         assert importlib.metadata.version("complexipy")==data["cognitive_reference"]["version"],"Reference version mismatch"

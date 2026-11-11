@@ -23,6 +23,7 @@ codex mcp list
 mvn clean package
 python3 scripts/smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/python_worker_test.py
+python3 scripts/python_metrics_spec_check.py
 python3 scripts/python_smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/java_metrics_test.py target/codeclarity-mcp.jar
 ```
@@ -165,6 +166,19 @@ java -jar target/codeclarity-mcp.jar --repo-root 'C:\work\my-project'
 | Java | `cognitive_complexity` | PMD `JavaMetrics.COGNITIVE_COMPLEXITY`, настройки по умолчанию |
 | Python | `cyclomatic_complexity` | Собственный алгоритм `codeclarity/python-cyclo/v1`, описанный выше |
 | Python | `cognitive_complexity` | `UNSUPPORTED` |
+| Python | `function_sloc` | Физические строки с кодом, без комментариев и docstring |
+| Python | `max_nesting_depth` | Синтаксическая вложенность управляющих конструкций |
+| Python | `parameter_count` | Все явные параметры, включая self/cls, varargs и kwargs |
+| Python | `return_count` | Явные return в собственной области функции |
+
+Python возвращает пять численных метрик и явный `UNSUPPORTED` для когнитивной сложности.
+Правила и 20 эталонных примеров описаны в [спецификации](docs/PYTHON_METRICS_SPEC.md).
+SLOC включает заголовок, декораторы и код вложенных объявлений, но исключает docstring;
+метрики вложенности и возвратов исключают вложенные области. Для вложенности `elif`
+продолжает текущую цепочку, тогда как настоящий `if` внутри `else` создаёт новый уровень.
+Все численные значения, включая нули, доступны ниже порогов диагностик.
+При изменении параметров текущий ключ функции меняется: значения обеих версий будут
+доступны раздельно, а сопоставление и дельта требуют запланированной доработки Core.
 
 Java-значения вычисляются через API PMD в том же проходе, что и диагностики, без разбора
 текста сообщений. Для объявлений без тела, включая абстрактные методы, оба значения

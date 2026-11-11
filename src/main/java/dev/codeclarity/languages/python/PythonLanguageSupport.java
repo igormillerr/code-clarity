@@ -38,7 +38,11 @@ public final class PythonLanguageSupport implements LanguageSupport {
     public List<MetricDefinition> metricDefinitions() {
         return List.of(new MetricDefinition("cyclomatic_complexity", "python", "codeclarity-python-ast/1",
                         "codeclarity/python-cyclo/v1"),
-                new MetricDefinition("cognitive_complexity", "python", "codeclarity-python-ast/1", "unsupported"));
+                new MetricDefinition("cognitive_complexity", "python", "codeclarity-python-ast/1", "unsupported"),
+                new MetricDefinition("function_sloc", "python", "codeclarity-python-ast/1", "codeclarity/python-physical-sloc/v1"),
+                new MetricDefinition("max_nesting_depth", "python", "codeclarity-python-ast/1", "codeclarity/python-nesting/v1"),
+                new MetricDefinition("parameter_count", "python", "codeclarity-python-ast/1", "codeclarity/python-parameters/include-receiver/v1"),
+                new MetricDefinition("return_count", "python", "codeclarity-python-ast/1", "codeclarity/python-explicit-returns/v1"));
     }
 
     @Override

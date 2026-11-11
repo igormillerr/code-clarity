@@ -273,6 +273,6 @@
   "verification": {
     "cyclomatic_complexity": "checked against existing worker on all 20 cases",
     "cognitive_complexity": "checked against complexipy 8.3.0 with source-preserving scope isolation",
-    "structural_metrics": "manually specified acceptance targets; implementation pending"
+    "structural_metrics": "manually specified acceptance targets; verified against worker on all 20 cases in stage 3"
   }
 }
