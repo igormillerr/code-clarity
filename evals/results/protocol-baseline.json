@@ -1,0 +1,487 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "MCP_PROTOCOL",
+  "jar": "plugin/server/codeclarity-mcp.jar",
+  "codexEndToEnd": "NOT_RUN",
+  "results": [
+    {
+      "scenarioId": "java-complexity",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP."
+    },
+    {
+      "scenarioId": "python-naming",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP."
+    },
+    {
+      "scenarioId": "good-code",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP."
+    },
+    {
+      "scenarioId": "partial-analysis",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP."
+    },
+    {
+      "scenarioId": "history-sufficient",
+      "status": "NOT_RUN",
+      "reason": "History decision requires Skill evaluation; persistence tools are a Core dependency."
+    },
+    {
+      "scenarioId": "history-insufficient",
+      "status": "NOT_RUN",
+      "reason": "History decision requires Skill evaluation; persistence tools are a Core dependency."
+    }
+  ],
+  "jarSha256": "bad30242e4921b484443139a6d634a5b51922ba8b6723285ae4cbfe8d8a3671c",
+  "sourceBaseline": "ec6a3ed",
+  "evaluationDate": "2026-11-11",
+  "agentEvaluation": "NOT_RUN",
+  "note": "Actual real-JAR MCP protocol results only. Four source fixtures passed; no claim of model review, installed plugin, six complete metrics or history persistence.",
+  "observedAnalysis": [
+    {
+      "scenarioId": "java-complexity",
+      "tool": "analyze_java_changes",
+      "status": "ok",
+      "warnings": [],
+      "measurements": [
+        {
+          "path": "Eligibility.java",
+          "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 7.0,
+            "reason": null
+          },
+          "delta": 6.0
+        },
+        {
+          "path": "Eligibility.java",
+          "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 21.0,
+            "reason": null
+          },
+          "delta": 21.0
+        }
+      ]
+    },
+    {
+      "scenarioId": "python-naming",
+      "tool": "analyze_python_changes",
+      "status": "ok",
+      "warnings": [],
+      "measurements": [
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(line_items)",
+          "metric": "cyclomatic_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "delta": null
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(line_items)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "delta": null
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "cyclomatic_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": null
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "delta": null
+        }
+      ]
+    },
+    {
+      "scenarioId": "good-code",
+      "tool": "analyze_java_changes",
+      "status": "ok",
+      "warnings": [],
+      "measurements": [
+        {
+          "path": "Totals.java",
+          "entity": "Totals#lineTotal(long, long)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "Totals.java",
+          "entity": "Totals#lineTotal(long, long)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ]
+    },
+    {
+      "scenarioId": "good-code",
+      "tool": "analyze_python_changes",
+      "status": "ok",
+      "warnings": [],
+      "measurements": [
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "delta": null
+        }
+      ]
+    },
+    {
+      "scenarioId": "partial-analysis",
+      "tool": "analyze_python_changes",
+      "status": "partial",
+      "warnings": [
+        "head broken.py: Python analysis: invalid syntax (broken.py, line 1)"
+      ],
+      "measurements": [
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "delta": null
+        }
+      ]
+    }
+  ]
+}

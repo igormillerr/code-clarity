@@ -1,6 +1,18 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codeclarity",
-  "version": "0.1.1",
-  "description": "Java and Python readability tools for Git changes, complexity findings, and function context"
+  "version": "0.2.0",
+  "description": "Evidence-based Java and Python readability reviews with independent review, MCP metrics, and proposed rules",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "CodeClarity",
+        "shortDescription": "Review readability of Java and Python changes",
+        "longDescription": "Review committed changes independently, correlate findings with measured MCP metrics, and propose rules from confirmed history when the Core supports it.",
+        "developerName": "CodeClarity team",
+        "category": "Developer Tools",
+        "defaultPrompt": ["Use CodeClarity to review readability of Java and Python changes between main and HEAD."]
+      }
+    }
+  }
 }

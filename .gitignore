@@ -1,2 +1,5 @@
 /target/
 __pycache__/
+/.codeclarity/
+/evals/runs/
+/.idea/

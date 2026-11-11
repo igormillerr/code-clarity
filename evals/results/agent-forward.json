@@ -1,0 +1,694 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "FORWARD_AGENT_WITH_REAL_MCP",
+  "status": "PASS",
+  "jar": "C:/Users/Igor Miller/Documents/projects/code-clarity/plugin/server/codeclarity-mcp.jar",
+  "jarSha256": "bad30242e4921b484443139a6d634a5b51922ba8b6723285ae4cbfe8d8a3671c",
+  "codexEndToEnd": "NOT_RUN_BY_THIS_AGENT",
+  "artifactHelperValidation": "PASS (four validate and four render invocations)",
+  "externalJsonSchemaValidation": "NOT_RUN: the optional jsonschema Python package is not installed (ModuleNotFoundError); bundled operational validator passed.",
+  "results": [
+    {
+      "scenarioId": "java-complexity",
+      "status": "PASS",
+      "errors": [],
+      "executionLevel": "FORWARD_AGENT_WITH_REAL_MCP",
+      "report": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/report.json",
+      "markdown": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/report.md",
+      "trace": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/trace.json",
+      "check": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/semantic-check.json",
+      "reportSha256": "9c5fd936d3725a026f54d3ed6c3a991dc76618d4454e3b857af186664efd7520",
+      "reviewId": "review-cea405fe443f4d89189d3151e555a2d5ad5a5e59803badeb691c87a39b00b974",
+      "verdict": "INCOMPLETE",
+      "aiFindings": 1,
+      "ruleDiscovery": "UNAVAILABLE",
+      "sourceFirst": true,
+      "independentFrozenBeforeAnalysis": true,
+      "recordedScope": {
+        "baseSha": "168b1f2ca7fd202f694a94e440c856cb968d7955",
+        "headSha": "ecabff52fb952b02415adbc283f1e777986ff21a",
+        "languages": [
+          "java"
+        ],
+        "paths": [
+          "Eligibility.java"
+        ],
+        "repoRoot": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/llm-protocol-evals-verified/fixtures/java-complexity/repo",
+        "snapshotId": "ecabff52fb952b02415adbc283f1e777986ff21a"
+      },
+      "frozenIndependentFindings": [
+        {
+          "categoryId": "readability",
+          "description": "The eligibility decision nests each prerequisite inside the previous one, so a reader must follow the indentation and closing braces to discover that every flag is required and any failure returns false.",
+          "evidence": [
+            "ecabff52fb952b02415adbc283f1e777986ff21a:Eligibility.java:4-17",
+            "git-source:C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/sources.json#Eligibility.java"
+          ],
+          "findingId": "finding-c71769ec3c3b5906804becd30dbdd1cc8e706f924e40ddf44c4e03d3c60fd5f2",
+          "location": {
+            "endLine": 17,
+            "path": "Eligibility.java",
+            "startLine": 4
+          },
+          "metricRelation": "INSUFFICIENT_DATA",
+          "recommendation": "Express the prerequisite conjunction directly in one return expression, or give the combined predicate a descriptive name.",
+          "reviewId": "review-cea405fe443f4d89189d3151e555a2d5ad5a5e59803badeb691c87a39b00b974",
+          "reviewStatus": "PENDING_FEEDBACK",
+          "snapshotId": "ecabff52fb952b02415adbc283f1e777986ff21a",
+          "source": "AI_REVIEW"
+        }
+      ],
+      "finalFindings": [
+        {
+          "categoryId": "readability",
+          "description": "The eligibility decision nests each prerequisite inside the previous one, so a reader must follow the indentation and closing braces to discover that every flag is required and any failure returns false.",
+          "evidence": [
+            "ecabff52fb952b02415adbc283f1e777986ff21a:Eligibility.java:4-17",
+            "git-source:C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/sources.json#Eligibility.java",
+            "mcp-receipt:C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/java-complexity/analysis.json#/java/files/0/metrics/1 (cognitive_complexity before 0.0, after 21.0, delta 21.0; PMD 7.29.0)"
+          ],
+          "location": {
+            "endLine": 17,
+            "path": "Eligibility.java",
+            "startLine": 4
+          },
+          "metricRelation": "SUPPORTED",
+          "recommendation": "Express the prerequisite conjunction directly in one return expression, or give the combined predicate a descriptive name.",
+          "reviewId": "review-cea405fe443f4d89189d3151e555a2d5ad5a5e59803badeb691c87a39b00b974",
+          "reviewStatus": "PENDING_FEEDBACK",
+          "snapshotId": "ecabff52fb952b02415adbc283f1e777986ff21a",
+          "source": "AI_REVIEW",
+          "originFindingIds": [
+            "finding-c71769ec3c3b5906804becd30dbdd1cc8e706f924e40ddf44c4e03d3c60fd5f2"
+          ],
+          "findingId": "finding-916ee01002ea8a6241d35e1228b7c4830c1b17eb11242267d136a0b99915d680"
+        }
+      ],
+      "metricComparisons": [
+        {
+          "path": "Eligibility.java",
+          "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 7.0,
+            "reason": null
+          },
+          "delta": 6.0
+        },
+        {
+          "path": "Eligibility.java",
+          "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 21.0,
+            "reason": null
+          },
+          "delta": 21.0
+        }
+      ]
+    },
+    {
+      "scenarioId": "python-naming",
+      "status": "PASS",
+      "errors": [],
+      "executionLevel": "FORWARD_AGENT_WITH_REAL_MCP",
+      "report": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/python-naming/report.json",
+      "markdown": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/python-naming/report.md",
+      "trace": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/python-naming/trace.json",
+      "check": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/python-naming/semantic-check.json",
+      "reportSha256": "0bb0adcba41c728d366f2a52f6b6b171e0c54794f619bf816fbe3e9654d60747",
+      "reviewId": "review-79339d56c517f7807d023355dbeb62169ca26988b848f906f00fef2a250906e6",
+      "verdict": "INCOMPLETE",
+      "aiFindings": 1,
+      "ruleDiscovery": "UNAVAILABLE",
+      "sourceFirst": true,
+      "independentFrozenBeforeAnalysis": true,
+      "recordedScope": {
+        "baseSha": "fa446b021c44b41658796b349fabb360bf0f8051",
+        "headSha": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7",
+        "languages": [
+          "python"
+        ],
+        "paths": [
+          "invoice_totals.py"
+        ],
+        "repoRoot": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/llm-protocol-evals-verified/fixtures/python-naming/repo",
+        "snapshotId": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7"
+      },
+      "frozenIndependentFindings": [
+        {
+          "categoryId": "opaque_names",
+          "description": "The new a, b, x and y names erase the line-item, quantity and unit-price roles. The intermediate tuple list also removes the dictionary keys before the multiplication, requiring readers to trace positional values back to their construction.",
+          "evidence": [
+            "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7:invoice_totals.py:1-3",
+            "git-source:C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/python-naming/sources.json#invoice_totals.py"
+          ],
+          "findingId": "finding-bf3b7b9ba87b9c3f687f2cc3742c82ac78e64bc9dab6100755d3595be759d521",
+          "location": {
+            "endLine": 3,
+            "path": "invoice_totals.py",
+            "startLine": 1
+          },
+          "metricRelation": "INSUFFICIENT_DATA",
+          "recommendation": "Keep line_items and item names and multiply the explicitly named quantity and unit_price fields directly; otherwise name the tuple components quantity and unit_price.",
+          "reviewId": "review-79339d56c517f7807d023355dbeb62169ca26988b848f906f00fef2a250906e6",
+          "reviewStatus": "PENDING_FEEDBACK",
+          "snapshotId": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7",
+          "source": "AI_REVIEW"
+        }
+      ],
+      "finalFindings": [
+        {
+          "categoryId": "opaque_names",
+          "description": "The new a, b, x and y names erase the line-item, quantity and unit-price roles. The intermediate tuple list also removes the dictionary keys before the multiplication, requiring readers to trace positional values back to their construction.",
+          "evidence": [
+            "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7:invoice_totals.py:1-3",
+            "git-source:C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/python-naming/sources.json#invoice_totals.py"
+          ],
+          "findingId": "finding-bf3b7b9ba87b9c3f687f2cc3742c82ac78e64bc9dab6100755d3595be759d521",
+          "location": {
+            "endLine": 3,
+            "path": "invoice_totals.py",
+            "startLine": 1
+          },
+          "metricRelation": "UNRELATED",
+          "recommendation": "Keep line_items and item names and multiply the explicitly named quantity and unit_price fields directly; otherwise name the tuple components quantity and unit_price.",
+          "reviewId": "review-79339d56c517f7807d023355dbeb62169ca26988b848f906f00fef2a250906e6",
+          "reviewStatus": "PENDING_FEEDBACK",
+          "snapshotId": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7",
+          "source": "AI_REVIEW"
+        }
+      ],
+      "metricComparisons": [
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(line_items)",
+          "metric": "cyclomatic_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "delta": null
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(line_items)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "delta": null
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "cyclomatic_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": null
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "ENTITY_ABSENT",
+            "value": null,
+            "reason": "No matching entity in this version."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "delta": null
+        }
+      ]
+    },
+    {
+      "scenarioId": "good-code",
+      "status": "PASS",
+      "errors": [],
+      "executionLevel": "FORWARD_AGENT_WITH_REAL_MCP",
+      "report": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/good-code/report.json",
+      "markdown": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/good-code/report.md",
+      "trace": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/good-code/trace.json",
+      "check": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/good-code/semantic-check.json",
+      "reportSha256": "65752ff2100d3242a42fdd7241f57ed2ca29728f4053556dd7750262007d2c93",
+      "reviewId": "review-98d119e63d23841edd8c870a55143e0e3ea16e69a9572a78dff839d335f5db05",
+      "verdict": "INCOMPLETE",
+      "aiFindings": 0,
+      "ruleDiscovery": "UNAVAILABLE",
+      "sourceFirst": true,
+      "independentFrozenBeforeAnalysis": true,
+      "recordedScope": {
+        "baseSha": "502011d13cfd18b504ef54836833d6eeadbe38e2",
+        "headSha": "f19dda2d4a97c67f695bb9ce709273e69175cae2",
+        "languages": [
+          "java",
+          "python"
+        ],
+        "paths": [
+          "Totals.java",
+          "totals.py"
+        ],
+        "repoRoot": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/llm-protocol-evals-verified/fixtures/good-code/repo",
+        "snapshotId": "f19dda2d4a97c67f695bb9ce709273e69175cae2"
+      },
+      "frozenIndependentFindings": [],
+      "finalFindings": [],
+      "metricComparisons": [
+        {
+          "path": "Totals.java",
+          "entity": "Totals#lineTotal(long, long)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "Totals.java",
+          "entity": "Totals#lineTotal(long, long)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "delta": null
+        }
+      ]
+    },
+    {
+      "scenarioId": "partial-analysis",
+      "status": "PASS",
+      "errors": [],
+      "executionLevel": "FORWARD_AGENT_WITH_REAL_MCP",
+      "report": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/partial-analysis/report.json",
+      "markdown": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/partial-analysis/report.md",
+      "trace": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/partial-analysis/trace.json",
+      "check": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/partial-analysis/semantic-check.json",
+      "reportSha256": "e67a470a702db4f759e440e3042d65583052727db4e5ce76075c5d89fd20a28c",
+      "reviewId": "review-7df7397089ceb0b1e5e7f760f504dd48a751392bc3badf4469ca1398abacd67e",
+      "verdict": "INCOMPLETE",
+      "aiFindings": 0,
+      "ruleDiscovery": "UNAVAILABLE",
+      "sourceFirst": true,
+      "independentFrozenBeforeAnalysis": true,
+      "recordedScope": {
+        "baseSha": "4b9fb347e1cba876f97bd794c2242c186e0b0220",
+        "headSha": "eb260121f6ff5376f8dd6eb5b3dd2467a97c6c61",
+        "languages": [
+          "python"
+        ],
+        "paths": [
+          "broken.py",
+          "valid.py"
+        ],
+        "repoRoot": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/llm-protocol-evals-verified/fixtures/partial-analysis/repo",
+        "snapshotId": "eb260121f6ff5376f8dd6eb5b3dd2467a97c6c61"
+      },
+      "frozenIndependentFindings": [],
+      "finalFindings": [],
+      "metricComparisons": [
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "unsupported"
+            },
+            "status": "UNSUPPORTED",
+            "value": null,
+            "reason": "Not implemented for Python."
+          },
+          "delta": null
+        }
+      ]
+    },
+    {
+      "scenarioId": "history-sufficient",
+      "status": "PASS",
+      "errors": [],
+      "executionLevel": "SYNTHETIC_SKILL_EVAL",
+      "report": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-sufficient/assessment.json",
+      "markdown": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-sufficient/assessment.md",
+      "trace": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-sufficient/trace.json",
+      "check": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-sufficient/semantic-check.json",
+      "reportSha256": "bb8ec76e0c1ac7259118e617241f87dfdf2195585a10f04e6c453d88f7c9da8e",
+      "decision": "RULE_SUGGESTED",
+      "synthetic": true,
+      "persisted": false,
+      "syntheticAssessment": {
+        "executionLevel": "SYNTHETIC_SKILL_EVAL",
+        "synthetic": true,
+        "decision": "RULE_SUGGESTED",
+        "userFacingMessage": "",
+        "candidate": {
+          "candidateId": "candidate-96583ae73c92e3abaa815b161ad496cc4d8f689660eab63379a751b8d0e75025",
+          "categoryId": "opaque_names",
+          "status": "PROPOSED",
+          "synthetic": true,
+          "title": "Preserve domain roles in calculation names",
+          "description": "Prepared synthetic history contains distinct invoice, shipping and stock calculations whose short operand names hide domain roles; two distinct synthetic fixes confirm clearer naming was useful in these examples. In comparable calculation code, flag names that require tracing operands to rediscover quantity, price, weight, rate or stock roles.",
+          "supportingFindingIds": [
+            "demo-finding-1",
+            "demo-finding-2",
+            "demo-finding-3"
+          ],
+          "confirmedFeedbackIds": [
+            "demo-feedback-1",
+            "demo-feedback-2"
+          ],
+          "examples": [
+            {
+              "findingId": "demo-finding-1",
+              "snapshotId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "location": {
+                "path": "invoice_totals.py",
+                "startLine": 1,
+                "endLine": 3
+              },
+              "evidence": [
+                "Synthetic example: def subtotal(a): ... sum(x * y for x, y in b)"
+              ]
+            },
+            {
+              "findingId": "demo-finding-2",
+              "snapshotId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "location": {
+                "path": "Shipping.java",
+                "startLine": 2,
+                "endLine": 4
+              },
+              "evidence": [
+                "Synthetic example: long charge(long p, long q) { return p * q; }"
+              ]
+            },
+            {
+              "findingId": "demo-finding-3",
+              "snapshotId": "cccccccccccccccccccccccccccccccccccccccc",
+              "location": {
+                "path": "inventory.py",
+                "startLine": 1,
+                "endLine": 2
+              },
+              "evidence": [
+                "Synthetic example: def remaining(m, n): return m - n"
+              ]
+            }
+          ],
+          "exceptions": [
+            "Conventional loop indices whose local purpose is unambiguous.",
+            "Established mathematical notation with its meaning stated in the immediate context.",
+            "Short domain names such as x/y coordinates when those are the actual documented domain roles."
+          ],
+          "suggestedValidation": "Have a developer review candidate examples and counterexamples, then evaluate on held-out calculation changes before considering any production activation."
+        }
+      }
+    },
+    {
+      "scenarioId": "history-insufficient",
+      "status": "PASS",
+      "errors": [],
+      "executionLevel": "SYNTHETIC_SKILL_EVAL",
+      "report": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-insufficient/assessment.json",
+      "markdown": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-insufficient/assessment.md",
+      "trace": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-insufficient/trace.json",
+      "check": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/agent-evals/forward/history-insufficient/semantic-check.json",
+      "reportSha256": "13db413f3fdf944a92ba01e7a2fd0c8cffd72fb85a431c62667e8ac312133db9",
+      "decision": "NO_SUGGESTION",
+      "synthetic": true,
+      "persisted": false,
+      "syntheticAssessment": {
+        "executionLevel": "SYNTHETIC_SKILL_EVAL",
+        "synthetic": true,
+        "decision": "NO_SUGGESTION",
+        "userFacingMessage": ""
+      }
+    }
+  ],
+  "limitations": [
+    "This is an agent forward test with a test-only McpClient connected to the real JAR, not an installed-plugin Codex CLI end-to-end run. The parent is testing actual CLI separately.",
+    "An initial broad read of the allowed test transport implementation exposed checker/self-test code before reviews. It did not expose scenarios.json, expected code-fixture labels, evals/results, or current metric values. The hardcoded synthetic history self-test expectations were exposed; history outcomes are not a fully blinded evaluation.",
+    "All four source-first artifacts were frozen before any current analysis call. All code reports and both history assessments were complete before invoking the labelled semantic checker; no findings or decisions were tuned after checking.",
+    "Skills are logical stages in this agent context, not isolated model contexts. All four independent stages were completed before the first metric request.",
+    "All main verdicts are INCOMPLETE because the current JAR omits function_sloc, max_nesting_depth, parameter_count and return_count. Python cognitive_complexity is explicitly UNSUPPORTED; malformed Python additionally causes partial analysis.",
+    "The real six-tool JAR exposes no history or LSP tools. Main rule discovery is UNAVAILABLE; synthetic history was assessed offline without persistence.",
+    "The semantic checker validates supplied artifacts and labels; its PASS does not itself prove installed-plugin execution or complete MVP analysis.",
+    "Windows Java required an approved sandbox escalation to resolve disposable fixture repositories after an initial AccessDeniedException."
+  ]
+}
