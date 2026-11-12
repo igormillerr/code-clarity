@@ -3,3 +3,4 @@ __pycache__/
 /.codeclarity/
 /evals/runs/
 /.idea/
+.venv/

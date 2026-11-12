@@ -1,0 +1,2 @@
+# Install into the interpreter selected by CODECLARITY_PYTHON.
+complexipy==8.3.0

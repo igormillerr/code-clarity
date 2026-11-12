@@ -1,6 +1,7 @@
 """Exercise Python support through the executable MCP JAR."""
 
 import os
+import importlib.metadata
 from pathlib import Path
 import subprocess
 import sys
@@ -16,7 +17,7 @@ def function(name, decisions):
 def check(client, root):
     changes = client.tool("list_python_changes", {"baseRef": "main", "headRef": "HEAD"})
     files = {f.get("newPath") or f["oldPath"]: f for f in changes["files"]}
-    assert set(files) == {"example.py", "invalid.py", "renamed.py"}, files
+    assert set(files) == {"example.py", "invalid.py", "broken_existing.py", "renamed.py"}, files
     assert files["renamed.py"]["oldPath"] == "rename.py", files
     java = client.tool("list_java_changes", {"baseRef": "main", "headRef": "HEAD"})
     assert len(java["files"]) == 1 and java["files"][0]["newPath"] == "Example.java", java
@@ -34,11 +35,42 @@ def check(client, root):
         value = metrics[(entity + "(value)", "cyclomatic_complexity")]
         assert value["status"] == "COMPARED" and value["before"]["value"] == before and value["after"]["value"] == after, value
         assert value["delta"] == after - before, value
-    cognitive = metrics[("below(value)", "cognitive_complexity")]
-    assert cognitive["status"] == "UNAVAILABLE" and cognitive.get("delta") is None, cognitive
-    assert cognitive["after"]["status"] == "UNSUPPORTED", cognitive
+        cognitive = metrics[(entity + "(value)", "cognitive_complexity")]
+        assert cognitive["status"] == "COMPARED", cognitive
+        assert cognitive["before"]["value"] == before - 1 and cognitive["after"]["value"] == after - 1, cognitive
+        assert cognitive["delta"] == after - before, cognitive
+        assert cognitive["after"]["definition"]["analyzer"] == "complexipy/8.3.0", cognitive
+        sloc = metrics[(entity + "(value)", "function_sloc")]
+        assert sloc["status"] == "COMPARED" and sloc["before"]["value"] == before + 1, sloc
+        assert sloc["after"]["value"] == after + 1 and sloc["delta"] == after - before, sloc
+    for metric_id, before, after, algorithm in [
+            ("function_sloc", 2, 5, "codeclarity/python-physical-sloc/v1"),
+            ("max_nesting_depth", 0, 2, "codeclarity/python-nesting/v1"),
+            ("parameter_count", 2, 2, "codeclarity/python-parameters/include-receiver/v1"),
+            ("return_count", 0, 2, "codeclarity/python-explicit-returns/v1")]:
+        value = metrics[("structure(value, *, flag)", metric_id)]
+        assert value["status"] == "COMPARED" and value["before"]["value"] == before, value
+        assert value["after"]["value"] == after and value["delta"] == after - before, value
+        assert value["after"]["definition"]["algorithm"] == algorithm, value
+    parameters = metrics[("parameters(value, extra)", "parameter_count")]
+    assert parameters["status"] == "COMPARED" and parameters["before"]["value"] == 1, parameters
+    assert parameters["after"]["value"] == 2 and parameters["delta"] == 1, parameters
+    assert ("parameters(value)", "parameter_count") not in metrics
+    match = next(m for m in report["files"][0]["matches"] if m["key"] == "parameters")
+    assert match["status"] == "MATCHED" and match["before"][0]["signature"] == "parameters(value)", match
+    assert match["after"][0]["signature"] == "parameters(value, extra)", match
+    cognitive = metrics[("structure(value, *, flag)", "cognitive_complexity")]
+    assert cognitive["before"]["value"] == 0 and cognitive["after"]["value"] == 3 and cognitive["delta"] == 3, cognitive
     partial = client.tool("analyze_python_changes", shas)
     assert partial["status"] == "partial" and any("invalid.py" in w for w in partial["warnings"]), partial
+    added_file = next(file for file in partial["files"] if file["newPath"] == "invalid.py")
+    assert not added_file["metrics"], added_file
+    broken = next(file for file in partial["files"] if file["newPath"] == "broken_existing.py")
+    assert broken["matches"][0]["status"] == "UNVERIFIED", broken
+    assert len(broken["metrics"]) == 6, broken
+    for metric in broken["metrics"]:
+        assert metric["after"]["status"] == "ERROR" and metric.get("delta") is None, metric
+        assert metric["before"]["status"] == "AVAILABLE", metric
     context = client.tool("inspect_python_function", {"commitSha": changes["headSha"],
                                                       "path": "example.py", "line": 2})
     assert context["signature"] == "introduced(value)", context
@@ -49,8 +81,8 @@ def check(client, root):
     return shas
 
 
-def connect(jar, root, missing=False):
-    env = dict(os.environ, CODECLARITY_PYTHON="codeclarity-missing-python" if missing else sys.executable)
+def connect(jar, root, missing=False, interpreter=None):
+    env = dict(os.environ, CODECLARITY_PYTHON="codeclarity-missing-python" if missing else str(interpreter or sys.executable))
     process = subprocess.Popen(["java", "-jar", str(jar), "--repo-root", str(root)],
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8", env=env)
     client = Client(process)
@@ -70,7 +102,36 @@ def close(process):
             process.wait()
 
 
+def check_python_batches(client, root, previous_head):
+    extra = root / "batch"
+    extra.mkdir()
+    paths = []
+    for index in range(51):
+        path = f"batch/extra{index:02d}.py"
+        paths.append(path)
+        (root / path).write_text("VALUE = 1\n", encoding="utf-8")
+    # Stage only batch files: example.py deliberately contains uncommitted invalid text.
+    git(root, "add", "batch")
+    git(root, "commit", "-m", "Python batch boundary")
+    changes = client.tool("list_python_changes", {"baseRef": previous_head, "headRef": "HEAD"})
+    assert [f["newPath"] for f in changes["files"]] == paths, changes
+    shas = {key: changes[key] for key in ("baseSha", "headSha")}
+    result = client.tool("analyze_python_changes", shas, error=True)
+    assert "51" in result["content"][0]["text"] and "50" in result["content"][0]["text"], result
+    analyzed = []
+    for batch in (paths[:50], paths[50:]):
+        report = client.tool("analyze_python_changes", {**shas, "paths": batch})
+        assert report["status"] == "ok", report
+        analyzed.extend(f["newPath"] for f in report["files"])
+    assert analyzed == paths, analyzed
+
+
 def main():
+    try:
+        version = importlib.metadata.version("complexipy")
+    except importlib.metadata.PackageNotFoundError:
+        raise SystemExit("Install requirements-python.txt into this interpreter before running the Python MCP smoke test.")
+    assert version == "8.3.0", version
     jar = Path(sys.argv[1] if len(sys.argv) > 1 else "target/codeclarity-mcp.jar").resolve()
     with TemporaryDirectory(prefix="codeclarity-python-") as folder:
         root = Path(folder)
@@ -78,15 +139,21 @@ def main():
         git(root, "config", "user.name", "Python test")
         git(root, "config", "user.email", "python@example.test")
         (root / "example.py").write_text("".join(function(n, c) for n, c in
-            [("introduced", 1), ("existing", 9), ("changed", 9), ("resolved", 9), ("below", 1)]), encoding="utf-8")
+            [("introduced", 1), ("existing", 9), ("changed", 9), ("resolved", 9), ("below", 1)])
+            + "async def structure(value, *, flag=False):\n    pass\n\n"
+            + "def parameters(value):\n    return value\n", encoding="utf-8")
         (root / "rename.py").write_text("def renamed():\n    pass\n", encoding="utf-8")
+        (root / "broken_existing.py").write_text("def damaged(value):\n    return value\n", encoding="utf-8")
         git(root, "add", ".")
         git(root, "commit", "-m", "base")
         git(root, "switch", "-c", "feature")
         (root / "example.py").write_text("".join(function(n, c) for n, c in
             [("introduced", 9), ("existing", 9), ("changed", 10), ("resolved", 1), ("below", 2)]).replace(
-                "def existing(value):", "def existing(value): # touched"), encoding="utf-8")
+                "def existing(value):", "def existing(value): # touched")
+            + "async def structure(value, *, flag=False):\n    if flag:\n        if value:\n            return value\n    return None\n\n"
+            + "def parameters(value, extra=None):\n    return value\n", encoding="utf-8")
         (root / "invalid.py").write_text("def broken(:\n", encoding="utf-8")
+        (root / "broken_existing.py").write_text("def damaged(:\n", encoding="utf-8")
         (root / "Example.java").write_text("class Example {}\n", encoding="utf-8")
         git(root, "mv", "rename.py", "renamed.py")
         git(root, "add", ".")
@@ -95,17 +162,45 @@ def main():
         process, client = connect(jar, root)
         try:
             shas = check(client, root)
+            check_python_batches(client, root, shas["headSha"])
+        finally:
+            close(process)
+        without_cognitive = root / ".without-cognitive"
+        subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(without_cognitive)], check=True)
+        clean_python = without_cognitive / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        process, client = connect(jar, root, interpreter=clean_python)
+        try:
+            report = client.tool("analyze_python_changes", {**shas, "paths": ["example.py"]})
+            assert report["status"] == "partial" and any("complexipy" in w for w in report["warnings"]), report
+            values = report["files"][0]["metrics"]
+            assert values, report
+            for value in values:
+                if value["metric"] == "cognitive_complexity":
+                    assert value["status"] == "UNAVAILABLE" and value.get("delta") is None, value
+                    assert "ERROR" in (value["before"]["status"], value["after"]["status"]), value
+                else:
+                    assert all(value[side]["status"] in ("AVAILABLE", "ENTITY_ABSENT") for side in ("before", "after")), value
+                    if all(value[side]["status"] == "AVAILABLE" for side in ("before", "after")):
+                        assert value["status"] == "COMPARED", value
+            # A failed metric does not make the independent CC diagnostics unverified.
+            assert {f["status"] for f in report["files"][0]["findings"]} == {"INTRODUCED", "EXISTING", "CHANGED", "RESOLVED"}
+            context = client.tool("inspect_python_function", {"commitSha": shas["headSha"], "path": "example.py", "line": 2})
+            assert context["signature"] == "introduced(value)", context
+            assert client.tool("analyze_java_changes", shas)["status"] == "ok"
         finally:
             close(process)
         process, client = connect(jar, root, missing=True)
         try:
             report = client.tool("analyze_python_changes", {**shas, "paths": ["example.py"]})
             assert report["status"] == "partial" and any("CODECLARITY_PYTHON" in w for w in report["warnings"]), report
+            assert all(value["after"]["status"] == "ERROR" and value.get("delta") is None
+                       for value in report["files"][0]["metrics"])
             assert client.tool("analyze_java_changes", shas)["status"] == "ok"
         finally:
             close(process)
     print("Passed: Python MCP tools, language isolation, four diagnostic statuses, rename, syntax errors, "
-          "inspection, committed source and missing interpreter handling.")
+          "all six metrics and deltas, 51-file batch boundary, inspection, committed source, "
+          "missing dependency and interpreter handling.")
 
 
 if __name__ == "__main__":

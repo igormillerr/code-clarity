@@ -1,0 +1,1590 @@
+{
+  "schema": "codeclarity/python-experiments/v1",
+  "success": true,
+  "started_utc": "2026-11-12T13:13:38.759640+00:00",
+  "experiments": [
+    {
+      "id": "structure",
+      "domain": "Ordinary dictionaries with all four fields: paid/priority booleans, integer items, local/remote destination. Amounts are illustrative integer fee units.",
+      "source_sha256": {
+        "before": "b8807cfb0d59a29a9c9f8e7e1ca74d73f1134ea8690f5383d4b5e8a29c826afb",
+        "after": "c59fae2953e0c30637f5b99f868e146235f19409f935bd3ab411bbded3ff3640"
+      },
+      "behavior": [
+        {
+          "case": 1,
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 2,
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 3,
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 4,
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 5,
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 6,
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 7,
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 8,
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 9,
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 10,
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 11,
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 12,
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 13,
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 14,
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 15,
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 16,
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 17,
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 18,
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 19,
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 20,
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 21,
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 22,
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 23,
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 24,
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null,
+          "before": null,
+          "after": null,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 25,
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": 500,
+          "before": 500,
+          "after": 500,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 26,
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": 900,
+          "before": 900,
+          "after": 900,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 27,
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": 1500,
+          "before": 1500,
+          "after": 1500,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 28,
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": 1500,
+          "before": 1500,
+          "after": 1500,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 29,
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": 500,
+          "before": 500,
+          "after": 500,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 30,
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": 900,
+          "before": 900,
+          "after": 900,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 31,
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": 1500,
+          "before": 1500,
+          "after": 1500,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 32,
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": 1500,
+          "before": 1500,
+          "after": 1500,
+          "inputs_unchanged": true
+        }
+      ],
+      "metrics": [
+        {
+          "entity": "shipping_fee(order)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 5.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 5.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "shipping_fee(order)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 12.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 4.0,
+            "reason": null
+          },
+          "delta": -8.0
+        },
+        {
+          "entity": "shipping_fee(order)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 12.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 10.0,
+            "reason": null
+          },
+          "delta": -2.0
+        },
+        {
+          "entity": "shipping_fee(order)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 4.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": -3.0
+        },
+        {
+          "entity": "shipping_fee(order)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "shipping_fee(order)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 5.0,
+            "reason": null
+          },
+          "delta": 4.0
+        }
+      ],
+      "findings": [],
+      "contexts": {
+        "before": {
+          "signature": "shipping_fee(order)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 12
+          },
+          "calls": [],
+          "truncated": false
+        },
+        "after": {
+          "signature": "shipping_fee(order)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 10
+          },
+          "calls": [],
+          "truncated": false
+        }
+      }
+    },
+    {
+      "id": "naming",
+      "domain": "Nonnegative integer capacity and reserved count; positional argument order is capacity, reserved.",
+      "source_sha256": {
+        "before": "1cec640710109441fef1fb16467c04768b46dda3fa74bda6e562b33508e8a51b",
+        "after": "3317b03bd1e9826e9d1484f7b857fa79b1b56c7fb039eddd57a878f8a5931c65"
+      },
+      "behavior": [
+        {
+          "case": 1,
+          "args": [
+            0,
+            0
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 2,
+          "args": [
+            0,
+            1
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 3,
+          "args": [
+            0,
+            5
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 4,
+          "args": [
+            0,
+            25
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 5,
+          "args": [
+            0,
+            30
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 6,
+          "args": [
+            1,
+            0
+          ],
+          "expected": 1,
+          "before": 1,
+          "after": 1,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 7,
+          "args": [
+            1,
+            1
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 8,
+          "args": [
+            1,
+            5
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 9,
+          "args": [
+            1,
+            25
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 10,
+          "args": [
+            1,
+            30
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 11,
+          "args": [
+            10,
+            0
+          ],
+          "expected": 10,
+          "before": 10,
+          "after": 10,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 12,
+          "args": [
+            10,
+            1
+          ],
+          "expected": 9,
+          "before": 9,
+          "after": 9,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 13,
+          "args": [
+            10,
+            5
+          ],
+          "expected": 5,
+          "before": 5,
+          "after": 5,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 14,
+          "args": [
+            10,
+            25
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 15,
+          "args": [
+            10,
+            30
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 16,
+          "args": [
+            25,
+            0
+          ],
+          "expected": 25,
+          "before": 25,
+          "after": 25,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 17,
+          "args": [
+            25,
+            1
+          ],
+          "expected": 24,
+          "before": 24,
+          "after": 24,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 18,
+          "args": [
+            25,
+            5
+          ],
+          "expected": 20,
+          "before": 20,
+          "after": 20,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 19,
+          "args": [
+            25,
+            25
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        },
+        {
+          "case": 20,
+          "args": [
+            25,
+            30
+          ],
+          "expected": 0,
+          "before": 0,
+          "after": 0,
+          "inputs_unchanged": true
+        }
+      ],
+      "metrics": [
+        {
+          "entity": "remaining(capacity, reserved)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "remaining(capacity, reserved)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "remaining(capacity, reserved)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 5.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 5.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "remaining(capacity, reserved)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "remaining(capacity, reserved)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "remaining(capacity, reserved)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "findings": [],
+      "contexts": {
+        "before": {
+          "signature": "remaining(a, b)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 5
+          },
+          "calls": [],
+          "truncated": false
+        },
+        "after": {
+          "signature": "remaining(capacity, reserved)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 5
+          },
+          "calls": [],
+          "truncated": false
+        }
+      }
+    }
+  ],
+  "environment": {
+    "python": "3.13.1",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "complexipy": "8.3.0",
+    "jar_sha256": "075c1d4caae49464ca8cbeeb3455deaf3b598129fe1622bde4a751ba34fb0e14"
+  },
+  "manifest_sha256": "9875568a21e1f86eb36fb77212e4b3b7cb22b3339ffca4093a65f174e49a3567",
+  "ai_review": {
+    "status": "not_run",
+    "note": "Interpretation notes are authored illustrations, not an independent reviewer experiment."
+  },
+  "baseSha": "5010731dab349d7c1475b3e1df2998cc28c5d9d2",
+  "headSha": "db8a91f5e7867028b200a437796060748ed54cd2",
+  "changes": {
+    "baseSha": "5010731dab349d7c1475b3e1df2998cc28c5d9d2",
+    "headSha": "db8a91f5e7867028b200a437796060748ed54cd2",
+    "files": [
+      {
+        "oldPath": "naming.py",
+        "newPath": "naming.py",
+        "baseLines": [
+          {
+            "startLine": 1,
+            "endLine": 3
+          },
+          {
+            "startLine": 5,
+            "endLine": 5
+          }
+        ],
+        "headLines": [
+          {
+            "startLine": 1,
+            "endLine": 3
+          },
+          {
+            "startLine": 5,
+            "endLine": 5
+          }
+        ]
+      },
+      {
+        "oldPath": "structure.py",
+        "newPath": "structure.py",
+        "baseLines": [
+          {
+            "startLine": 2,
+            "endLine": 12
+          }
+        ],
+        "headLines": [
+          {
+            "startLine": 2,
+            "endLine": 10
+          }
+        ]
+      }
+    ]
+  },
+  "mcp_report": {
+    "baseSha": "5010731dab349d7c1475b3e1df2998cc28c5d9d2",
+    "headSha": "db8a91f5e7867028b200a437796060748ed54cd2",
+    "status": "ok",
+    "files": [
+      {
+        "oldPath": "naming.py",
+        "newPath": "naming.py",
+        "changedMethods": [
+          "remaining(capacity, reserved)"
+        ],
+        "findings": [],
+        "metrics": [
+          {
+            "entity": "remaining(capacity, reserved)",
+            "metric": "cyclomatic_complexity",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "cyclomatic_complexity",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-cyclo/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 2.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "cyclomatic_complexity",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-cyclo/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 2.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "remaining(capacity, reserved)",
+            "metric": "cognitive_complexity",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "cognitive_complexity",
+                "language": "python",
+                "analyzer": "complexipy/8.3.0",
+                "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "cognitive_complexity",
+                "language": "python",
+                "analyzer": "complexipy/8.3.0",
+                "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "remaining(capacity, reserved)",
+            "metric": "function_sloc",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "function_sloc",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-physical-sloc/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 5.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "function_sloc",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-physical-sloc/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 5.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "remaining(capacity, reserved)",
+            "metric": "max_nesting_depth",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "max_nesting_depth",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-nesting/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "max_nesting_depth",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-nesting/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "remaining(capacity, reserved)",
+            "metric": "parameter_count",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "parameter_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 2.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "parameter_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 2.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "remaining(capacity, reserved)",
+            "metric": "return_count",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "return_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-explicit-returns/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 2.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "return_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-explicit-returns/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 2.0,
+              "reason": null
+            },
+            "delta": 0.0
+          }
+        ],
+        "matches": [
+          {
+            "key": "remaining",
+            "status": "MATCHED",
+            "before": [
+              {
+                "signature": "remaining(a, b)",
+                "lines": {
+                  "startLine": 1,
+                  "endLine": 5
+                },
+                "matchingKey": "remaining",
+                "matchingAmbiguous": false
+              }
+            ],
+            "after": [
+              {
+                "signature": "remaining(capacity, reserved)",
+                "lines": {
+                  "startLine": 1,
+                  "endLine": 5
+                },
+                "matchingKey": "remaining",
+                "matchingAmbiguous": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "oldPath": "structure.py",
+        "newPath": "structure.py",
+        "changedMethods": [
+          "shipping_fee(order)"
+        ],
+        "findings": [],
+        "metrics": [
+          {
+            "entity": "shipping_fee(order)",
+            "metric": "cyclomatic_complexity",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "cyclomatic_complexity",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-cyclo/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 5.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "cyclomatic_complexity",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-cyclo/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 5.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "shipping_fee(order)",
+            "metric": "cognitive_complexity",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "cognitive_complexity",
+                "language": "python",
+                "analyzer": "complexipy/8.3.0",
+                "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+              },
+              "status": "AVAILABLE",
+              "value": 12.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "cognitive_complexity",
+                "language": "python",
+                "analyzer": "complexipy/8.3.0",
+                "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+              },
+              "status": "AVAILABLE",
+              "value": 4.0,
+              "reason": null
+            },
+            "delta": -8.0
+          },
+          {
+            "entity": "shipping_fee(order)",
+            "metric": "function_sloc",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "function_sloc",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-physical-sloc/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 12.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "function_sloc",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-physical-sloc/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 10.0,
+              "reason": null
+            },
+            "delta": -2.0
+          },
+          {
+            "entity": "shipping_fee(order)",
+            "metric": "max_nesting_depth",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "max_nesting_depth",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-nesting/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 4.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "max_nesting_depth",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-nesting/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "delta": -3.0
+          },
+          {
+            "entity": "shipping_fee(order)",
+            "metric": "parameter_count",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "parameter_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "parameter_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "delta": 0.0
+          },
+          {
+            "entity": "shipping_fee(order)",
+            "metric": "return_count",
+            "status": "COMPARED",
+            "before": {
+              "definition": {
+                "id": "return_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-explicit-returns/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 1.0,
+              "reason": null
+            },
+            "after": {
+              "definition": {
+                "id": "return_count",
+                "language": "python",
+                "analyzer": "codeclarity-python-ast/1",
+                "algorithm": "codeclarity/python-explicit-returns/v1"
+              },
+              "status": "AVAILABLE",
+              "value": 5.0,
+              "reason": null
+            },
+            "delta": 4.0
+          }
+        ],
+        "matches": [
+          {
+            "key": "shipping_fee",
+            "status": "MATCHED",
+            "before": [
+              {
+                "signature": "shipping_fee(order)",
+                "lines": {
+                  "startLine": 1,
+                  "endLine": 12
+                },
+                "matchingKey": "shipping_fee",
+                "matchingAmbiguous": false
+              }
+            ],
+            "after": [
+              {
+                "signature": "shipping_fee(order)",
+                "lines": {
+                  "startLine": 1,
+                  "endLine": 10
+                },
+                "matchingKey": "shipping_fee",
+                "matchingAmbiguous": false
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "warnings": []
+  },
+  "identical_analysis_runs": 2,
+  "finished_utc": "2026-11-12T13:13:44.347219+00:00"
+}

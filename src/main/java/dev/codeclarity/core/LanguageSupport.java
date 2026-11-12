@@ -7,7 +7,7 @@ import dev.codeclarity.core.model.MetricDefinition;
 import dev.codeclarity.core.model.MetricMeasurement;
 import java.util.List;
 
-/** Language tools and AST objects must stay behind this boundary. */
+/** Language tools, AST objects and the meaning of entity matching keys stay behind this boundary. */
 public interface LanguageSupport {
     String languageId();
     boolean supports(String path);
@@ -15,6 +15,7 @@ public interface LanguageSupport {
     EntityContext inspect(String path, String source, int line);
     default List<MetricDefinition> metricDefinitions() { return List.of(); }
 
+    /** complete is entity/finding coverage; a failed metric uses its own status and warnings. */
     record AnalysisResult(List<SourceEntity> entities, List<Finding> findings,
                           boolean complete, List<String> warnings, List<MetricMeasurement> metrics) {
         public AnalysisResult(List<SourceEntity> entities, List<Finding> findings,
