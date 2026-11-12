@@ -17,12 +17,16 @@ from tempfile import TemporaryDirectory
 from threading import Thread
 import time
 
-from smoke_test import Client
+from smoke_test import Client, git
 
 PROJECT = Path(__file__).resolve().parents[1]
 METRICS = {"cyclomatic_complexity", "cognitive_complexity", "function_sloc",
            "max_nesting_depth", "parameter_count", "return_count"}
-CASES = ("file-selector", "environment-precedence", "server-default", "missing-jar")
+CASES = ("file-selector", "environment-precedence", "server-default", "missing-jar", "jdt-selector-contract")
+TOOLS = {"get_changes", "analyze_changes", "get_symbol_context", "inspect_symbol_ast",
+         "get_review_history", "update_review_history", "propose_rule_candidate",
+         "get_symbol_definition", "find_symbol_references", "list_java_changes", "analyze_java_changes",
+         "inspect_java_method", "list_python_changes", "analyze_python_changes", "inspect_python_function"}
 
 
 def require(value, message):
@@ -95,9 +99,58 @@ def close_tree(process, children):
     return return_code
 
 
-def execute(case, repo, python, output):
+def jdt_selector_contract():
+    """Check forwarding at the real child-process boundary, without claiming JDT navigation."""
     launcher = PROJECT / "plugin/scripts/LaunchMcp.java"
-    jar = PROJECT / "plugin/server/codeclarity-mcp.jar"
+    records = []
+    with TemporaryDirectory(prefix="codeclarity-launcher-selector-") as directory:
+        root = Path(directory)
+        classes = root / "classes"
+        classes.mkdir()
+        source = root / "LauncherEnvironmentProbe.java"
+        source.write_text('''
+public class LauncherEnvironmentProbe {
+    public static void main(String[] args) {
+        var output = new java.io.PrintStream(System.out, true, java.nio.charset.StandardCharsets.UTF_8);
+        output.println(System.getenv("CODECLARITY_JDTLS_HOME"));
+        output.println(System.getenv("CODECLARITY_JDTLS_JAVA"));
+    }
+}
+''', encoding="utf-8")
+        subprocess.run(["javac", "--release", "21", "-encoding", "UTF-8", "-d", str(classes), str(source)],
+                       check=True, capture_output=True, timeout=30)
+        probe = root / "probe.jar"
+        subprocess.run(["jar", "--create", "--file", str(probe), "--main-class", "LauncherEnvironmentProbe",
+                        "-C", str(classes), "."], check=True, capture_output=True, timeout=30)
+        for mode in ("file", "environment", "invalid", "oversized"):
+            home = root / mode
+            config = home / ".codeclarity"
+            config.mkdir(parents=True)
+            selected = [str(root / "JDT LS Ω"), str(root / "custom java.exe")]
+            environment = dict(os.environ, JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8")
+            for variable, name, value in zip(("CODECLARITY_JDTLS_HOME", "CODECLARITY_JDTLS_JAVA"),
+                                             ("jdtls-home.txt", "jdtls-java.txt"), selected):
+                environment.pop(variable, None)
+                text = "\ufeff" + value + "\n" if mode == "file" else "relative/path" if mode in ("invalid", "environment") else "x" * 8193
+                (config / name).write_text(text, encoding="utf-8")
+                if mode == "environment":
+                    environment[variable] = value
+            result = subprocess.run(["java", "-Duser.home=" + str(home), str(launcher), str(probe)],
+                                    env=environment, capture_output=True, text=True, encoding="utf-8", timeout=45)
+            require(result.returncode == 0, result.stdout + result.stderr)
+            expected = selected if mode in ("file", "environment") else ["null", "null"]
+            require(result.stdout.splitlines() == expected, "JDT selection was not forwarded to the child: " + mode)
+            warnings = "invalid CODECLARITY_JDTLS_HOME configuration" in result.stderr and "invalid CODECLARITY_JDTLS_JAVA configuration" in result.stderr
+            require(warnings == (mode in ("invalid", "oversized")), "Wrong JDT configuration diagnostics: " + mode)
+            records.append({"mode": mode, "selected": expected, "stderr": result.stderr})
+    return {"case": "jdt-selector-contract", "status": "PASS", "executionLevel": "LAUNCHER_CHILD_ENVIRONMENT",
+            "realJdtLs": "NOT_RUN", "codexEndToEnd": False, "checks": records}
+
+
+def execute(case, repo, python, output, jar):
+    if case == "jdt-selector-contract":
+        return jdt_selector_contract()
+    launcher = PROJECT / "plugin/scripts/LaunchMcp.java"
     record = {"case": case, "status": "FAIL", "codexEndToEnd": False}
     environment = dict(os.environ)
     environment.pop("CODECLARITY_PYTHON", None)
@@ -141,7 +194,7 @@ def execute(case, repo, python, output):
             client.send("notifications/initialized", {}, notification=True)
             catalog = client.send("tools/list")
             tools = sorted(tool["name"] for tool in catalog["tools"])
-            require(len(tools) == 6 and "analyze_python_changes" in tools and "analyze_java_changes" in tools,
+            require(set(tools) == TOOLS,
                     "Expected both languages in actual tool discovery")
             child_records = child_processes(process.pid)
             children = [item["ProcessId"] for item in child_records]
@@ -197,31 +250,47 @@ def execute(case, repo, python, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repo", type=Path, default=PROJECT / ".codeclarity/python-integration-naming/repo")
-    parser.add_argument("--python", type=Path, default=PROJECT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python"))
+    parser.add_argument("--repo", type=Path, help="Optional existing fixture; by default create an isolated naming fixture")
+    parser.add_argument("--python", type=Path, default=Path(sys.executable))
+    parser.add_argument("--jar", type=Path, default=PROJECT / "plugin/server/codeclarity-mcp.jar")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--case", choices=CASES, action="append", dest="cases")
     args = parser.parse_args()
-    require(args.repo.resolve().is_dir(), "Prepare the python-naming Git fixture before this launch test")
     require(args.python.resolve().is_file(), "Configured Python venv is missing")
+    require(args.jar.resolve().is_file(), "Supplied MCP JAR is missing")
     require(shutil.which("java"), "Java 21+ must be in PATH")
     output = args.output or PROJECT / ".codeclarity/launcher-tests" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     require(not output.exists() or not any(output.iterdir()), "Use a new or empty output directory")
     output.mkdir(parents=True, exist_ok=True)
     results = []
-    for case in args.cases or CASES:
-        try:
-            record = execute(case, args.repo.resolve(), args.python.resolve(), output)
-        except Exception as error:
-            record = {"case": case, "status": "FAIL", "error": f"{type(error).__name__}: {error}"}
-        (output / (case + ".json")).write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        results.append(record)
-        print(f"{record['status']} {case}" + (": " + record["error"] if "error" in record else ""), flush=True)
+    with TemporaryDirectory(prefix="codeclarity-launcher-fixture-") as directory:
+        repo = args.repo.resolve() if args.repo else Path(directory)
+        if args.repo:
+            require(repo.is_dir(), "Supplied Git fixture is missing")
+        else:
+            git(repo, "init", "-b", "main")
+            git(repo, "config", "user.name", "Launcher test")
+            git(repo, "config", "user.email", "launcher@example.test")
+            for branch, source in (("main", "def compute(value):\n    return value\n"),
+                                    ("feature", "def compute(value):\n    result = value\n    return result\n")):
+                if branch != "main":
+                    git(repo, "switch", "-c", branch)
+                (repo / "naming.py").write_text(source, encoding="utf-8")
+                git(repo, "add", ".")
+                git(repo, "commit", "-m", branch)
+        for case in args.cases or CASES:
+            try:
+                record = execute(case, repo, args.python.resolve(), output, args.jar.resolve())
+            except Exception as error:
+                record = {"case": case, "status": "FAIL", "error": f"{type(error).__name__}: {error}"}
+            (output / (case + ".json")).write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            results.append(record)
+            print(f"{record['status']} {case}" + (": " + record["error"] if "error" in record else ""), flush=True)
     summary = {"schemaVersion": 1, "executionLevel": "LAUNCHER_REAL_MCP", "codexEndToEnd": False,
                "success": all(record["status"] == "PASS" for record in results),
-               "jarSha256": hashlib.sha256((PROJECT / "plugin/server/codeclarity-mcp.jar").read_bytes()).hexdigest(),
+               "jarSha256": hashlib.sha256(args.jar.resolve().read_bytes()).hexdigest(),
                "launcherSha256": hashlib.sha256((PROJECT / "plugin/scripts/LaunchMcp.java").read_bytes()).hexdigest(),
-               "repo": str(args.repo.resolve()), "results": results}
+               "repo": str(repo), "fixture": "EXISTING" if args.repo else "DISPOSABLE_SYNTHETIC", "results": results}
     (output / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("Report: " + str(output / "summary.json"), flush=True)
     return 0 if summary["success"] else 1

@@ -48,6 +48,8 @@ public final class LaunchMcp {
         if (selected != null && !selected.isBlank()) {
             builder.environment().put("CODECLARITY_PYTHON", selected);
         }
+        forwardOptionalPath(builder, home, "CODECLARITY_JDTLS_HOME", "jdtls-home.txt");
+        forwardOptionalPath(builder, home, "CODECLARITY_JDTLS_JAVA", "jdtls-java.txt");
 
         Process process = builder.start();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -67,6 +69,25 @@ public final class LaunchMcp {
             process.destroyForcibly();
             Thread.currentThread().interrupt();
             throw error;
+        }
+    }
+
+    private static void forwardOptionalPath(ProcessBuilder builder, String home, String variable, String fileName) {
+        String selected = System.getenv(variable);
+        if (selected != null && !selected.isBlank()) { return; }
+        Path config = Path.of(home, ".codeclarity", fileName);
+        try {
+            if (!Files.isRegularFile(config)) { return; }
+            if (Files.size(config) > 8192) { throw new IOException(fileName + " exceeds 8192 bytes"); }
+            selected = Files.readString(config, StandardCharsets.UTF_8).replaceFirst("^\\uFEFF", "").strip();
+            if (selected.isBlank() || selected.indexOf('\n') >= 0 || selected.indexOf('\r') >= 0
+                    || !Path.of(selected).isAbsolute()) {
+                throw new IOException(fileName + " must contain one absolute path");
+            }
+            builder.environment().put(variable, selected);
+        } catch (IOException | RuntimeException error) {
+            System.err.println("CodeClarity launcher: invalid " + variable + " configuration; using the server default. "
+                    + error.getMessage());
         }
     }
 }

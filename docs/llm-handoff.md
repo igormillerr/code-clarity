@@ -1,108 +1,71 @@
-# Task 03 — границы ответственности и интеграция
+# CodeClarity — передача объединённого MVP
 
-Ветка: `codex/llm-workflow`. Первоначальная LLM-часть основана на
-`feature/python ec6a3ed`; Python-интеграция `dc9d957` принята merge-коммитом
-`a922e40`. Пакет плагина — `0.3.2`.
+Ветка: `codex/llm-workflow`. Пакет 0.4.0, сервер 0.1.7. Источники:
+Python `dc9d957`, LLM workflow `8f612ac`, Java Core и исправления `afe8b08`.
 
-## Разделение файлов
+## Границы ответственности
 
-| Владелец | Область |
+| Участник | Область |
 |---|---|
-| Python Developer (Task 01) | Python Analyzer, шесть Python-метрик, зависимости, Pyright и analyzer tests |
-| Java Core Developer (Task 02) | Общие модели/сравнения, Java-метрики, MCP Tools, JSON storage/feedback, JAR, LSP |
-| Java / LLM Engineer (Task 03) | Plugin packaging, `plugin/skills/**`, `plugin/contracts/**`, `plugin/scripts/**`, `scripts/llm_*`, `evals/**`, LLM docs, демо и презентация |
+| Python Developer | Python worker, шесть метрик, complexipy 8.3.0, алгоритмы и эталоны |
+| Java Core Developer | Git snapshots, маршрутизация, matching, Java-метрики, MCP, JSON storage/feedback, LSP |
+| Java / LLM Engineer | Plugin packaging, четыре Skills, отчёт, correlation, Rule Discovery, Evals и демонстрация |
 
-Из Python-ветки приняты её анализатор, JAR, тесты и изменения общего matching
-без дополнительной переработки предметной логики. Продолжение изменений общих
-Core-файлов нужно координировать с участником 2. Java/Python-файлы в `evals/fixtures`
-служат входами LLM Evals; они не заменяют анализаторы или их unit-тесты.
-Имена шести существующих языковых MCP Tools и диагностический `core.model.Finding`
-сохранены.
+Объединённая версия сохраняет обе реализации; изменения общего контракта
+сопровождаются тестами. Приёмка продукта описана в [статусе](llm-status.md).
 
-## Получено от Python-разработчика
+## Переданные возможности
 
-- Все шесть численных Python-метрик; CogC через строго `complexipy==8.3.0`.
-- [Спецификация семантики](PYTHON_METRICS_SPEC.md), эталоны и единый `scripts/check.py`.
-- Сопоставление Python по qualified name без параметров; изменение параметров
-  может сохранить пару и корректные delta.
-- `files[].matches` с исходными сущностями и диапазонами обеих версий.
-- [Два демонстрационных эксперимента](../experiments/python_readability/README.md)
-  с проверкой поведения и фактическими MCP-измерениями.
+- По шесть Java/Python-метрик с определениями алгоритмов и статусами доступности.
+- Смешанные get_changes/analyze_changes и committed get_symbol_context.
+- Python matchingKey без параметров; сохранение files[].matches в entityMatches.
+- matchingAmbiguous и matchingWarning: неоднозначность и неподтверждённую
+  идентичность нельзя превращать в уверенную пару или delta.
+- coverage.base/head: изменённые строки вне поддерживаемых сущностей видны явно.
+- get_review_history/update_review_history: immutable reviews, категории,
+  производная статистика и атомарная идемпотентная запись.
+- propose_rule_candidate: только PROPOSED, не менее трёх source/snapshot
+  occurrences и двух последних операторских FIXED разных повторений.
+- Необязательные WORKTREE definition/references через JDT LS; отсутствие LSP
+  не убирает результаты AST/метрик. Контекст WORKTREE не приписывается другому SHA.
 
-Python worker использует выбранный `CODECLARITY_PYTHON`; версия зависимости
-должна быть установлена в этот интерпретатор. Ошибка CogC сохраняет остальные
-пять измерений. `AnalysisResult.complete` относится к AST/entities, а доступность
-метрик определяется их статусами и warnings. Текстовые интерпретации экспериментов
-не следует выдавать за результаты независимого AI-review.
+## Отчёт и порядок работы
 
-Java launcher `plugin/scripts/LaunchMcp.java` относится к упаковке LLM-части.
-Он выбирает переданную переменную `CODECLARITY_PYTHON` или домашний
-`~/.codeclarity/python-path.txt` и явно задаёт selector дочернему Core-процессу.
-Без selector сохраняется стандартный Python из PATH. Файловый selector
-предусмотрен для хоста, который фильтрует пользовательские переменные;
-алгоритмы и поставленный JAR не перерабатываются. Настройка файла и порядок приоритетов — в
-[llm-setup.md](llm-setup.md).
+[review.schema.json](../plugin/contracts/review.schema.json) описывает AI-отчёт.
+Это отдельная модель от PMD Finding(rule,line,column,message).
+Независимый анализ читает оба Git-снимка до измерений и фиксируется неизменным
+артефактом. Его покрытие — SNAPSHOT_ENTITY; итоговое — MATCH_GROUP из Core.
+Различие этих counts не требует переписывать независимый результат.
 
-## Контракты LLM → Core
+Стороны метрик, определения и delta сохраняются из Core. Недоступность или
+неподтверждённая идентичность остаются явными; значения не восстанавливаются
+вычитанием в Skill. Основной отчёт сохраняется до discovery.
 
-Статус предложений истории — **PENDING_TEAM_REVIEW**; интеграция Python сама по
-себе не означает согласование участником 2 модели хранения и feedback.
+Для истории создаётся стабильный review.history-input.json с NOT_RUN и теми же
+reviewId/findingId. update_review_history принимает review/categories, но не
+feedback или клиентские счётчики. Исход discovery хранится отдельно; итоговый
+report.final.json/.md создаётся новым артефактом. Replay не обновляет immutable
+находки и не удваивает статистику.
 
-- [Finding и полный отчёт](../plugin/contracts/review.schema.json).
-- [History/feedback/ruleCandidate](../plugin/contracts/history.schema.json).
-- [Текущие и целевые MCP-вызовы](../plugin/contracts/mcp-compatibility.md).
+FIXED/REJECTED записываются только по явному решению оператора через локальную
+CLI-команду с автором и evidence. Исчезновение диагностики или модельное
+confirmed:true не устанавливают FIXED. Предложения правил не активируются.
+Кандидаты ссылаются на известные findings/feedback и проверяются Core.
 
-AI Finding содержит review/finding IDs, snapshot, source/category, location,
-evidence, description/recommendation, metricRelation и
-`reviewStatus: PENDING_FEEDBACK`. Это отдельный контракт от PMD-диагностики
-`Finding(rule,line,column,message)`. При объединении `originFindingIds` сохраняет
-связь с неизменным независимым артефактом. Модель не подтверждает собственный FIXED.
+Точные входы и ограничения:
+[MCP compatibility](../plugin/contracts/mcp-compatibility.md),
+[history update](../plugin/contracts/history-update.schema.json),
+[persistent history](../plugin/contracts/review-history.schema.json),
+[rule candidate](../plugin/contracts/rule-candidate.schema.json).
 
-Review ID детерминирован по repoRoot + base/head/snapshot + languages/paths;
-Finding ID — по review/snapshot/category/location/evidence. Время не участвует в ID.
-Текущий repoRoot намеренно различает локальные копии проекта; переход к отдельному
-repoId требует отдельного согласования.
+## Runtime и проверка
 
-Стороны метрик и delta сохраняются ровно из Core, с analyzer/algorithm definitions.
-Пропущенный ID не получает вымышленного MetricValue или версии: его отсутствие
-отмечается skip и MISSING в Markdown. Core matching сохраняется в `entityMatches`,
-без повторной реализации сопоставления в LLM.
+Нужны JDK 21+, Git и Python с requirements-llm-dev.txt. Плагин использует
+LaunchMcp.java и передаёт выбранный Python дочернему JAR; настройки описаны в
+[llm-setup.md](llm-setup.md). Maven verify собирает и проверяет общую версию.
+JAR в plugin/server должен совпадать с проверенным target JAR по SHA-256.
 
-Независимое покрытие использует `SNAPSHOT_ENTITY`: рассматриваются исходные
-сущности обеих версий. Итоговое покрытие использует `MATCH_GROUP`: группы Core
-могут объединять разные before/after-сигнатуры. Различие counts не требует
-перезаписи frozen независимого результата. Для старого ответа без matches
-допускается явно обозначенный `LEGACY_METRIC_ENTITY`; неизвестные counts остаются
-null и требуют INCOMPLETE.
-
-## Что ещё нужно от Java Core
-
-1. Четыре структурные Java-метрики и их определения. Сейчас Java возвращает
-   CC/CogC; Python-only scope уже не должен автоматически считаться неполным.
-2. Discovery schemas универсальных Tools, если они появятся. Совместимость с
-   шестью текущими языковыми Tools сохраняется.
-3. `get_review_history`, `append_review_result`, `record_feedback`,
-   `propose_rule_candidate` или документированные эквиваленты: атомарность,
-   конкурентная запись, идемпотентность и проверка provenance feedback остаются
-   обязанностью Core. Строка модели `confirmedBy` не является подтверждением.
-4. Опциональный LSP-контекст. Его отсутствие не блокирует полный AST/metric review.
-
-Без history Tools обычное ревью записывает машинный UNAVAILABLE и сохраняет
-основной отчёт. Прямой записи `.codeclarity/review-history.json` в Skills нет.
-Подготовленная синтетическая история проверяет решение Skill, не persistence.
-
-После поставки Core: повторить протокол/Evals, проверить реальные append/read-back,
-повторный reviewId без дублей и новую/повторную заявку правила. Основной review
-и pre-discovery history payload остаются неизменными; исход discovery хранится
-отдельно, а итоговый display report создаётся новым артефактом.
-
-## Готовность и доказательства
-
-Техническая приёмка Python-ветки выполнена отдельно от LLM-интеграции. Текущие
-проверки плагина, модели и артефактов перечислены в [llm-status.md](llm-status.md).
-Новые результаты не перезаписывают исторические `evals/results/*.json` от версии
-0.2.0. Полнота ревью определяется данными конкретного запуска, а не старым
-baseline или одним serverInfo.
-
-Для полного Task 03 остаются интеграция history/Core и совместная репетиция.
-Согласование с людьми и репетиция не объявляются выполненными автоматически.
+Исторические receipts 0.2.0/0.3.2 и самостоятельной Java-ветки сохранены.
+Новые результаты объединения имеют отдельные имена. Внешнее согласование команды,
+реальная Windows JDT LS-навигация и установленный плагин не объявляются
+проверенными по одному успешному локальному MCP-тесту.

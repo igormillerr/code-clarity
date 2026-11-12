@@ -120,7 +120,9 @@ def check_python_batches(client, root, previous_head):
     assert "51" in result["content"][0]["text"] and "50" in result["content"][0]["text"], result
     analyzed = []
     for batch in (paths[:50], paths[50:]):
-        report = client.tool("analyze_python_changes", {**shas, "paths": batch})
+        # Each committed Python file starts a real worker. The maximum-size batch
+        # needs a larger bounded response budget under the parallel Windows suite.
+        report = client.tool("analyze_python_changes", {**shas, "paths": batch}, timeout=120)
         assert report["status"] == "ok", report
         analyzed.extend(f["newPath"] for f in report["files"])
     assert analyzed == paths, analyzed

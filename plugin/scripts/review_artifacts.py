@@ -142,6 +142,9 @@ def check_entity_matches(matches):
                 require(isinstance(entity.get("signature"), str) and entity["signature"], "Source entity signature missing")
                 require(entity.get("matchingKey") == match["key"], "Source entity matchingKey differs from group")
                 require(type(entity.get("matchingAmbiguous")) is bool, "Source entity ambiguity status missing")
+                warning = entity.get("matchingWarning")
+                require(warning is None or isinstance(warning, str) and warning.strip(),
+                        "Invalid source entity matching warning")
                 lines = entity.get("lines", {})
                 start, end = lines.get("startLine"), lines.get("endLine")
                 require(type(start) is int and type(end) is int and 0 < start <= end,
@@ -150,6 +153,8 @@ def check_entity_matches(matches):
             require(len(before) == len(after) == 1, "MATCHED requires one entity on each side")
             require(not before[0]["matchingAmbiguous"] and not after[0]["matchingAmbiguous"],
                     "MATCHED cannot assert an ambiguous pair")
+            require(not before[0].get("matchingWarning") and not after[0].get("matchingWarning"),
+                    "MATCHED cannot assert an unverified identity")
         elif match["status"] == "ADDED":
             require(not before and len(after) == 1, "ADDED requires only a head entity")
         elif match["status"] == "REMOVED":
@@ -161,6 +166,36 @@ def check_entity_matches(matches):
         require((match["path"], display) not in displays, "Entity match display identity is ambiguous")
         displays[(match["path"], display)] = match
     return displays, incomplete
+
+
+def check_file_coverage(files, paths):
+    """Retain Core's changed-line coverage, separately from entity-count coverage."""
+    require(isinstance(files, list), "fileCoverage must be an array")
+    seen, complete = set(), True
+    for file in files:
+        path = file.get("path")
+        safe_path(path)
+        require(path in paths and path not in seen, "Invalid or duplicate file coverage path")
+        seen.add(path)
+        for key in ("oldPath", "newPath"):
+            require(key in file, "File coverage missing " + key)
+            if file[key] is not None:
+                safe_path(file[key])
+        require(path == (file["newPath"] or file["oldPath"]), "File coverage owning path mismatch")
+        for key in ("base", "head"):
+            side = file.get(key, {})
+            status = side.get("status")
+            require(status in ("COMPLETE", "OUTSIDE_SUPPORTED_ENTITIES", "UNKNOWN"), "Invalid Core file coverage status")
+            ranges = side.get("outsideEntityLines")
+            require(isinstance(ranges, list), "Core outside-entity ranges missing")
+            for span in ranges:
+                start, end = span.get("startLine"), span.get("endLine")
+                require(type(start) is int and type(end) is int and 0 < start <= end, "Invalid outside-entity line range")
+            require((not ranges) if status == "COMPLETE" else isinstance(side.get("reason"), str) and side["reason"].strip(),
+                    "Core file coverage reason/ranges contradict status")
+            require(status != "OUTSIDE_SUPPORTED_ENTITIES" or ranges, "Outside-entity coverage needs line ranges")
+            complete = complete and status == "COMPLETE"
+    return complete and seen == set(paths)
 
 
 def validate(report, independent=None):
@@ -189,6 +224,7 @@ def validate(report, independent=None):
     require(report["coverage"]["filesExpected"] == len(scope["paths"]),
             "Report coverage denominator differs from selected paths")
     independent_complete = stage["status"] == "COMPLETE"
+    file_coverage_complete = check_file_coverage(report["fileCoverage"], scope["paths"]) if "fileCoverage" in report else True
     matches, matches_incomplete = check_entity_matches(report["entityMatches"]) if "entityMatches" in report else ({}, False)
     coverage_unit = report["coverage"].get("entityUnit")
     require(coverage_unit != "SNAPSHOT_ENTITY", "Final coverage must describe match groups or legacy metric entities")
@@ -226,12 +262,14 @@ def validate(report, independent=None):
                 metrics_complete = False
         both = before["status"] == after["status"] == "AVAILABLE"
         compatible = before["definition"] == after["definition"]
-        expected = "COMPARED" if both and compatible else "INCOMPATIBLE" if both else "UNAVAILABLE"
+        match = matches.get(key[:2])
+        unverified = match is not None and match["status"] in ("UNVERIFIED", "AMBIGUOUS")
+        expected = "UNAVAILABLE" if unverified else "COMPARED" if both and compatible else "INCOMPATIBLE" if both else "UNAVAILABLE"
         require(metric["status"] == expected, "Invalid comparison status")
         delta = metric.get("delta")
         require(delta == after["value"] - before["value"] if expected == "COMPARED" else delta is None,
                 "Delta contradicts Core metric sides")
-        if expected == "INCOMPATIBLE":
+        if expected == "INCOMPATIBLE" or unverified:
             metrics_complete = False
     metrics_complete = metrics_complete and all(set(METRICS) == values for values in groups.values())
     if "entityMatches" in report:
@@ -254,7 +292,8 @@ def validate(report, independent=None):
     verdict = report["verdict"]
     require(verdict in ("PASS", "WARN", "INCOMPLETE", "NO_CHANGES"), "Invalid verdict")
     if verdict in ("PASS", "WARN"):
-        require(covered and independent_complete and metrics_complete, "Complete verdict contradicts missing review/metrics coverage")
+        require(covered and independent_complete and metrics_complete and file_coverage_complete,
+                "Complete verdict contradicts missing review/metrics coverage")
     if verdict == "PASS":
         require(not report["findings"], "PASS contradicts findings")
     if verdict == "NO_CHANGES":
@@ -283,6 +322,12 @@ def render(report):
              "Selected paths: " + (", ".join(scope["paths"]) or "none"),
              "Independent coverage: " + json.dumps(report["independentReview"]["coverage"], ensure_ascii=False),
              "Analysis coverage: " + json.dumps(report["coverage"], ensure_ascii=False)]
+    if "fileCoverage" in report:
+        lines += ["", "Core changed-line coverage:", ""]
+        for file in report["fileCoverage"]:
+            for side in ("base", "head"):
+                value = file[side]
+                lines.append("- " + file["path"] + " (" + side + "): " + json.dumps(value, ensure_ascii=False))
     if "entityMatches" in report:
         lines += ["", "Core entity matches:", "", "| Group | Status | Base source | Head source |", "|---|---|---|---|"]
         for match in report["entityMatches"]:
@@ -292,20 +337,20 @@ def render(report):
             lines.append("| " + " | ".join(map(cell, [match["path"] + " / " + match["key"], match["status"],
                          source_entities(match["before"], match["oldPath"], scope["baseSha"]),
                          source_entities(match["after"], match["newPath"], scope["headSha"])])) + " |")
-    lines += ["", "| File / entity | Metric | Before | After | Delta |", "|---|---|---|---|---|"]
+    lines += ["", "| File / entity | Metric | Before | After | Delta | Comparison |", "|---|---|---|---|---|---|"]
     for entry in report["metrics"]:
         def measured(side):
             return str(side["value"]) if side["status"] == "AVAILABLE" else side["status"]
         lines.append("| " + " | ".join(map(cell, [entry["path"] + " / " + entry["entity"], entry["metric"],
-                         measured(entry["before"]), measured(entry["after"]), entry.get("delta") if entry.get("delta") is not None else "—"])) + " |")
+                         measured(entry["before"]), measured(entry["after"]), entry.get("delta") if entry.get("delta") is not None else "—", entry["status"]])) + " |")
     groups = {(m["path"], m["entity"]) for m in report["metrics"]}
     for path, entity in sorted(groups):
         present = {m["metric"] for m in report["metrics"] if (m["path"], m["entity"]) == (path, entity)}
         for metric_id in METRICS:
             if metric_id not in present:
-                lines.append(f"| {cell(path + ' / ' + entity)} | {metric_id} | MISSING | MISSING | — |")
+                lines.append(f"| {cell(path + ' / ' + entity)} | {metric_id} | MISSING | MISSING | — | MISSING |")
     if not report["metrics"]:
-        lines.extend(f"| — | {metric_id} | MISSING | MISSING | — |" for metric_id in METRICS)
+        lines.extend(f"| — | {metric_id} | MISSING | MISSING | — | MISSING |" for metric_id in METRICS)
     definitions = sorted({json.dumps(side["definition"], ensure_ascii=False, sort_keys=True)
                           for m in report["metrics"] for side in (m["before"], m["after"])})
     lines += ["", "Analyzer definitions:", "", *["- `" + definition + "`" for definition in definitions], "", "Findings:", ""]

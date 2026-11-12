@@ -250,6 +250,11 @@
         "$ref": "#/$defs/entityMatch"
       },
       "description": "Exact Core match records with owning path/oldPath/newPath added. No LLM-inferred pairing."
+    },
+    "fileCoverage": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/fileCoverage"},
+      "description": "Exact Core files[].coverage base/head sides plus owning path/oldPath/newPath; independent of entity counts."
     }
   },
   "$defs": {
@@ -506,6 +511,10 @@
         "matchingAmbiguous": {
           "type": "boolean"
         },
+        "matchingWarning": {
+          "type": ["string", "null"],
+          "description": "Adapter warning when cross-snapshot identity cannot be established; never reconstruct a delta from raw values."
+        },
         "lines": {
           "type": "object",
           "required": [
@@ -523,6 +532,36 @@
             }
           }
         }
+      }
+    },
+    "fileCoverage": {
+      "type": "object",
+      "required": ["path", "oldPath", "newPath", "base", "head"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "oldPath": {"type": ["string", "null"]},
+        "newPath": {"type": ["string", "null"]},
+        "base": {"$ref": "#/$defs/fileCoverageSide"},
+        "head": {"$ref": "#/$defs/fileCoverageSide"}
+      }
+    },
+    "fileCoverageSide": {
+      "type": "object",
+      "required": ["status", "outsideEntityLines", "reason"],
+      "properties": {
+        "status": {"enum": ["COMPLETE", "OUTSIDE_SUPPORTED_ENTITIES", "UNKNOWN"]},
+        "outsideEntityLines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["startLine", "endLine"],
+            "properties": {
+              "startLine": {"type": "integer", "minimum": 1},
+              "endLine": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "reason": {"type": ["string", "null"]}
       }
     },
     "entityMatch": {

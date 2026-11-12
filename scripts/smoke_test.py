@@ -2,11 +2,12 @@
 
 import json
 from pathlib import Path
-from queue import Queue
+from queue import Empty, Queue
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
 from threading import Thread
+import time
 
 
 def git(root, *args):
@@ -64,6 +65,8 @@ def check_analysis_batches(client, root):
     over_limit = client.tool("analyze_java_changes", shas, error=True)
     message = over_limit["content"][0]["text"]
     assert "94" in message and "50" in message and "paths" in message, over_limit
+    unified_over_limit = client.tool("analyze_changes", shas, error=True)
+    assert "94" in unified_over_limit["content"][0]["text"] and "50" in unified_over_limit["content"][0]["text"], unified_over_limit
 
     analyzed = []
     findings = []
@@ -92,7 +95,7 @@ class Client:
 
         Thread(target=read, daemon=True).start()
 
-    def send(self, method, params=None, *, notification=False):
+    def send(self, method, params=None, *, notification=False, timeout=45):
         message = {"jsonrpc": "2.0", "method": method}
         if params is not None:
             message["params"] = params
@@ -103,16 +106,20 @@ class Client:
         self.process.stdin.flush()
         if notification:
             return None
+        deadline = time.monotonic() + timeout
         while True:
-            line = self.inbox.get(timeout=45)
+            try:
+                line = self.inbox.get(timeout=max(0, deadline - time.monotonic()))
+            except Empty as error:
+                raise TimeoutError(f"MCP {method} request {self.request_id} exceeded {timeout}s response budget") from error
             assert line is not None, "MCP server closed stdout"
             response = json.loads(line)
             if response.get("id") == self.request_id:
                 assert "error" not in response, response
                 return response["result"]
 
-    def tool(self, name, arguments, *, error=False):
-        result = self.send("tools/call", {"name": name, "arguments": arguments})
+    def tool(self, name, arguments, *, error=False, timeout=45):
+        result = self.send("tools/call", {"name": name, "arguments": arguments}, timeout=timeout)
         assert result.get("isError", False) == error, result
         return result if error else result["structuredContent"]
 
@@ -132,6 +139,9 @@ def main():
                 assert hello["serverInfo"]["name"] == "codeclarity", hello
                 client.send("notifications/initialized", notification=True)
                 assert {tool["name"] for tool in client.send("tools/list")["tools"]} == {
+                    "get_changes", "analyze_changes", "get_symbol_context", "inspect_symbol_ast",
+                    "get_review_history", "update_review_history", "propose_rule_candidate",
+                    "get_symbol_definition", "find_symbol_references",
                     "list_java_changes", "analyze_java_changes", "inspect_java_method",
                     "list_python_changes", "analyze_python_changes", "inspect_python_function"
                 }

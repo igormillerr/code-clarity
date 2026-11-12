@@ -34,9 +34,24 @@ public final class EntityMatchingTest {
 
         var javaOld = new SourceEntity("Service#f(int)", ALL);
         var javaNew = new SourceEntity("Service#f(int, int)", ALL);
+        check(javaOld.matchingKey().equals(javaOld.signature()) && javaOld.matchingWarning() == null
+                && oldFunction.matchingWarning() == null && ambiguousOwner.matchingWarning() == null,
+                "backward-compatible constructors default warnings to null");
         result = match(List.of(javaOld), List.of(javaNew), List.of(ALL), List.of(ALL), true, true);
         check(result.size() == 2 && result.get(0).status() == REMOVED && result.get(1).status() == ADDED,
                 "Java default matching stays exact");
+
+        var unsafe = new SourceEntity("Owner.anonymous(expression:1)#run()", ALL, null, false,
+                "Lexical identity is unverified.");
+        check(unsafe.matchingKey().equals(unsafe.signature()), "null canonical matching key defaults to signature");
+        check(match(List.of(unsafe), List.of(unsafe), List.of(ALL), List.of(ALL), true, true)
+                .getFirst().status() == UNVERIFIED, "unsafe identity is not a verified match");
+        check(match(List.of(), List.of(unsafe), List.of(), List.of(ALL), true, true)
+                .getFirst().status() == UNVERIFIED, "unsafe addition is not a verified added identity");
+        var unsafeAmbiguous = new SourceEntity("Service.f(self, x)", ALL, "Service.f", true,
+                "Enclosing identity is unverified.");
+        check(match(List.of(unsafeAmbiguous), List.of(oldFunction), List.of(ALL), List.of(ALL), true, true)
+                .getFirst().status() == AMBIGUOUS, "ambiguity retains precedence over identity warnings");
 
         result = match(List.of(oldFunction), List.of(), List.of(ALL), List.of(), true, false);
         check(result.getFirst().status() == UNVERIFIED, "parse failure is not removal");
@@ -47,7 +62,7 @@ public final class EntityMatchingTest {
         var renamed = new SourceEntity("Service.g(self, x)", ALL, "Service.g");
         check(match(List.of(oldFunction), List.of(renamed), List.of(ALL), List.of(ALL), true, true).size() == 2,
                 "renamed functions not guessed");
-        System.out.println("Passed: adapter matching keys, parameter changes, duplicates, partial analysis and exact Java matching.");
+        System.out.println("Passed: adapter matching keys, parameter changes, duplicates, partial analysis, exact Java matching and unsafe identity warnings.");
     }
 
     private static List<EntityMatcher.Match> match(List<SourceEntity> before, List<SourceEntity> after,

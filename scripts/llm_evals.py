@@ -242,6 +242,7 @@ def check_report(report, trace, repo=None):
     scope = report.get("scope", {})
     observed = {}
     observed_matches = {}
+    observed_file_coverage = {}
     match_receipts_available = False
     observed_paths = set()
     mandatory_missing = False
@@ -254,6 +255,14 @@ def check_report(report, trace, repo=None):
         for file in result.get("files", []):
             path = file.get("newPath") or file.get("oldPath")
             observed_paths.add(path)
+            if "coverage" in file:
+                normalized = {"path": path, "oldPath": file.get("oldPath"),
+                              "newPath": file.get("newPath"), **file["coverage"]}
+                if path in observed_file_coverage and observed_file_coverage[path] != normalized:
+                    errors.append(f"Repeated Core file coverage changed: {path}.")
+                observed_file_coverage[path] = normalized
+                if any(file["coverage"].get(side, {}).get("status") != "COMPLETE" for side in ("base", "head")):
+                    mandatory_missing = True
             if "matches" in file:
                 match_receipts_available = True
                 for match in file["matches"]:
@@ -302,6 +311,17 @@ def check_report(report, trace, repo=None):
                 errors.append(f"Missing metrics need an explicit metrics-stage skip for {path}/{entity}.")
             mandatory_missing = True
     coverage = report.get("coverage", {})
+    if observed_file_coverage:
+        reported_file_coverage = {}
+        for file in report.get("fileCoverage", []):
+            path = file.get("path")
+            if path in reported_file_coverage:
+                errors.append(f"Duplicate Core file coverage: {path}.")
+            reported_file_coverage[path] = file
+        if reported_file_coverage != observed_file_coverage:
+            errors.append("Reported file coverage differs from exact Core receipts.")
+    elif report.get("fileCoverage"):
+        errors.append("Report contains file coverage not supplied by Core.")
     if "paths" in scope:
         if coverage.get("filesExpected") != len(scope["paths"]):
             errors.append("File coverage denominator differs from selected scope.")
@@ -474,6 +494,27 @@ class CheckerTests(unittest.TestCase):
     def test_fabricated_value_is_rejected(self):
         self.report["metrics"][0]["after"]["value"] = 99
         self.assertTrue(any("differs" in error for error in check_report(self.report, self.trace)))
+
+    def test_core_file_coverage_cannot_be_omitted_or_changed(self):
+        side = {"status": "COMPLETE", "outsideEntityLines": [], "reason": None}
+        self.receipt["files"][0]["coverage"] = {"base": copy.deepcopy(side), "head": copy.deepcopy(side)}
+        self.assertTrue(any("file coverage" in e for e in check_report(self.report, self.trace)))
+        self.report["fileCoverage"] = [{"path": "total.py", "oldPath": "total.py", "newPath": "total.py",
+                                        **copy.deepcopy(self.receipt["files"][0]["coverage"])}]
+        self.assertEqual([], check_report(self.report, self.trace))
+        self.report["fileCoverage"][0]["head"]["reason"] = "invented"
+        self.assertTrue(any("file coverage" in e for e in check_report(self.report, self.trace)))
+
+    def test_field_only_outside_coverage_requires_incomplete(self):
+        outside = {"status": "OUTSIDE_SUPPORTED_ENTITIES", "outsideEntityLines": [{"startLine": 1, "endLine": 1}],
+                   "reason": "Changed lines outside supported entities"}
+        self.receipt["files"][0].update(changedMethods=[], metrics=[], coverage={"base": outside, "head": outside})
+        self.report.update(metrics=[], fileCoverage=[{"path": "total.py", "oldPath": "total.py", "newPath": "total.py",
+                                                    "base": copy.deepcopy(outside), "head": copy.deepcopy(outside)}])
+        self.report["coverage"].update(entitiesExpected=0, entitiesAnalyzed=0)
+        self.assertEqual([], check_report(self.report, self.trace))
+        self.report["verdict"] = "PASS"
+        self.assertTrue(any("INCOMPLETE" in e for e in check_report(self.report, self.trace)))
 
     def test_metrics_before_independent_is_rejected(self):
         self.assertTrue(any("frozen" in error for error in check_report(self.report, list(reversed(self.trace)))))

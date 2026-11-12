@@ -2,11 +2,13 @@
 
 import copy
 import importlib.util
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
 from llm_evals import check_report, git
+from llm_java_skill_e2e import discovery_errors
 
 PROJECT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("review_artifacts", PROJECT / "plugin/scripts/review_artifacts.py")
@@ -215,11 +217,16 @@ class ArtifactTests(unittest.TestCase):
             root = Path(directory)
             ARTIFACTS.write_new(root / "report.main.json", main_json)
             ARTIFACTS.write_new(root / "report.main.md", main_markdown)
+            ARTIFACTS.write_new(root / "review.history-input.json", main_json)
             ARTIFACTS.write_new(root / "discovery.json", ARTIFACTS.canonical(final["ruleDiscovery"]))
             ARTIFACTS.write_new(root / "report.final.json", final_json)
             ARTIFACTS.write_new(root / "report.final.md", final_markdown)
             with self.assertRaises(ValueError):
                 ARTIFACTS.write_new(root / "report.main.md", final_markdown)
+            with self.assertRaises(ValueError):
+                ARTIFACTS.write_new(root / "review.history-input.json", final_json)
+            ARTIFACTS.write_new(root / "review.history-input.json", main_json)
+            self.assertEqual("NOT_RUN", ARTIFACTS.load(root / "review.history-input.json")["ruleDiscovery"]["status"])
             self.assertEqual(main_json, (root / "report.main.json").read_bytes())
             self.assertEqual(main_markdown, (root / "report.main.md").read_bytes())
             self.assertEqual(final_json, (root / "report.final.json").read_bytes())
@@ -247,6 +254,68 @@ class MatchCoverageTests(unittest.TestCase):
         self.report["verdict"] = "WARN"
         ARTIFACTS.validate(self.report, self.independent)
         self.assertEqual([], check_report(self.report, self.trace))
+
+    def test_unverified_identity_keeps_raw_values_without_manufacturing_delta(self):
+        match = self.report["entityMatches"][0]
+        match["status"] = "UNVERIFIED"
+        for side in ("before", "after"):
+            match[side][0]["matchingWarning"] = "Synthetic positional owner: cross-snapshot identity unverified"
+        raw = []
+        for row in self.report["metrics"]:
+            if row["path"] == match["path"]:
+                raw.append(copy.deepcopy((row["before"], row["after"])))
+                row.update(status="UNAVAILABLE", delta=None)
+        self.report["verdict"] = "INCOMPLETE"
+        self.report["skips"] = [{"stage": "matching", "path": match["path"],
+                                 "reason": match["after"][0]["matchingWarning"]}]
+        ARTIFACTS.validate(self.report, self.independent)
+        self.assertEqual(raw, [(row["before"], row["after"]) for row in self.report["metrics"] if row["path"] == match["path"]])
+        self.assertIn("UNAVAILABLE", ARTIFACTS.render(self.report))
+        self.report["verdict"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "Complete verdict"):
+            ARTIFACTS.validate(self.report, self.independent)
+        self.report["verdict"] = "INCOMPLETE"
+        self.report["metrics"][0]["delta"] = 1
+        with self.assertRaisesRegex(ValueError, "Delta contradicts"):
+            ARTIFACTS.validate(self.report, self.independent)
+        self.report["metrics"][0].update(status="COMPARED", delta=1)
+        with self.assertRaisesRegex(ValueError, "comparison status"):
+            ARTIFACTS.validate(self.report, self.independent)
+
+    def test_matching_warning_cannot_be_presented_as_a_matched_pair(self):
+        self.report["entityMatches"][0]["before"][0]["matchingWarning"] = "Synthetic identity warning"
+        with self.assertRaisesRegex(ValueError, "unverified identity"):
+            ARTIFACTS.validate(self.report, self.independent)
+
+    def test_outside_or_unknown_core_line_coverage_cannot_be_pass(self):
+        complete = {"status": "COMPLETE", "outsideEntityLines": [], "reason": None}
+        self.report["fileCoverage"] = [{"path": path, "oldPath": path, "newPath": path,
+                                        "base": copy.deepcopy(complete), "head": copy.deepcopy(complete)}
+                                       for path in self.report["scope"]["paths"]]
+        ARTIFACTS.validate(self.report, self.independent)
+        for status, spans in (("OUTSIDE_SUPPORTED_ENTITIES", [{"startLine": 4, "endLine": 5}]), ("UNKNOWN", [])):
+            with self.subTest(status=status):
+                self.report["fileCoverage"][0]["head"] = {"status": status, "outsideEntityLines": spans,
+                                                          "reason": "Synthetic field-only or failed coverage"}
+                retained = copy.deepcopy(self.report["fileCoverage"])
+                self.report["verdict"] = "INCOMPLETE"
+                self.report["skips"] = [{"stage": "coverage", "path": "sample.py", "reason": retained[0]["head"]["reason"]}]
+                ARTIFACTS.validate(self.report, self.independent)
+                self.assertEqual(retained, self.report["fileCoverage"])
+                self.assertIn(status, ARTIFACTS.render(self.report))
+                self.report["verdict"] = "PASS"
+                with self.assertRaisesRegex(ValueError, "Complete verdict"):
+                    ARTIFACTS.validate(self.report, self.independent)
+
+    def test_file_coverage_cannot_omit_a_selected_path_and_claim_complete(self):
+        complete = {"status": "COMPLETE", "outsideEntityLines": [], "reason": None}
+        self.report["fileCoverage"] = [{"path": "sample.py", "oldPath": "sample.py", "newPath": "sample.py",
+                                        "base": complete, "head": complete}]
+        self.report["verdict"] = "INCOMPLETE"
+        ARTIFACTS.validate(self.report, self.independent)
+        self.report["verdict"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "Complete verdict"):
+            ARTIFACTS.validate(self.report, self.independent)
 
     def test_final_group_denominator_cannot_use_union_of_signatures(self):
         self.report["coverage"].update(entitiesExpected=4, entitiesAnalyzed=4)
@@ -339,6 +408,51 @@ class MatchCoverageTests(unittest.TestCase):
                     normalized[side][0]["lines"].update(startLine=4, endLine=5)
                     file["matches"][0][side][0]["lines"].update(startLine=4, endLine=5)
             self.assertEqual([], check_report(self.report, self.trace, root))
+
+
+class DiscoveryRecordTests(unittest.TestCase):
+    def setUp(self):
+        directory = TemporaryDirectory(prefix="codeclarity-discovery-record-")
+        self.addCleanup(directory.cleanup)
+        self.path = Path(directory.name) / "discovery.json"
+        self.review_id = "synthetic-discovery-link-review"
+        self.rules = {"status": "NO_SUGGESTION", "reason": "Synthetic history has no confirmed fixes"}
+        self.record = {"reviewId": self.review_id, **self.rules}
+        self.path.write_text(json.dumps(self.record), encoding="utf-8")
+
+    def test_relative_and_absolute_artifact_links_do_not_require_record_self_reference(self):
+        self.assertNotIn("artifact", self.record)
+        for link in (self.path.name, str(self.path.resolve())):
+            with self.subTest(link=link):
+                rules = {**self.rules, "artifact": link}
+                self.assertEqual([], discovery_errors(rules, self.record, self.review_id, self.path))
+
+    def test_link_to_another_discovery_file_is_rejected(self):
+        wrong = self.path.with_name("different-discovery.json")
+        wrong.write_text(json.dumps(self.record), encoding="utf-8")
+        for link in (wrong.name, str(wrong.resolve())):
+            with self.subTest(link=link):
+                errors = discovery_errors({**self.rules, "artifact": link}, self.record, self.review_id, self.path)
+                self.assertTrue(any("different file" in error for error in errors), errors)
+
+    def test_link_does_not_hide_changed_status_reason_or_review_identity(self):
+        rules = {**self.rules, "artifact": self.path.name}
+        for key, value in (("status", "ERROR"), ("reason", "Altered decision rationale"),
+                           ("reviewId", "another-review")):
+            with self.subTest(field=key):
+                record = {**self.record, key: value}
+                errors = discovery_errors(rules, record, self.review_id, self.path)
+                self.assertTrue(any("differs" in error for error in errors), errors)
+
+    def test_legacy_decision_without_artifact_link_remains_valid(self):
+        self.assertEqual([], discovery_errors(self.rules, self.record, self.review_id, self.path))
+        self.assertEqual([], discovery_errors(self.rules, self.rules, self.review_id, self.path))
+
+    def test_empty_or_non_string_artifact_link_is_rejected(self):
+        for link in ("", None, 3):
+            with self.subTest(link=link):
+                errors = discovery_errors({**self.rules, "artifact": link}, self.record, self.review_id, self.path)
+                self.assertIn("Invalid discovery artifact link", errors)
 
 
 if __name__ == "__main__":

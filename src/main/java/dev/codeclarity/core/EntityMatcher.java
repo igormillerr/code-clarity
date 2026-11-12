@@ -46,7 +46,9 @@ public final class EntityMatcher {
                     || oldCandidates.stream().anyMatch(SourceEntity::matchingAmbiguous)
                     || newCandidates.stream().anyMatch(SourceEntity::matchingAmbiguous)) {
                 status = Status.AMBIGUOUS;
-            } else if (!baseComplete || !headComplete) {
+            } else if (!baseComplete || !headComplete
+                    || oldCandidates.stream().anyMatch(entity -> entity.matchingWarning() != null)
+                    || newCandidates.stream().anyMatch(entity -> entity.matchingWarning() != null)) {
                 status = Status.UNVERIFIED;
             } else if (oldCandidates.isEmpty()) {
                 status = Status.ADDED;

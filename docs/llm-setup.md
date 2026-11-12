@@ -1,9 +1,9 @@
 # CodeClarity: локальная установка и запуск LLM-части
 
-В `codex/llm-workflow` интегрирована Python-ветка
-`feature/python-metrics-integration` (`dc9d957`, merge `a922e40`). Версия пакета
-плагина — `0.3.2`, serverInfo существующего Java-сервера — `0.1.1`.
-По одной версии сервера нельзя определять набор метрик: проверяйте реальные ответы.
+В `codex/llm-workflow` объединены Python `dc9d957` и Java Core с исправлениями
+`afe8b08`. Версия пакета плагина — `0.4.0`, сервера — `0.1.7`.
+Сервер предоставляет шесть метрик каждого языка, универсальные MCP Tools,
+JSON-историю и предложения правил. Проверяйте фактическую доступность измерений.
 Требуются JDK 21+ (с компилятором для Java source-file launcher), Git, Python с зависимостями и локальный Codex с поддержкой
 плагинов. Использовавшаяся версия CLI — `0.167.0-alpha.3.2`;
 фактические результаты текущей интеграции — в [статусе](llm-status.md).
@@ -77,6 +77,23 @@ printf '%s\n' "$CODECLARITY_PYTHON" > ~/.codeclarity/python-path.txt
 MCP-сервер/сеанс плагина. Для чтения файла полный перезапуск приложения не нужен.
 В `mcp.json` остаются только `type`, `command`, `args` и `cwd`.
 
+## Необязательная Java LSP-навигация
+
+Для definition/references нужен отдельно распакованный JDT LS. Его отсутствие
+не мешает основному AST/metric review. Launcher выбирает непустые переменные
+CODECLARITY_JDTLS_HOME/CODECLARITY_JDTLS_JAVA, а при фильтрации окружения хостом —
+UTF-8 файлы `~/.codeclarity/jdtls-home.txt` и `~/.codeclarity/jdtls-java.txt`.
+Каждый файл содержит один абсолютный путь: каталог JDT LS и исполняемый Java
+подходящей для этого дистрибутива версии. Python selector настраивается отдельно.
+
+```powershell
+Set-Content -LiteralPath "$env:USERPROFILE\.codeclarity\jdtls-home.txt" -Value 'C:\tools\jdtls' -Encoding utf8NoBOM
+Set-Content -LiteralPath "$env:USERPROFILE\.codeclarity\jdtls-java.txt" -Value 'C:\tools\jdk\bin\java.exe' -Encoding utf8NoBOM
+```
+
+После смены настроек нужен новый MCP-процесс. LSP возвращает WORKTREE-контекст;
+для ревью другого Git SHA сначала проверьте соответствие рабочего файла снимку.
+
 ## Установка плагина
 
 ```powershell
@@ -120,10 +137,10 @@ Java должна быть в PATH. Плагин подключает один M
 
 ## Полнота и matching
 
-Python-only ревью может завершиться `PASS` или `WARN`, если обработаны исходники,
-обязательные этапы и все шесть метрик. Java пока возвращает CC/CogC: ревью
-затронутых Java-методов, в том числе смешанное, требует `INCOMPLETE` при отсутствии
-четырёх обязательных метрик. `ok` от сервера само по себе не доказывает полноту.
+Java/Python и смешанное ревью могут завершиться `PASS` или `WARN`, если обработаны
+исходники, обязательные этапы и все шесть метрик. Недоступные метрики,
+неподтверждённое сопоставление и непокрытые изменённые строки отражаются явно.
+`ok` от сервера само по себе не доказывает полноту.
 
 Core возвращает `files[].matches`: логические группы со статусом, ключом,
 сигнатурами и диапазонами обеих сторон. Изменение параметров Python-функции
@@ -143,7 +160,7 @@ Core возвращает `files[].matches`: логические группы �
 | Tools дублируются | Plugin connection и ручная регистрация `codex mcp list` |
 | Python CogC ERROR | Приоритетная `CODECLARITY_PYTHON`, затем `python-path.txt`; установка complexipy **8.3.0** в выбранный Python; новый запуск launcher после смены selector |
 | Python partial | Причины в warnings и отдельных метриках; сохранить доступные пять значений и Java-результат |
-| История UNAVAILABLE | History Tools ещё отсутствуют; прямой записью JSON это не компенсируется |
+| История UNAVAILABLE | Проверить get_review_history/update_review_history/propose_rule_candidate и права выбранного Git-репозитория; прямой записью JSON ошибку не компенсировать |
 | Сервер ok, ревью INCOMPLETE | Проверить шесть метрик, source coverage, статусы matches и обязательные этапы |
 
 Запущенный без протокольного клиента JAR может просто ожидать stdin.

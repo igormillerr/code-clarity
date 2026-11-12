@@ -15,8 +15,12 @@ are [independent-review](../independent-review/SKILL.md),
 ## Establish the scope
 
 1. Discover the tools exposed by the connected CodeClarity server and read their
-   actual schemas. Prefer the universal operations only when advertised; otherwise
-   use `list_java_changes`, `list_python_changes`, `analyze_java_changes`,
+   actual schemas. When advertised, use `get_changes(baseRef, headRef)`,
+   `analyze_changes(baseSha, headSha, paths?)`, and
+   `get_symbol_context(commitSha, path, line)`. They route Java/Python files
+   automatically; no language or metric-selection argument is needed. Otherwise
+   use the advertised `inspect_symbol_ast` for compact AST context and/or
+   `list_java_changes`, `list_python_changes`, `analyze_java_changes`,
    `analyze_python_changes`, `inspect_java_method`, and `inspect_python_function`.
    Never invent a tool or argument. Missing MCP access is an explicit limitation.
 2. Resolve the user's base/head through the change-list tool before reading code.
@@ -28,6 +32,8 @@ are [independent-review](../independent-review/SKILL.md),
    Collect the complete selected change list for both languages and verify that all
    calls refer to the same snapshots. Record explicitly excluded/unsupported files.
    A selected path not returned by the tool must be reported, not silently dropped.
+   Preserve listing `partial` status and warnings; empty ranges from a failed file
+   do not establish that the file has no changed entities.
 4. Obtain a deterministic `reviewId` with
    [scripts/review_ids.py](scripts/review_ids.py), passing JSON `{ "scope": ...,
    "findings": [] }` on stdin. Do not include timestamps in scope identity.
@@ -54,14 +60,29 @@ claiming a successful review of those files.
    frozen independent result. Separate Skills provide logical ordering in the same
    conversation; they do not guarantee isolated model contexts.
 2. **Measured results.** Call the discovered analysis operation(s), using exactly
-   the resolved SHAs and the selected files. For the current tools, batch at most
-   50 paths per call and retain every result/warning. Preserve raw tool results or
+   the resolved SHAs and the selected files. Prefer one `analyze_changes` call for
+   a mixed Java/Python batch; use the language-specific analysis tools as fallback.
+   Batch at most 50 paths per call and retain every result/warning, including
+   healthy file results from a `partial` response. Preserve raw tool results or
    trace references; retry only the failed batch, without replacing prior results.
    When `files[].matches` is returned, preserve every Core match under report
    `entityMatches`, adding only `path`, `oldPath`, and `newPath` from the owning
    file. Keep `key`, `status`, `before`, and `after` exactly as returned. Final
    entity coverage uses these logical groups (`entityUnit: MATCH_GROUP`), not a
    union of old/new signature strings. It can differ from frozen source coverage.
+   Read numerical measurements from `files[].metrics[]`, including entities with
+   no threshold findings. For every touched entity check all six metric IDs:
+   `cyclomatic_complexity`, `cognitive_complexity`, `function_sloc`,
+   `max_nesting_depth`, `parameter_count`, and `return_count`.
+   One analysis call returns all implemented metrics; no separate calls per metric
+   are needed. Preserve each measurement's `before`, `after`, `delta`, comparison
+   status, and both analyzer/algorithm definitions. Do not substitute `findings`
+   for numerical measurements or calculate missing values yourself.
+   Preserve `files[].coverage` under report `fileCoverage`, adding only the
+   owning `path`, `oldPath` and `newPath`. Keep its `base`/`head` sides unchanged.
+   `OUTSIDE_SUPPORTED_ENTITIES` or `UNKNOWN` is an explicit coverage limitation:
+   retain the path/ranges/reason in `skips` and use `INCOMPLETE` under the current
+   entity-metric policy, including field-only changes with no metric rows.
 3. **Correlation.** Apply `metrics-correlation` to the frozen independent artifact
    and measured results. Deduplicate observations about the same issue/location,
    retaining their evidence. A static `Finding` is a rule diagnostic, not an AI
@@ -103,9 +124,12 @@ claiming a successful review of those files.
   measurements and coverage, never from a hardcoded historical JAR limitation.
   The integrated Python adapter supports all six with `complexipy==8.3.0` in the
   selected Python; an unavailable/wrong cognitive engine returns `ERROR` while
-  preserving the other five. A complete Python-only review may therefore be
-  `PASS` or `WARN`. Java's currently missing structural metrics affect selected
-  Java entities; they do not make an otherwise complete Python-only scope partial.
+  preserving the other five. Java now supplies all six for methods and ordinary
+  constructors with bodies. A complete Python-only, Java-only or mixed review may
+  therefore be `PASS` or `WARN`. Bodyless Java declarations and compact record
+  constructors retain their actual `UNSUPPORTED` measurements; these require
+  `INCOMPLETE` under the six-metric policy. A legitimate `ENTITY_ABSENT` side for
+  an addition/deletion does not alone make the review incomplete.
 - Matching belongs to Core. Python parameter renames may now be `MATCHED` and
   have real deltas; do not apply the earlier signature-only pairing assumption.
   Preserve `AMBIGUOUS`/`UNVERIFIED` groups and their unavailable values. For a
@@ -114,6 +138,11 @@ claiming a successful review of those files.
   `entityUnit: LEGACY_METRIC_ENTITY` for distinct reported path/entity keys, not
   asserted Core match groups. Unknown grouping or coverage is a limitation, not
   permission to invent matches or rewrite the frozen stage.
+- Java positional anonymous/initializer identities may be `UNVERIFIED` even with
+  two raw `AVAILABLE` measurements. Preserve `matchingWarning`, comparison
+  `UNAVAILABLE`, and null delta. Do not subtract the values or reinterpret an
+  `UNVERIFIED` diagnostic as a confirmed change. This matching limitation requires
+  `INCOMPLETE`; the measurements themselves remain useful source evidence.
 - LSP is optional: unavailable definition/references must be stated but do not
   invalidate otherwise complete AST/metric review. History failure alone likewise
   does not change an otherwise complete main-review verdict.

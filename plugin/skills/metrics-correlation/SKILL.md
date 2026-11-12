@@ -48,6 +48,10 @@ when supplied by Core, takes precedence; retain its identity in the report.
   have a different count; preserve its original count and findings.
 - `COMPARED` permits a delta only when both sides are `AVAILABLE` and their full
   definitions match. `INCOMPATIBLE` and `UNAVAILABLE` have no usable delta.
+  `COMPARED` also requires Core's reliable entity identity: an `UNVERIFIED` group
+  can carry two raw `AVAILABLE` values but its comparison remains `UNAVAILABLE`
+  with null delta. Preserve `matchingWarning`; never reconstruct the withheld
+  delta or claim an `UNVERIFIED` diagnostic is an established change.
   Preserve `UNSUPPORTED`, `MISSING`, `ERROR`, and `ENTITY_ABSENT`; display no
   number for these states. `ENTITY_ABSENT` is legitimate for additions/deletions
   and must not become zero or an automatic completeness failure by itself.
@@ -58,6 +62,11 @@ when supplied by Core, takes precedence; retain its identity in the report.
   explicit analyzer-returned `MISSING` measurement as received. Missing mandatory
   metrics, partial files, missing batches, or unprocessed entities require
   `INCOMPLETE`, even when the prototype's top-level status is `ok`.
+- Copy each supplied `files[].coverage` into `fileCoverage`, adding only owning
+  `path`, `oldPath`, `newPath`. Preserve its `base`/`head` statuses, line ranges and
+  reasons exactly. Any `UNKNOWN` or `OUTSIDE_SUPPORTED_ENTITIES` needs a skip and
+  `INCOMPLETE` under the current metric policy; an empty metric list does not
+  establish coverage of fields, imports or initializers.
 
 ## Correlate without replacing the source review
 

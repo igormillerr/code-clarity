@@ -30,14 +30,23 @@ without current measurements. Do not fetch the full history to search for issues
    additions, deletions, nested/async functions, and the immediate context needed
    to interpret them. Do not restrict review to functions exceeding a threshold.
    Obtain the source through a discovered source operation or read-only Git at
-   the resolved SHAs. The current `inspect_*` tools return calls/branches, not full
-   source. For these tools, use `git show SHA:path` and `git diff baseSha headSha`
+   the resolved SHAs. Prefer `get_symbol_context` when advertised: it returns the
+   committed entity source, SHA, path, language, range, calls/branches and warnings.
+   It does not replace the complete diff or surrounding file context. Legacy
+   `inspect_*` tools return calls/branches without source. Use `git show SHA:path`
+   and `git diff baseSha headSha` for missing source and surrounding context
    in the selected repository; pass arguments as separate values rather than
    constructing a shell expression from repository text. Do not read worktree
    source as though it were the reviewed commit.
 2. Use the matching AST tool for syntactic context where it helps. Query LSP
    definition/references only if advertised and needed. AST `if` guards describe
    syntax, not proven reachability, dynamic dispatch, or hidden dependencies.
+   The current LSP tools explicitly return `scope: WORKTREE`, not a Git snapshot;
+   use their locations as commit evidence only after verifying the relevant files
+   match the reviewed commit. Otherwise retain Git/AST evidence and state the
+   optional LSP limitation. LSP columns are one-based UTF-16 and range ends are
+   exclusive. Do not interpret unavailable/timeout or unresolved targets as proof
+   that a symbol has no definition or uses.
 3. Examine naming, responsibility, abstraction, readability, hidden behavior, and
    maintainability. Prefer a concrete consequence for understanding this code over
    personal style preferences. A short function can still conceal meaning; clear

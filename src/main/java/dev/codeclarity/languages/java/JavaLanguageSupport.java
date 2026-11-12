@@ -17,7 +17,11 @@ public final class JavaLanguageSupport implements LanguageSupport {
             "pmd/" + net.sourceforge.pmd.PMDVersion.VERSION, "pmd-java/COGNITIVE_COMPLEXITY/default-options");
 
     @Override
-    public List<MetricDefinition> metricDefinitions() { return List.of(CYCLO, COGNITIVE); }
+    public List<MetricDefinition> metricDefinitions() {
+        var definitions = new ArrayList<>(List.of(CYCLO, COGNITIVE));
+        definitions.addAll(JavaParserMetrics.definitions());
+        return List.copyOf(definitions);
+    }
 
     @Override
     public String languageId() { return "java"; }
@@ -29,11 +33,13 @@ public final class JavaLanguageSupport implements LanguageSupport {
     public AnalysisResult analyze(String path, String source) {
         var methods = JavaSource.methods(source);
         var entities = methods.stream()
-                .map(method -> new SourceEntity(method.signature(), method.lines())).toList();
+                .map(method -> new SourceEntity(method.signature(), method.lines(), method.signature(), false,
+                        method.matchingWarning())).toList();
         var result = pmd.analyze(path, source);
         List<MetricMeasurement> metrics = new ArrayList<>();
         for (var method : methods) {
-            var position = method.node().getName().getBegin().orElseThrow();
+            metrics.addAll(JavaParserMetrics.measure(method));
+            var position = method.name().getBegin().orElseThrow();
             var matches = result.metrics().stream()
                     .filter(value -> value.line() == position.line && value.column() == position.column).toList();
             if (matches.size() == 1) {

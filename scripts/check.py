@@ -26,6 +26,7 @@ def digest(path):
 
 def source_digest():
     files = sorted(p for p in (PROJECT / "src/main").rglob("*") if p.is_file())
+    files += sorted((PROJECT / "plugin/contracts").glob("*.json"))
     files += [PROJECT / "pom.xml", PROJECT / "requirements-python.txt"]
     result = hashlib.sha256()
     for path in files:
@@ -117,19 +118,22 @@ def build_bundled(args, env, report, log, temporary):
     run(["javac", "--release", release, "-encoding", "UTF-8", "-cp", bundle,
          "-d", classes, "@" + str(arguments)], env, log, args.timeout)
     resources = PROJECT / "src/main/resources"
-    resource_files = sorted(p for p in resources.rglob("*") if p.is_file())
-    resource_names = {p.relative_to(resources).as_posix() for p in resource_files}
+    resource_files = {p.relative_to(resources).as_posix(): p
+                      for p in sorted(resources.rglob("*")) if p.is_file()}
+    for name in ("review.schema.json", "review-history.schema.json", "history-update.schema.json",
+                 "rule-candidate.schema.json"):
+        resource_files["contracts/" + name] = PROJECT / "plugin/contracts" / name
     output = PROJECT / "target/codeclarity-mcp.jar"
     output.parent.mkdir(parents=True, exist_ok=True)
     staged = temporary / "codeclarity-mcp.jar"
     with ZipFile(bundle) as original, ZipFile(staged, "w", ZIP_DEFLATED) as result:
         for item in original.infolist():
-            if not item.filename.startswith("dev/codeclarity/") and item.filename not in resource_names:
+            if not item.filename.startswith(("dev/codeclarity/", "contracts/")) and item.filename not in resource_files:
                 result.writestr(item, original.read(item.filename))
         for path in sorted(classes.rglob("*.class")):
             result.write(path, path.relative_to(classes).as_posix())
-        for path in resource_files:
-            result.write(path, path.relative_to(resources).as_posix())
+        for name, path in resource_files.items():
+            result.write(path, name)
     shutil.copyfile(staged, output)
     log.write("Fresh sources and resources packaged with verified bundled dependency versions.\n")
 
@@ -160,16 +164,10 @@ def main():
         backend = "maven" if shutil.which("mvn", path=env.get("PATH")) else "bundled"
     report = {"started_utc": datetime.now(timezone.utc).isoformat(), "build_backend": backend,
               "success": False, "stages": []}
-    suites = [
-        ("python_unit", ["scripts/python_worker_test.py"]),
-        ("metric_fixtures", ["scripts/python_metrics_spec_check.py", "--require-cognitive"]),
-        ("core", ["scripts/core_test.py"]),
-        ("java_metrics", ["scripts/java_metrics_test.py", "target/codeclarity-mcp.jar"]),
-        ("python_mcp", ["scripts/python_smoke_test.py", "target/codeclarity-mcp.jar"]),
-        ("python_matching", ["scripts/python_matching_test.py", "target/codeclarity-mcp.jar"]),
-        ("java_mcp", ["scripts/smoke_test.py", "target/codeclarity-mcp.jar"]),
-        ("python_experiments", ["scripts/python_experiments.py"]),
-    ]
+    # Both build backends use exactly the Maven verify acceptance runner. Package
+    # skips tests here so this command neither duplicates checks nor recurses.
+    suites = [("acceptance", ["scripts/verify.py", "--jar", "target/codeclarity-mcp.jar",
+                              "--output", str(report_dir / "acceptance"), "--timeout", str(args.timeout)])]
     # Keep logs outside target while Maven clean may remove target itself.
     with TemporaryDirectory(prefix="codeclarity-check-") as folder:
         temporary = Path(folder)
@@ -200,7 +198,8 @@ def main():
                 stage("build", lambda log: build_bundled(args, env, report, log, temporary))
             report["jar_sha256"] = digest(PROJECT / "target/codeclarity-mcp.jar")
             for name, command in suites:
-                stage(name, lambda log, command=command: run([sys.executable, *command], env, log, args.timeout))
+                stage(name, lambda log, command=command: run([sys.executable, *command], env, log,
+                                                            args.timeout * 5 + 30))
             report["success"] = True
         except Exception as error:
             print(f"Check failed: {error}", file=sys.stderr, flush=True)

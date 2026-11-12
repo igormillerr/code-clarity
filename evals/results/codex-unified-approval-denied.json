@@ -1,0 +1,1340 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "CODEX_CLI_WITH_REAL_MCP",
+  "status": "FAIL",
+  "errors": [
+    "MCP call failed: update_review_history",
+    "Agent did not read and save history through native MCP tools"
+  ],
+  "attempt": {
+    "status": "COMPLETED",
+    "repo": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\fixture\\repo",
+    "skill": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\plugin\\skills\\readability-review\\SKILL.md",
+    "skillSha256": "dabc938f20dd0762c5cfe9003775e16ecc697350b44da985b10dc21de9a0e019",
+    "jar": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\plugin\\server\\codeclarity-mcp.jar",
+    "jarSha256": "6365553ded3136cfacce4d00d7e221febb76864cc4fb35beed5b9a9246c6a25e",
+    "withHistory": true,
+    "languages": [
+      "java",
+      "python"
+    ],
+    "navigationConfiguration": null,
+    "command": [
+      "C:\\Users\\Igor Miller\\AppData\\Local\\OpenAI\\Codex\\bin\\f71a721e0e6193a9\\codex.EXE",
+      "--no-daemon",
+      "exec",
+      "--ephemeral",
+      "--json",
+      "--disable",
+      "multi_agent",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\fixture\\repo",
+      "--add-dir",
+      "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\artifacts",
+      "-c",
+      "mcp_servers={codeclarity={command=\"java\",args=[\"-jar\", \"C:\\\\Users\\\\Igor Miller\\\\Documents\\\\projects\\\\code-clarity\\\\plugin\\\\server\\\\codeclarity-mcp.jar\", \"--repo-root\", \"C:\\\\Users\\\\Igor Miller\\\\Documents\\\\projects\\\\code-clarity\\\\.codeclarity\\\\unified-integration-live-01\\\\fixture\\\\repo\"],env={CODECLARITY_PYTHON=\"C:\\\\Users\\\\Igor Miller\\\\Documents\\\\projects\\\\code-clarity\\\\.venv\\\\Scripts\\\\python.exe\"}}}",
+      "-o",
+      "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\last-message.md",
+      "<see prompt.txt>"
+    ],
+    "configuration": "process-local MCP override",
+    "exitCode": 0
+  },
+  "eventsSha256": "ab2c7a25011cf5b7625c3ea9ae6b94e95f167a694477117f7da3d02e0c3da9e7",
+  "rawEvents": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\events.jsonl",
+  "calls": [
+    {
+      "eventIndex": 14,
+      "event": "tool_call",
+      "tool": "get_changes",
+      "arguments": {
+        "baseRef": "main",
+        "headRef": "HEAD"
+      },
+      "result": {
+        "baseSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "headSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "status": "ok",
+        "files": [
+          {
+            "oldPath": "Eligibility.java",
+            "newPath": "Eligibility.java",
+            "baseLines": [
+              {
+                "startLine": 4,
+                "endLine": 4
+              }
+            ],
+            "headLines": [
+              {
+                "startLine": 4,
+                "endLine": 17
+              }
+            ]
+          },
+          {
+            "oldPath": "Totals.java",
+            "newPath": "Totals.java",
+            "baseLines": [
+              {
+                "startLine": 3,
+                "endLine": 3
+              }
+            ],
+            "headLines": [
+              {
+                "startLine": 3,
+                "endLine": 3
+              }
+            ]
+          },
+          {
+            "oldPath": "invoice_totals.py",
+            "newPath": "invoice_totals.py",
+            "baseLines": [
+              {
+                "startLine": 1,
+                "endLine": 2
+              }
+            ],
+            "headLines": [
+              {
+                "startLine": 1,
+                "endLine": 3
+              }
+            ]
+          },
+          {
+            "oldPath": "totals.py",
+            "newPath": "totals.py",
+            "baseLines": [
+              {
+                "startLine": 2,
+                "endLine": 2
+              }
+            ],
+            "headLines": [
+              {
+                "startLine": 2,
+                "endLine": 2
+              }
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 36,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "Totals.java",
+        "line": 2
+      },
+      "result": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "Totals.java",
+        "language": "java",
+        "status": "ok",
+        "signature": "Totals#lineTotal(long, long)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 4
+        },
+        "source": "    static long lineTotal(long quantity, long unitPriceCents) {\n        return quantity * unitPriceCents;\n    }",
+        "calls": [],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 37,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "Eligibility.java",
+        "line": 2
+      },
+      "result": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "Eligibility.java",
+        "language": "java",
+        "status": "ok",
+        "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 18
+        },
+        "source": "    static boolean shouldNotify(boolean active, boolean verified, boolean subscribed,\n                                boolean inRegion, boolean hasQuota, boolean deliverable) {\n        if (active) {\n            if (verified) {\n                if (subscribed) {\n                    if (inRegion) {\n                        if (hasQuota) {\n                            if (deliverable) {\n                                return true;\n                            }\n                        }\n                    }\n                }\n            }\n        }\n        return false;\n    }",
+        "calls": [],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 38,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "Totals.java",
+        "line": 2
+      },
+      "result": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "Totals.java",
+        "language": "java",
+        "status": "ok",
+        "signature": "Totals#lineTotal(long, long)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 4
+        },
+        "source": "    static long lineTotal(long quantity, long unitPriceCents) {\n        return quantity;\n    }",
+        "calls": [],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 39,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "Eligibility.java",
+        "line": 2
+      },
+      "result": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "Eligibility.java",
+        "language": "java",
+        "status": "ok",
+        "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 5
+        },
+        "source": "    static boolean shouldNotify(boolean active, boolean verified, boolean subscribed,\n                                boolean inRegion, boolean hasQuota, boolean deliverable) {\n        return active;\n    }",
+        "calls": [],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 40,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "invoice_totals.py",
+        "line": 1
+      },
+      "result": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "invoice_totals.py",
+        "language": "python",
+        "status": "ok",
+        "signature": "subtotal(line_items)",
+        "lines": {
+          "startLine": 1,
+          "endLine": 2
+        },
+        "source": "def subtotal(line_items):\n    return sum(item[\"quantity\"] * item[\"unit_price\"] for item in line_items)",
+        "calls": [
+          {
+            "line": 2,
+            "expression": "sum(item[\"quantity\"] * item[\"unit_price\"] for item in line_items)",
+            "enclosingIfs": []
+          }
+        ],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 41,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "totals.py",
+        "line": 1
+      },
+      "result": {
+        "commitSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "path": "totals.py",
+        "language": "python",
+        "status": "ok",
+        "signature": "line_total(quantity, unit_price_cents)",
+        "lines": {
+          "startLine": 1,
+          "endLine": 2
+        },
+        "source": "def line_total(quantity, unit_price_cents):\n    return quantity",
+        "calls": [],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 42,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "invoice_totals.py",
+        "line": 1
+      },
+      "result": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "invoice_totals.py",
+        "language": "python",
+        "status": "ok",
+        "signature": "subtotal(a)",
+        "lines": {
+          "startLine": 1,
+          "endLine": 3
+        },
+        "source": "def subtotal(a):\n    b = [(x[\"quantity\"], x[\"unit_price\"]) for x in a]\n    return sum(x * y for x, y in b)",
+        "calls": [
+          {
+            "line": 3,
+            "expression": "sum(x * y for x, y in b)",
+            "enclosingIfs": []
+          }
+        ],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 43,
+      "event": "tool_call",
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "totals.py",
+        "line": 1
+      },
+      "result": {
+        "commitSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "path": "totals.py",
+        "language": "python",
+        "status": "ok",
+        "signature": "line_total(quantity, unit_price_cents)",
+        "lines": {
+          "startLine": 1,
+          "endLine": 2
+        },
+        "source": "def line_total(quantity, unit_price_cents):\n    return quantity * unit_price_cents",
+        "calls": [],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 54,
+      "event": "tool_call",
+      "tool": "analyze_changes",
+      "arguments": {
+        "baseSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "headSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "paths": [
+          "Eligibility.java",
+          "Totals.java",
+          "invoice_totals.py",
+          "totals.py"
+        ]
+      },
+      "result": {
+        "baseSha": "2979c94375c6e591a176e1f73759cc0e6e107dce",
+        "headSha": "ac672177040a02dd1d07e0a30d04551089749349",
+        "status": "ok",
+        "files": [
+          {
+            "oldPath": "Eligibility.java",
+            "newPath": "Eligibility.java",
+            "language": "java",
+            "changedMethods": [
+              "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)"
+            ],
+            "findings": [
+              {
+                "method": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "rule": "CognitiveComplexity",
+                "status": "INTRODUCED",
+                "before": null,
+                "after": {
+                  "rule": "CognitiveComplexity",
+                  "line": 2,
+                  "column": 20,
+                  "message": "The method 'shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)' has a cognitive complexity of 21, current threshold is 15"
+                }
+              }
+            ],
+            "metrics": [
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 7.0,
+                  "reason": null
+                },
+                "delta": 6.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 21.0,
+                  "reason": null
+                },
+                "delta": 21.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 4.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 17.0,
+                  "reason": null
+                },
+                "delta": 13.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 6.0,
+                  "reason": null
+                },
+                "delta": 6.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 6.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 6.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              }
+            ],
+            "matches": [
+              {
+                "key": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "status": "MATCHED",
+                "before": [
+                  {
+                    "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                    "lines": {
+                      "startLine": 2,
+                      "endLine": 5
+                    },
+                    "matchingKey": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ],
+                "after": [
+                  {
+                    "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                    "lines": {
+                      "startLine": 2,
+                      "endLine": 18
+                    },
+                    "matchingKey": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ]
+              }
+            ],
+            "coverage": {
+              "base": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              },
+              "head": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              }
+            }
+          },
+          {
+            "oldPath": "Totals.java",
+            "newPath": "Totals.java",
+            "language": "java",
+            "changedMethods": [
+              "Totals#lineTotal(long, long)"
+            ],
+            "findings": [],
+            "metrics": [
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              }
+            ],
+            "matches": [
+              {
+                "key": "Totals#lineTotal(long, long)",
+                "status": "MATCHED",
+                "before": [
+                  {
+                    "signature": "Totals#lineTotal(long, long)",
+                    "lines": {
+                      "startLine": 2,
+                      "endLine": 4
+                    },
+                    "matchingKey": "Totals#lineTotal(long, long)",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ],
+                "after": [
+                  {
+                    "signature": "Totals#lineTotal(long, long)",
+                    "lines": {
+                      "startLine": 2,
+                      "endLine": 4
+                    },
+                    "matchingKey": "Totals#lineTotal(long, long)",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ]
+              }
+            ],
+            "coverage": {
+              "base": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              },
+              "head": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              }
+            }
+          },
+          {
+            "oldPath": "invoice_totals.py",
+            "newPath": "invoice_totals.py",
+            "language": "python",
+            "changedMethods": [
+              "subtotal(a)"
+            ],
+            "findings": [],
+            "metrics": [
+              {
+                "entity": "subtotal(a)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-cyclo/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-cyclo/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "subtotal(a)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "python",
+                    "analyzer": "complexipy/8.3.0",
+                    "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "python",
+                    "analyzer": "complexipy/8.3.0",
+                    "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "subtotal(a)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-physical-sloc/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-physical-sloc/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "subtotal(a)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "subtotal(a)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "subtotal(a)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-explicit-returns/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-explicit-returns/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              }
+            ],
+            "matches": [
+              {
+                "key": "subtotal",
+                "status": "MATCHED",
+                "before": [
+                  {
+                    "signature": "subtotal(line_items)",
+                    "lines": {
+                      "startLine": 1,
+                      "endLine": 2
+                    },
+                    "matchingKey": "subtotal",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ],
+                "after": [
+                  {
+                    "signature": "subtotal(a)",
+                    "lines": {
+                      "startLine": 1,
+                      "endLine": 3
+                    },
+                    "matchingKey": "subtotal",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ]
+              }
+            ],
+            "coverage": {
+              "base": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              },
+              "head": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              }
+            }
+          },
+          {
+            "oldPath": "totals.py",
+            "newPath": "totals.py",
+            "language": "python",
+            "changedMethods": [
+              "line_total(quantity, unit_price_cents)"
+            ],
+            "findings": [],
+            "metrics": [
+              {
+                "entity": "line_total(quantity, unit_price_cents)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-cyclo/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-cyclo/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "line_total(quantity, unit_price_cents)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "python",
+                    "analyzer": "complexipy/8.3.0",
+                    "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "python",
+                    "analyzer": "complexipy/8.3.0",
+                    "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "line_total(quantity, unit_price_cents)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-physical-sloc/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-physical-sloc/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "line_total(quantity, unit_price_cents)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "line_total(quantity, unit_price_cents)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "line_total(quantity, unit_price_cents)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-explicit-returns/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-explicit-returns/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              }
+            ],
+            "matches": [
+              {
+                "key": "line_total",
+                "status": "MATCHED",
+                "before": [
+                  {
+                    "signature": "line_total(quantity, unit_price_cents)",
+                    "lines": {
+                      "startLine": 1,
+                      "endLine": 2
+                    },
+                    "matchingKey": "line_total",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ],
+                "after": [
+                  {
+                    "signature": "line_total(quantity, unit_price_cents)",
+                    "lines": {
+                      "startLine": 1,
+                      "endLine": 2
+                    },
+                    "matchingKey": "line_total",
+                    "matchingAmbiguous": false,
+                    "matchingWarning": null
+                  }
+                ]
+              }
+            ],
+            "coverage": {
+              "base": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              },
+              "head": {
+                "status": "COMPLETE",
+                "outsideEntityLines": [],
+                "reason": null
+              }
+            }
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 75,
+      "event": "tool_call",
+      "tool": "get_review_history",
+      "arguments": {},
+      "result": {
+        "schemaVersion": 1,
+        "revision": 0,
+        "reviews": [],
+        "categories": [],
+        "findings": [],
+        "feedback": [],
+        "ruleCandidates": [],
+        "statistics": {
+          "occurrenceCount": 0,
+          "detectedCount": 0,
+          "fixedCount": 0,
+          "rejectedCount": 0,
+          "reviewCount": 0,
+          "categoryCount": 0
+        }
+      }
+    },
+    {
+      "eventIndex": 90,
+      "event": "tool_call",
+      "tool": "get_review_history",
+      "arguments": {},
+      "result": {
+        "schemaVersion": 1,
+        "revision": 0,
+        "reviews": [],
+        "categories": [],
+        "findings": [],
+        "feedback": [],
+        "ruleCandidates": [],
+        "statistics": {
+          "occurrenceCount": 0,
+          "detectedCount": 0,
+          "fixedCount": 0,
+          "rejectedCount": 0,
+          "reviewCount": 0,
+          "categoryCount": 0
+        }
+      }
+    }
+  ],
+  "freeze": [
+    {
+      "eventIndex": 49,
+      "event": "independent_review_frozen",
+      "reviewId": "review-6f195e1776ecf5aee6f9ff621ae4dcd6f5bebb13ba08065ecb9152e09ac7e8a9",
+      "artifact": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\artifacts\\independent.frozen.json",
+      "sha256": "82f9ac1199471a5e50c3ddea9802c848eb6907284c575078605ebd67d09a356d"
+    }
+  ],
+  "analysisStartedEventIndices": [
+    53
+  ],
+  "entitiesMeasured": 4,
+  "metricComparisons": 24,
+  "report": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\unified-integration-live-01\\artifacts\\report.final.json",
+  "reportSha256": "226300fc1d8658b1db8d3d47e3bf8b65beb251d5da1cef7eb397b302cf910160",
+  "schemaValidation": "PASS",
+  "coverage": {
+    "filesExpected": 4,
+    "filesAnalyzed": 4,
+    "entitiesExpected": 4,
+    "entitiesAnalyzed": 4,
+    "entityUnit": "MATCH_GROUP"
+  },
+  "findingsCount": 2,
+  "verdict": "WARN",
+  "history": null,
+  "limitations": [
+    "Tests repository Skill and JAR via process-local MCP configuration; does not verify installed plugin cache.",
+    "Disposable synthetic source repository; its history is not the user's production history.",
+    "One agent run does not guarantee deterministic future behavior."
+  ]
+}

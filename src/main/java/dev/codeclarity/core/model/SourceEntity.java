@@ -1,13 +1,18 @@
 package dev.codeclarity.core.model;
 
-/** Adapter-owned identity; matchingAmbiguous also covers an ambiguous enclosing declaration. */
-public record SourceEntity(String signature, SourceRange lines, String matchingKey, boolean matchingAmbiguous) {
+/** Adapter-owned identity; warnings preserve measurements but prevent unsafe snapshot comparisons. */
+public record SourceEntity(String signature, SourceRange lines, String matchingKey, boolean matchingAmbiguous,
+                           String matchingWarning) {
     public SourceEntity(String signature, SourceRange lines) {
-        this(signature, lines, signature, false);
+        this(signature, lines, signature, false, null);
     }
 
     public SourceEntity(String signature, SourceRange lines, String matchingKey) {
-        this(signature, lines, matchingKey, false);
+        this(signature, lines, matchingKey, false, null);
+    }
+
+    public SourceEntity(String signature, SourceRange lines, String matchingKey, boolean matchingAmbiguous) {
+        this(signature, lines, matchingKey, matchingAmbiguous, null);
     }
 
     public SourceEntity {

@@ -1,5 +1,31 @@
 # CodeClarity LLM evaluations
 
+## Unified package 0.4.0
+
+The integrated server 0.1.7 combines Java6, Python6, exact Core match groups,
+changed-line coverage and review/candidate persistence. Run `mvn verify` with
+the interpreter configured by `requirements-llm-dev.txt`. This includes real
+MCP tests and deterministic artifact checks; it does not invoke a model.
+
+For a fresh agent, both languages and history persistence:
+
+```bash
+python scripts/llm_java_skill_e2e.py --languages java python --with-history --output .codeclarity/evals/unified-new
+```
+
+Despite its historical filename, the script accepts either or both languages.
+It uses repository Skills and an explicit process-local MCP server, preserves
+native Codex events, validates the report and checks history restart/replay.
+It does not install or update a plugin, change home configuration, manufacture
+human feedback or activate a rule. Use a new output directory for each run.
+`--with-history` explicitly approves only `update_review_history` on the
+process-local server bound to that newly created disposable repository.
+Other tools retain their normal approval behavior; without the flag there is
+no override and the prompt prohibits writes. This uses the documented
+[per-tool approval setting](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+The recordings below retain their original version and scope.
+
 These six cases test the Java / LLM Engineer's workflow. They do not implement or
 replace the Python analyzer, Java metrics, MCP transport or Core history store.
 Expected labels are in `scenarios.json`; do not pass them to independent-review.
@@ -22,7 +48,7 @@ The baseline JAR lacks four required metrics and Python Cognitive Complexity;
 the complete review verdict for these fixtures must therefore be `INCOMPLETE`.
 MCP protocol PASS does not change that verdict.
 
-## Current integration and historical evidence
+## Historical Python integration 0.3.2
 
 The initial table and `protocol-baseline.json` above describe the preserved
 `feature/python ec6a3ed` baseline, not the integrated JAR. Do not rewrite those
@@ -46,6 +72,81 @@ invent pairing records. Optional absent units preserve old v1 artifact validatio
 
 New integrated results must have new filenames. Existing JSON under `results/`
 is historical evidence with its original JAR hash and limitations.
+
+## Unified MCP API smoke checks
+
+```bash
+python3 scripts/mcp_smoke_test.py target/codeclarity-mcp.jar
+python3 scripts/mcp_codex_smoke.py --output .codeclarity/evals/api-run --jar target/codeclarity-mcp.jar
+```
+
+The first command is a standalone real-STDIO smoke check: handshake, discovery,
+get_changes, mixed analyze_changes, get_symbol_context for both languages,
+committed source and line ranges, partial/truncation warnings, argument errors,
+and compatibility with compact context tools. The second starts a fresh Codex
+session with read-only sandboxing, default model and existing authentication;
+pass `--codex /path/to/codex` if needed. It records native MCP calls and verifies
+all three required tools were called, both languages retained metrics, and both
+contexts came from the resolved commit. The MCP configuration is process-local.
+
+The 12.11.2026 run is retained in
+[`results/unified-mcp-api.json`](results/unified-mcp-api.json): PASS, four native
+Codex MCP calls covering all three required operations and both languages.
+
+## Optional JDT LS navigation
+
+```bash
+python3 scripts/lsp_client_test.py target/codeclarity-mcp.jar
+python3 scripts/lsp_smoke_test.py
+python3 scripts/lsp_smoke_test.py --jdtls-home /path/to/extracted/jdtls --java /path/to/jdk/bin/java --output .codeclarity/evals/jdtls-live.json
+```
+
+The controlled protocol peer checks framing, duplex configuration requests,
+Location/LocationLink, references, startup/request/write timeouts, invalid input,
+stderr draining, graceful shutdown and forced process termination. It does not
+stand in for the last command, which starts real JDT LS through MCP and verifies
+cross-file definition/references, UTF-16 positions after Unicode, a clean working
+tree and metric isolation from failed startup. No Maven/Gradle import is enabled.
+The tools explicitly return WORKTREE scope, not a committed snapshot.
+
+[`results/jdtls-navigation.json`](results/jdtls-navigation.json) retains the
+12.11.2026 real-server run using JDT LS 1.54.0, a SHA-256-verified official archive,
+JDK 25 and server 0.1.6. Both semantic requests and the metric-isolation checks passed.
+
+## Live Java Skill check with six metrics
+
+For server 0.1.3, run a fresh agent against the repository's current
+`readability-review` Skill and actual MCP tools:
+
+```bash
+python3 scripts/llm_java_skill_e2e.py --output .codeclarity/evals/java-skill-run
+python3 scripts/llm_java_skill_e2e.py --output .codeclarity/evals/java-skill-run --verify-only
+```
+
+Pass `--codex /absolute/path/to/codex` if the CLI is not on PATH. The run uses
+existing CLI authentication and its default model. It creates a disposable Java-only
+Git fixture with two methods, configures the bundled MCP JAR for this process only,
+and directs the agent to the current Skill without providing the expected verdict.
+It does not install/update a plugin or change the home repository configuration.
+Use a new output directory for every agent run; verification can be repeated.
+
+`events.jsonl` retains raw CLI/MCP events. `evidence.json` verifies actual MCP calls,
+freeze before analysis starts, six numerical metric comparisons for each method,
+exact preservation of returned values/definitions/deltas, report coverage and
+`PASS`/`WARN` completeness, final Markdown rendering, and an unchanged input fixture.
+Full Draft 2020-12 report-schema validation uses the validator bundled in the JAR;
+its output is retained in `schema-validation.log`. The agent creates the independent,
+main, discovery and final artifacts under `artifacts/`.
+
+This checks the Skill and real MCP in a fresh agent, separately from the historical
+installed-plugin runs below. It does not verify an installed plugin cache or history
+persistence, and a single successful run does not guarantee future model behavior.
+
+The verified 12.11.2026 run is retained in
+[`results/java-six-metrics-skill.json`](results/java-six-metrics-skill.json):
+two Java files/methods, 12 numerical comparisons, freeze before analysis, complete
+coverage, one source-backed finding and final verdict `WARN`. History discovery
+is `UNAVAILABLE`; it does not make the main Java review incomplete.
 
 ## Reproduce the protocol results
 
@@ -110,6 +211,25 @@ recommendation: record whether the finding explains the labelled problem and
 whether its proposed change preserves intended behavior.
 
 ## Rule Discovery fixtures
+
+For a complete fresh-agent Java review with real MCP history writes, restart and
+idempotent replay checks, plus optional real JDT LS navigation, run:
+
+```sh
+python3 scripts/llm_java_skill_e2e.py --codex /path/to/codex --output .codeclarity/evals/full-workflow-01 --with-history --jdtls-home /path/to/jdtls --jdtls-java /path/to/java
+```
+
+The runner uses existing CLI authentication/default model and a process-local MCP
+configuration. History is written only in its disposable fixture repository; no
+human confirmations are manufactured. Omit both JDT LS options to test the core
+review/history workflow alone. Without `--with-history`, history writes remain
+forbidden. Retain `events.jsonl`, reports, `evidence.json` and the fixture history.
+Verification checks the frozen review precedes metrics, all 12 Java comparisons
+match MCP receipts, the final report schema/Markdown, two fresh-process history
+reads, and unchanged file bytes/mtime and counters on an identical review replay.
+With JDT LS configured, actual native agent definition/references calls must
+resolve the unchanged caller to the reviewed declaration and back. This checks
+the repository Skill/JAR, not the installed plugin cache.
 
 `fixtures/history/sufficient.json` and `insufficient.json` are explicitly
 synthetic. Every confirmation has `source: DEMO_FIXTURE`, a test identity and
