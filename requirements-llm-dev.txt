@@ -1,0 +1,4 @@
+# Local validation tools; not required by the Java MCP transport.
+-r requirements-python.txt
+PyYAML==6.0.3
+jsonschema==4.25.1

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "provenance": "Hand-authored CodeClarity demonstration fixture. These are invented test reviews and confirmations, not real developer feedback. Never copy into a user's production history.",
+  "reviews": [
+    {"reviewId": "demo-review-1", "synthetic": true},
+    {"reviewId": "demo-review-2", "synthetic": true},
+    {"reviewId": "demo-review-3", "synthetic": true}
+  ],
+  "categories": [
+    {"categoryId": "opaque_names", "name": "Opaque domain names", "description": "Non-domain variable names hide the meaning of a calculation."}
+  ],
+  "findings": [
+    {"findingId": "demo-finding-1", "reviewId": "demo-review-1", "snapshotId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "source": "AI_REVIEW", "categoryId": "opaque_names", "location": {"path": "invoice_totals.py", "startLine": 1, "endLine": 3}, "description": "a/b/x/y hide the meaning of invoice quantities and prices.", "recommendation": "Use line_items, quantity and unit_price.", "evidence": ["Synthetic example: def subtotal(a): ... sum(x * y for x, y in b)"], "reviewStatus": "PENDING_FEEDBACK", "synthetic": true},
+    {"findingId": "demo-finding-2", "reviewId": "demo-review-2", "snapshotId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "source": "AI_REVIEW", "categoryId": "opaque_names", "location": {"path": "Shipping.java", "startLine": 2, "endLine": 4}, "description": "p/q hide package weight and shipping rate in a charge calculation.", "recommendation": "Name weightGrams and ratePerGram.", "evidence": ["Synthetic example: long charge(long p, long q) { return p * q; }"], "reviewStatus": "PENDING_FEEDBACK", "synthetic": true},
+    {"findingId": "demo-finding-3", "reviewId": "demo-review-3", "snapshotId": "cccccccccccccccccccccccccccccccccccccccc", "source": "AI_REVIEW", "categoryId": "opaque_names", "location": {"path": "inventory.py", "startLine": 1, "endLine": 2}, "description": "m/n hide available stock and reserved stock.", "recommendation": "Name available_units and reserved_units.", "evidence": ["Synthetic example: def remaining(m, n): return m - n"], "reviewStatus": "PENDING_FEEDBACK", "synthetic": true}
+  ],
+  "feedback": [
+    {"feedbackId": "demo-feedback-1", "reviewId": "demo-review-1", "findingId": "demo-finding-1", "decision": "FIXED", "source": "DEMO_FIXTURE", "confirmedBy": "synthetic-developer", "confirmationEvidence": "fixture:demo-review-1/renamed invoice variables", "synthetic": true},
+    {"feedbackId": "demo-feedback-2", "reviewId": "demo-review-2", "findingId": "demo-finding-2", "decision": "FIXED", "source": "DEMO_FIXTURE", "confirmedBy": "synthetic-developer", "confirmationEvidence": "fixture:demo-review-2/renamed shipping parameters", "synthetic": true}
+  ],
+  "ruleCandidates": []
+}

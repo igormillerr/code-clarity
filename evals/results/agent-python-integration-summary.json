@@ -1,0 +1,406 @@
+{
+  "artifactCheckExecutionLevel": "ARTIFACT_CHECK",
+  "checks": {
+    "history-insufficient": "PASS",
+    "history-sufficient": "PASS",
+    "python-naming": "PASS"
+  },
+  "executionLevel": "FORWARD_AGENT_WITH_REAL_MCP",
+  "hashes": {
+    ".codeclarity/agent-python-integration/analysis.json": "77b9713b512a198506394dd6c6efcf142ac35dddf3985d86710e952db6dd9f9e",
+    ".codeclarity/agent-python-integration/check.history-insufficient.json": "6b235f960399fc9ebda26300a814b0f8be7f9d53440c486e2c1566e86e6fbfa5",
+    ".codeclarity/agent-python-integration/check.history-sufficient.json": "e753e4c5e3e3b1e89206e3e10fe1828ff630c934071ed11a639219bda34a1992",
+    ".codeclarity/agent-python-integration/discovery.insufficient.json": "48d58e416c73ee5cc593301c987522a90c64e7fc23963b4e2284aad9a2025f7a",
+    ".codeclarity/agent-python-integration/discovery.json": "3b99d580701a77d08c0246432c22b2c0137a87a78a64c799db0d5d36e1d01d51",
+    ".codeclarity/agent-python-integration/discovery.sufficient.json": "c6871bf491307481a6bf871c79460a43a9fc562d072a8dddde23005512569668",
+    ".codeclarity/agent-python-integration/independent.frozen.json": "bc11cb17ab4bb31e0ffa0064523e53515912605060b3adc96a2e7acdd6ad4fe1",
+    ".codeclarity/agent-python-integration/report.final.json": "46174b36f02f4664480de63978ec7204a35f1035aea51d8eceb0399dbc92df7d",
+    ".codeclarity/agent-python-integration/report.final.md": "da493315f96a4eddb33836ab89d672008dbb354dc72c265b47f2697c9c3ee890",
+    ".codeclarity/agent-python-integration/report.main.json": "786126497925b9ec5fd07d69404d21a4d9113ce0b89c1579b0d226eca6b9200b",
+    ".codeclarity/agent-python-integration/report.main.md": "c1dd79d8ecb0efd66f1806442700281d6cb713cf6a3ca6d2498f60f7f31d3f45",
+    ".codeclarity/agent-python-integration/trace.json": "3ad313a08fc59ff3a5cc16819e54911faed544a453514f0a05abcd7dac2e632f",
+    "evals/results/agent-python-integration.json": "fde5569bc760207c9249fa990dc4f9b582199c6aeb995b27b538980abf5728c5"
+  },
+  "jarBuildKind": "source-built target artifact, not plugin/server bundled artifact",
+  "jarPath": "C:/Users/Igor Miller/Documents/projects/code-clarity/target/codeclarity-mcp.jar",
+  "jarSha256": "510508109d64bda8b0b3fa0bdd2f87aa1b71f52f8780d7c9ebf85f0b0688d107",
+  "limitations": [
+    "Test-only direct real-JAR McpClient transport; not installed-plugin end-to-end execution.",
+    "Successful JAR calls required approved access after sandbox AccessDeniedException.",
+    "No LSP or history/candidate operations were advertised. No production history or feedback was written.",
+    "Synthetic fixture confirmations are test evidence only and were never mixed with the real review.",
+    "Artifact checks verify retained artifacts and receipts, rather than proving model authorship."
+  ],
+  "verdict": "WARN",
+  "scope": {
+    "baseSha": "fa446b021c44b41658796b349fabb360bf0f8051",
+    "headSha": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7",
+    "languages": [
+      "python"
+    ],
+    "paths": [
+      "invoice_totals.py"
+    ],
+    "repoRoot": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/python-integration-naming/repo",
+    "snapshotId": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7"
+  },
+  "independentReview": {
+    "artifact": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\agent-python-integration\\independent.frozen.json",
+    "coverage": {
+      "entitiesExpected": 2,
+      "entitiesReviewed": 2,
+      "entityUnit": "SNAPSHOT_ENTITY",
+      "filesExpected": 1,
+      "filesReviewed": 1
+    },
+    "findings": [
+      {
+        "categoryId": "opaque_names",
+        "description": "The subtotal calculation replaces line_items and item with a, b, x, and y. A reader must trace the temporary tuple collection and its positional unpacking to recover which values are quantities and unit prices.",
+        "evidence": [
+          "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7:invoice_totals.py:1-3",
+          "fa446b021c44b41658796b349fabb360bf0f8051:invoice_totals.py:1-2"
+        ],
+        "findingId": "finding-5053cc39ca084497734ccc249e9ed5d502366e8225212a42a9020f7b0f344386",
+        "location": {
+          "endLine": 3,
+          "path": "invoice_totals.py",
+          "startLine": 1
+        },
+        "metricRelation": "INSUFFICIENT_DATA",
+        "recommendation": "Keep descriptive line-item names and multiply quantity by unit_price directly, or give the intermediate collection and unpacked values names that state those roles.",
+        "reviewId": "review-28ebadc7c500f3f8590ebfb13807f9f8e823d71521cec4851567c5bdfa494def",
+        "reviewStatus": "PENDING_FEEDBACK",
+        "snapshotId": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7",
+        "source": "AI_REVIEW"
+      }
+    ],
+    "status": "COMPLETE"
+  },
+  "findings": [
+    {
+      "categoryId": "opaque_names",
+      "description": "The subtotal calculation replaces line_items and item with a, b, x, and y. A reader must trace the temporary tuple collection and its positional unpacking to recover which values are quantities and unit prices.",
+      "evidence": [
+        "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7:invoice_totals.py:1-3",
+        "fa446b021c44b41658796b349fabb360bf0f8051:invoice_totals.py:1-2"
+      ],
+      "findingId": "finding-5053cc39ca084497734ccc249e9ed5d502366e8225212a42a9020f7b0f344386",
+      "location": {
+        "endLine": 3,
+        "path": "invoice_totals.py",
+        "startLine": 1
+      },
+      "metricRelation": "UNRELATED",
+      "recommendation": "Keep descriptive line-item names and multiply quantity by unit_price directly, or give the intermediate collection and unpacked values names that state those roles.",
+      "reviewId": "review-28ebadc7c500f3f8590ebfb13807f9f8e823d71521cec4851567c5bdfa494def",
+      "reviewStatus": "PENDING_FEEDBACK",
+      "snapshotId": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7",
+      "source": "AI_REVIEW"
+    }
+  ],
+  "metrics": [
+    {
+      "after": {
+        "definition": {
+          "algorithm": "codeclarity/python-cyclo/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "cyclomatic_complexity",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 3.0
+      },
+      "before": {
+        "definition": {
+          "algorithm": "codeclarity/python-cyclo/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "cyclomatic_complexity",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 2.0
+      },
+      "delta": 1.0,
+      "entity": "subtotal(a)",
+      "metric": "cyclomatic_complexity",
+      "path": "invoice_totals.py",
+      "status": "COMPARED"
+    },
+    {
+      "after": {
+        "definition": {
+          "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false",
+          "analyzer": "complexipy/8.3.0",
+          "id": "cognitive_complexity",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 2.0
+      },
+      "before": {
+        "definition": {
+          "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false",
+          "analyzer": "complexipy/8.3.0",
+          "id": "cognitive_complexity",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "delta": 1.0,
+      "entity": "subtotal(a)",
+      "metric": "cognitive_complexity",
+      "path": "invoice_totals.py",
+      "status": "COMPARED"
+    },
+    {
+      "after": {
+        "definition": {
+          "algorithm": "codeclarity/python-physical-sloc/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "function_sloc",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 3.0
+      },
+      "before": {
+        "definition": {
+          "algorithm": "codeclarity/python-physical-sloc/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "function_sloc",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 2.0
+      },
+      "delta": 1.0,
+      "entity": "subtotal(a)",
+      "metric": "function_sloc",
+      "path": "invoice_totals.py",
+      "status": "COMPARED"
+    },
+    {
+      "after": {
+        "definition": {
+          "algorithm": "codeclarity/python-nesting/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "max_nesting_depth",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "before": {
+        "definition": {
+          "algorithm": "codeclarity/python-nesting/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "max_nesting_depth",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "delta": 0.0,
+      "entity": "subtotal(a)",
+      "metric": "max_nesting_depth",
+      "path": "invoice_totals.py",
+      "status": "COMPARED"
+    },
+    {
+      "after": {
+        "definition": {
+          "algorithm": "codeclarity/python-parameters/include-receiver/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "parameter_count",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "before": {
+        "definition": {
+          "algorithm": "codeclarity/python-parameters/include-receiver/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "parameter_count",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "delta": 0.0,
+      "entity": "subtotal(a)",
+      "metric": "parameter_count",
+      "path": "invoice_totals.py",
+      "status": "COMPARED"
+    },
+    {
+      "after": {
+        "definition": {
+          "algorithm": "codeclarity/python-explicit-returns/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "return_count",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "before": {
+        "definition": {
+          "algorithm": "codeclarity/python-explicit-returns/v1",
+          "analyzer": "codeclarity-python-ast/1",
+          "id": "return_count",
+          "language": "python"
+        },
+        "reason": null,
+        "status": "AVAILABLE",
+        "value": 1.0
+      },
+      "delta": 0.0,
+      "entity": "subtotal(a)",
+      "metric": "return_count",
+      "path": "invoice_totals.py",
+      "status": "COMPARED"
+    }
+  ],
+  "entityMatches": [
+    {
+      "after": [
+        {
+          "lines": {
+            "endLine": 3,
+            "startLine": 1
+          },
+          "matchingAmbiguous": false,
+          "matchingKey": "subtotal",
+          "signature": "subtotal(a)"
+        }
+      ],
+      "before": [
+        {
+          "lines": {
+            "endLine": 2,
+            "startLine": 1
+          },
+          "matchingAmbiguous": false,
+          "matchingKey": "subtotal",
+          "signature": "subtotal(line_items)"
+        }
+      ],
+      "key": "subtotal",
+      "newPath": "invoice_totals.py",
+      "oldPath": "invoice_totals.py",
+      "path": "invoice_totals.py",
+      "status": "MATCHED"
+    }
+  ],
+  "coverage": {
+    "entitiesAnalyzed": 1,
+    "entitiesExpected": 1,
+    "entityUnit": "MATCH_GROUP",
+    "filesAnalyzed": 1,
+    "filesExpected": 1
+  },
+  "ruleDiscovery": {
+    "reason": "The discovered real JAR exposes only six analysis/list/inspect tools and no get_review_history, append_review_result, or propose_rule_candidate operation. No history was read or written.",
+    "status": "UNAVAILABLE"
+  },
+  "syntheticAssessments": [
+    {
+      "candidate": {
+        "candidateId": "candidate-96583ae73c92e3abaa815b161ad496cc4d8f689660eab63379a751b8d0e75025",
+        "categoryId": "opaque_names",
+        "confirmedFeedbackIds": [
+          "demo-feedback-1",
+          "demo-feedback-2"
+        ],
+        "description": "Three distinct synthetic observations show invoice, shipping, and stock calculations whose generic variable names hide domain roles. Two distinct supplied DEMO_FIXTURE confirmations describe accepted renames. Consider a review rule that requests meaningful names where identifying units or business roles requires tracing a calculation.",
+        "examples": [
+          {
+            "evidence": [
+              "Synthetic example: def subtotal(a): ... sum(x * y for x, y in b)"
+            ],
+            "findingId": "demo-finding-1",
+            "fixture": "C:/Users/Igor Miller/Documents/projects/code-clarity/evals/fixtures/history/sufficient.json",
+            "location": {
+              "endLine": 3,
+              "path": "invoice_totals.py",
+              "startLine": 1
+            },
+            "reviewId": "demo-review-1",
+            "snapshotId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "suggestedNames": "Use line_items, quantity and unit_price."
+          },
+          {
+            "evidence": [
+              "Synthetic example: long charge(long p, long q) { return p * q; }"
+            ],
+            "findingId": "demo-finding-2",
+            "fixture": "C:/Users/Igor Miller/Documents/projects/code-clarity/evals/fixtures/history/sufficient.json",
+            "location": {
+              "endLine": 4,
+              "path": "Shipping.java",
+              "startLine": 2
+            },
+            "reviewId": "demo-review-2",
+            "snapshotId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "suggestedNames": "Name weightGrams and ratePerGram."
+          },
+          {
+            "evidence": [
+              "Synthetic example: def remaining(m, n): return m - n"
+            ],
+            "findingId": "demo-finding-3",
+            "fixture": "C:/Users/Igor Miller/Documents/projects/code-clarity/evals/fixtures/history/sufficient.json",
+            "location": {
+              "endLine": 2,
+              "path": "inventory.py",
+              "startLine": 1
+            },
+            "reviewId": "demo-review-3",
+            "snapshotId": "cccccccccccccccccccccccccccccccccccccccc",
+            "suggestedNames": "Name available_units and reserved_units."
+          }
+        ],
+        "exceptions": [
+          "Conventional short loop indexes where no domain role is hidden.",
+          "Mathematical symbols whose meaning is established by the surrounding formula or documentation.",
+          "Names required by an external protocol or compatibility contract."
+        ],
+        "status": "PROPOSED",
+        "suggestedValidation": "Have a human compare the three supplied synthetic examples with conventional index and documented mathematical-symbol counterexamples before considering any real rule.",
+        "supportingFindingIds": [
+          "demo-finding-1",
+          "demo-finding-2",
+          "demo-finding-3"
+        ],
+        "synthetic": true,
+        "title": "Keep domain roles visible in calculation names"
+      },
+      "decision": "RULE_SUGGESTED",
+      "executionLevel": "SYNTHETIC_SKILL_EVAL",
+      "fixture": "C:/Users/Igor Miller/Documents/projects/code-clarity/evals/fixtures/history/sufficient.json",
+      "synthetic": true,
+      "userFacingMessage": ""
+    },
+    {
+      "decision": "NO_SUGGESTION",
+      "executionLevel": "SYNTHETIC_SKILL_EVAL",
+      "fixture": "C:/Users/Igor Miller/Documents/projects/code-clarity/evals/fixtures/history/insufficient.json",
+      "synthetic": true,
+      "userFacingMessage": ""
+    }
+  ]
+}

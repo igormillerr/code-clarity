@@ -1,0 +1,2 @@
+# Install into the interpreter selected by scripts/setup.py.
+complexipy==8.3.0

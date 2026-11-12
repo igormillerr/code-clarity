@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:codeclarity:history:1",
+  "title": "Proposed history exchange; persistence belongs to Java Core",
+  "type": "object", "required": ["schemaVersion", "reviews", "categories", "findings", "feedback", "ruleCandidates"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reviews": {"type": "array", "items": {"type": "object", "required": ["reviewId"]}},
+    "categories": {"type": "array", "items": {"type": "object", "required": ["categoryId", "name"], "properties": {"categoryId": {"type": "string"}, "name": {"type": "string"}, "description": {"type": "string"}}}},
+    "findings": {"type": "array", "items": {"type": "object", "required": ["findingId", "reviewId", "categoryId"]}},
+    "feedback": {"type": "array", "items": {"$ref": "#/$defs/feedback"}},
+    "ruleCandidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+    "synthetic": {"type": "boolean"}, "provenance": {"type": "string"}
+  },
+  "$defs": {
+    "feedback": {
+      "type": "object", "required": ["feedbackId", "reviewId", "findingId", "decision", "source", "confirmedBy", "confirmationEvidence"],
+      "properties": {"feedbackId": {"type": "string", "minLength": 1}, "reviewId": {"type": "string"}, "findingId": {"type": "string"}, "decision": {"enum": ["FIXED", "REJECTED"]}, "source": {"enum": ["HUMAN", "VERIFIED_PROCESS", "DEMO_FIXTURE"]}, "confirmedBy": {"type": "string", "minLength": 1}, "confirmationEvidence": {"type": "string", "minLength": 1}, "synthetic": {"type": "boolean"}}
+    },
+    "candidate": {
+      "type": "object", "required": ["candidateId", "categoryId", "status", "title", "description", "supportingFindingIds", "confirmedFeedbackIds", "examples", "exceptions"],
+      "properties": {"candidateId": {"type": "string", "minLength": 1}, "categoryId": {"type": "string"}, "status": {"const": "PROPOSED"}, "title": {"type": "string"}, "description": {"type": "string"}, "supportingFindingIds": {"type": "array", "uniqueItems": true, "minItems": 3, "items": {"type": "string"}}, "confirmedFeedbackIds": {"type": "array", "uniqueItems": true, "minItems": 2, "items": {"type": "string"}}, "examples": {"type": "array", "minItems": 1, "items": {"type": "object"}}, "exceptions": {"type": "array", "items": {"type": "string"}}, "synthetic": {"type": "boolean"}}
+    }
+  }
+}

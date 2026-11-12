@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="CodeClarity"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0">
+    <description>Method complexity signals for Java code review</description>
+    <rule ref="category/java/design.xml/CognitiveComplexity"/>
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="classReportLevel" value="2147483647"/>
+        </properties>
+    </rule>
+</ruleset>

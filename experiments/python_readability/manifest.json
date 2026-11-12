@@ -1,0 +1,565 @@
+{
+  "schema": "codeclarity/python-experiments/v1",
+  "experiments": [
+    {
+      "id": "structure",
+      "function": "shipping_fee",
+      "domain": "Ordinary dictionaries with all four fields: paid/priority booleans, integer items, local/remote destination. Amounts are illustrative integer fee units.",
+      "expected_metrics": {
+        "cyclomatic_complexity": [
+          5,
+          5
+        ],
+        "cognitive_complexity": [
+          12,
+          4
+        ],
+        "function_sloc": [
+          12,
+          10
+        ],
+        "max_nesting_depth": [
+          4,
+          1
+        ],
+        "parameter_count": [
+          1,
+          1
+        ],
+        "return_count": [
+          1,
+          5
+        ]
+      },
+      "behavior_cases": [
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": -1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 0,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": false,
+              "items": 3,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": -1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 0,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": 500
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": 900
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": 1500
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 1,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": 1500
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "local",
+              "priority": false
+            }
+          ],
+          "expected": 500
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "local",
+              "priority": true
+            }
+          ],
+          "expected": 900
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "remote",
+              "priority": false
+            }
+          ],
+          "expected": 1500
+        },
+        {
+          "args": [
+            {
+              "paid": true,
+              "items": 3,
+              "destination": "remote",
+              "priority": true
+            }
+          ],
+          "expected": 1500
+        }
+      ],
+      "expected_case_count": 32
+    },
+    {
+      "id": "naming",
+      "function": "remaining",
+      "domain": "Nonnegative integer capacity and reserved count; positional argument order is capacity, reserved.",
+      "expected_metrics": {
+        "cyclomatic_complexity": [
+          2,
+          2
+        ],
+        "cognitive_complexity": [
+          1,
+          1
+        ],
+        "function_sloc": [
+          5,
+          5
+        ],
+        "max_nesting_depth": [
+          1,
+          1
+        ],
+        "parameter_count": [
+          2,
+          2
+        ],
+        "return_count": [
+          2,
+          2
+        ]
+      },
+      "behavior_cases": [
+        {
+          "args": [
+            0,
+            0
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            0,
+            1
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            0,
+            5
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            0,
+            25
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            0,
+            30
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            1,
+            0
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            1,
+            1
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            1,
+            5
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            1,
+            25
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            1,
+            30
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            10,
+            0
+          ],
+          "expected": 10
+        },
+        {
+          "args": [
+            10,
+            1
+          ],
+          "expected": 9
+        },
+        {
+          "args": [
+            10,
+            5
+          ],
+          "expected": 5
+        },
+        {
+          "args": [
+            10,
+            25
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            10,
+            30
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            25,
+            0
+          ],
+          "expected": 25
+        },
+        {
+          "args": [
+            25,
+            1
+          ],
+          "expected": 24
+        },
+        {
+          "args": [
+            25,
+            5
+          ],
+          "expected": 20
+        },
+        {
+          "args": [
+            25,
+            25
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            25,
+            30
+          ],
+          "expected": 0
+        }
+      ],
+      "expected_case_count": 20
+    }
+  ]
+}

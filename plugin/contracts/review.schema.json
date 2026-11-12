@@ -1,0 +1,623 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:codeclarity:review:1",
+  "title": "CodeClarity LLM review exchange v1 (proposed integration contract)",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "reviewId",
+    "scope",
+    "independentReview",
+    "metrics",
+    "findings",
+    "coverage",
+    "skips",
+    "verdict",
+    "ruleDiscovery"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "reviewId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "repoRoot",
+        "baseSha",
+        "headSha",
+        "snapshotId",
+        "languages",
+        "paths"
+      ],
+      "properties": {
+        "repoRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseSha": {
+          "type": "string",
+          "pattern": "^([a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        "headSha": {
+          "type": "string",
+          "pattern": "^([a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        "snapshotId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "java",
+              "python"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "independentReview": {
+      "type": "object",
+      "required": [
+        "status",
+        "artifact",
+        "coverage",
+        "findings"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "COMPLETE",
+            "INCOMPLETE"
+          ]
+        },
+        "artifact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverage": {
+          "type": "object",
+          "required": [
+            "filesExpected",
+            "filesReviewed",
+            "entitiesExpected",
+            "entitiesReviewed"
+          ],
+          "properties": {
+            "filesExpected": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "filesReviewed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "entitiesExpected": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "entitiesReviewed": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "entityUnit": {
+              "enum": [
+                "SNAPSHOT_ENTITY",
+                "MATCH_GROUP",
+                "LEGACY_METRIC_ENTITY"
+              ],
+              "description": "Optional explicit count basis; absent preserves historical v1 artifacts."
+            }
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/comparison"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": [
+        "filesExpected",
+        "filesAnalyzed",
+        "entitiesExpected",
+        "entitiesAnalyzed"
+      ],
+      "properties": {
+        "filesExpected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "filesAnalyzed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entitiesExpected": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "entitiesAnalyzed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "entityUnit": {
+          "enum": [
+            "SNAPSHOT_ENTITY",
+            "MATCH_GROUP",
+            "LEGACY_METRIC_ENTITY"
+          ],
+          "description": "Optional explicit count basis; absent preserves historical v1 artifacts."
+        }
+      }
+    },
+    "skips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stage",
+          "reason"
+        ],
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "WARN",
+        "INCOMPLETE",
+        "NO_CHANGES"
+      ]
+    },
+    "ruleDiscovery": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_RUN",
+            "RULE_SUGGESTED",
+            "NO_SUGGESTION",
+            "UNAVAILABLE",
+            "ERROR"
+          ]
+        },
+        "candidate": {
+          "type": "object"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "entityMatches": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entityMatch"
+      },
+      "description": "Exact Core match records with owning path/oldPath/newPath added. No LLM-inferred pairing."
+    },
+    "fileCoverage": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/fileCoverage"},
+      "description": "Exact Core files[].coverage base/head sides plus owning path/oldPath/newPath; independent of entity counts."
+    }
+  },
+  "$defs": {
+    "definition": {
+      "type": "object",
+      "required": [
+        "id",
+        "language",
+        "analyzer",
+        "algorithm"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "java",
+            "python"
+          ]
+        },
+        "analyzer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "algorithm": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "value": {
+      "type": "object",
+      "required": [
+        "definition",
+        "status"
+      ],
+      "properties": {
+        "definition": {
+          "$ref": "#/$defs/definition"
+        },
+        "status": {
+          "enum": [
+            "AVAILABLE",
+            "UNSUPPORTED",
+            "MISSING",
+            "ERROR",
+            "ENTITY_ABSENT"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "AVAILABLE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "path",
+        "entity",
+        "metric",
+        "status",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "entity": {
+          "type": "string"
+        },
+        "metric": {
+          "enum": [
+            "cyclomatic_complexity",
+            "cognitive_complexity",
+            "function_sloc",
+            "max_nesting_depth",
+            "parameter_count",
+            "return_count"
+          ]
+        },
+        "status": {
+          "enum": [
+            "COMPARED",
+            "INCOMPATIBLE",
+            "UNAVAILABLE"
+          ]
+        },
+        "before": {
+          "$ref": "#/$defs/value"
+        },
+        "after": {
+          "$ref": "#/$defs/value"
+        },
+        "delta": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "findingId",
+        "reviewId",
+        "snapshotId",
+        "source",
+        "categoryId",
+        "location",
+        "evidence",
+        "description",
+        "recommendation",
+        "metricRelation",
+        "reviewStatus"
+      ],
+      "properties": {
+        "findingId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshotId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "AI_REVIEW",
+            "METRIC_SIGNAL"
+          ]
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "location": {
+          "type": "object",
+          "required": [
+            "path",
+            "startLine",
+            "endLine"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "startLine": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "endLine": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommendation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metricRelation": {
+          "enum": [
+            "SUPPORTED",
+            "UNRELATED",
+            "INSUFFICIENT_DATA"
+          ]
+        },
+        "reviewStatus": {
+          "const": "PENDING_FEEDBACK"
+        },
+        "originFindingIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sourceEntity": {
+      "type": "object",
+      "required": [
+        "signature",
+        "lines",
+        "matchingKey",
+        "matchingAmbiguous"
+      ],
+      "properties": {
+        "signature": {
+          "type": "string",
+          "minLength": 1
+        },
+        "matchingKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "matchingAmbiguous": {
+          "type": "boolean"
+        },
+        "matchingWarning": {
+          "type": ["string", "null"],
+          "description": "Adapter warning when cross-snapshot identity cannot be established; never reconstruct a delta from raw values."
+        },
+        "lines": {
+          "type": "object",
+          "required": [
+            "startLine",
+            "endLine"
+          ],
+          "properties": {
+            "startLine": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "endLine": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "fileCoverage": {
+      "type": "object",
+      "required": ["path", "oldPath", "newPath", "base", "head"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "oldPath": {"type": ["string", "null"]},
+        "newPath": {"type": ["string", "null"]},
+        "base": {"$ref": "#/$defs/fileCoverageSide"},
+        "head": {"$ref": "#/$defs/fileCoverageSide"}
+      }
+    },
+    "fileCoverageSide": {
+      "type": "object",
+      "required": ["status", "outsideEntityLines", "reason"],
+      "properties": {
+        "status": {"enum": ["COMPLETE", "OUTSIDE_SUPPORTED_ENTITIES", "UNKNOWN"]},
+        "outsideEntityLines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["startLine", "endLine"],
+            "properties": {
+              "startLine": {"type": "integer", "minimum": 1},
+              "endLine": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "entityMatch": {
+      "type": "object",
+      "required": [
+        "path",
+        "oldPath",
+        "newPath",
+        "key",
+        "status",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "oldPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "newPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "MATCHED",
+            "ADDED",
+            "REMOVED",
+            "AMBIGUOUS",
+            "UNVERIFIED"
+          ]
+        },
+        "before": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceEntity"
+          }
+        },
+        "after": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceEntity"
+          }
+        }
+      }
+    }
+  }
+}

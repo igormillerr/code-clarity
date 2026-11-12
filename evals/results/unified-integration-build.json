@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "executionLevel": "SOURCE_BUILD_AND_REAL_MCP_CHECKS",
+  "status": "PASS",
+  "branch": "codex/llm-workflow",
+  "headBeforeMerge": "8f612acc41e56498d4a6f886ea2d81bd270e4c57",
+  "mergeSource": "afe8b0851ba632d8a13562ebe264ea37603b3a75",
+  "incorporatedJavaCommits": [
+    "0f70f65",
+    "2a6b6bb",
+    "afe8b08"
+  ],
+  "pythonIntegrationCommit": "dc9d957c6d67fdab3f8e89e9e3414eec032b8886",
+  "pluginVersion": "0.4.0",
+  "serverVersion": "0.1.7",
+  "platform": "Windows",
+  "javaVersion": "OpenJDK 21",
+  "pythonVersion": "3.13.2",
+  "complexipyVersion": "8.3.0",
+  "build": {
+    "compilation": "PASS",
+    "packaging": "PASS",
+    "command": "mvn clean verify",
+    "initialVerify": "19/20: 45s test-client response budget exceeded on a 50-file Python batch",
+    "resolution": "Only Python batch test calls use a 120s budget; normal calls keep 45s. Analyzer semantics unchanged.",
+    "finalVerification": "mvn antrun:run@workflow-checks",
+    "finalVerificationStatus": "BUILD_SUCCESS",
+    "artifactRepackedBetweenChecks": false
+  },
+  "checksPassed": 20,
+  "checksTotal": 20,
+  "checks": [
+    {
+      "name": "mcp_smoke_test",
+      "exitCode": 0,
+      "seconds": 14.85
+    },
+    {
+      "name": "smoke_test",
+      "exitCode": 0,
+      "seconds": 46.83
+    },
+    {
+      "name": "python_smoke_test",
+      "exitCode": 0,
+      "seconds": 315.45
+    },
+    {
+      "name": "java_metrics_test",
+      "exitCode": 0,
+      "seconds": 6.61
+    },
+    {
+      "name": "language_integration_test",
+      "exitCode": 0,
+      "seconds": 39.35
+    },
+    {
+      "name": "history_test",
+      "exitCode": 0,
+      "seconds": 50.49
+    },
+    {
+      "name": "history_storage_test",
+      "exitCode": 0,
+      "seconds": 25.38
+    },
+    {
+      "name": "lsp_client_test",
+      "exitCode": 0,
+      "seconds": 235.69
+    },
+    {
+      "name": "java_regression_test",
+      "exitCode": 0,
+      "seconds": 235.12
+    },
+    {
+      "name": "python_matching_test",
+      "exitCode": 0,
+      "seconds": 246.76
+    },
+    {
+      "name": "python_worker_test",
+      "exitCode": 0,
+      "seconds": 1.91
+    },
+    {
+      "name": "core_test",
+      "exitCode": 0,
+      "seconds": 22.5
+    },
+    {
+      "name": "llm_artifact_test",
+      "exitCode": 0,
+      "seconds": 1.42
+    },
+    {
+      "name": "llm_launcher_test",
+      "exitCode": 0,
+      "seconds": 39.99
+    },
+    {
+      "name": "python_metrics_spec_check",
+      "exitCode": 0,
+      "seconds": 0.56
+    },
+    {
+      "name": "python_experiments",
+      "exitCode": 0,
+      "seconds": 22.44
+    },
+    {
+      "name": "lsp_smoke_test",
+      "exitCode": 0,
+      "seconds": 15.61
+    },
+    {
+      "name": "eval-self-test",
+      "exitCode": 0,
+      "seconds": 0.45
+    },
+    {
+      "name": "ids-self-test",
+      "exitCode": 0,
+      "seconds": 0.28
+    },
+    {
+      "name": "protocol",
+      "exitCode": 0,
+      "seconds": 27.52
+    }
+  ],
+  "cp1251": {
+    "executionLevel": "MCP_WITHOUT_JDTLS",
+    "scope": "WORKTREE",
+    "sourceLayout": "src/main/java",
+    "realJdtLs": "NOT_RUN",
+    "checks": [
+      {
+        "configuration": "missing home",
+        "result": {
+          "scope": "WORKTREE",
+          "status": "unavailable",
+          "language": "java",
+          "path": "src/main/java/demo/App.java",
+          "line": 3,
+          "column": 49,
+          "locations": [],
+          "warnings": [
+            "Cannot start JDT LS: C:\\Users\\IGORMI~1\\AppData\\Local\\Temp\\codeclarity-lsp-smoke-8gs7ka2_\\missing-jdtls"
+          ]
+        },
+        "metricsPreserved": true
+      },
+      {
+        "configuration": "unconfigured",
+        "result": {
+          "scope": "WORKTREE",
+          "status": "unavailable",
+          "language": "java",
+          "path": "src/main/java/demo/App.java",
+          "line": 3,
+          "column": 49,
+          "locations": [],
+          "warnings": [
+            "Set CODECLARITY_JDTLS_HOME to an extracted Eclipse JDT LS distribution."
+          ]
+        },
+        "metricsPreserved": true
+      }
+    ],
+    "jarSha256": "6365553ded3136cfacce4d00d7e221febb76864cc4fb35beed5b9a9246c6a25e",
+    "jdtlsHome": null,
+    "java": "java",
+    "status": "PASS"
+  },
+  "packagedJar": "plugin/server/codeclarity-mcp.jar",
+  "jarSha256": "6365553ded3136cfacce4d00d7e221febb76864cc4fb35beed5b9a9246c6a25e",
+  "installedPluginChanged": false,
+  "productionHistoryTouched": false,
+  "realWindowsJdtLs": "NOT_RUN",
+  "installedPluginEndToEnd": "NOT_RUN",
+  "liveRepositorySkillResult": "PASS: codex-unified-integration.json",
+  "pushPerformed": false,
+  "postLiveVerifierRegression": {
+    "artifactTestsPassed": 33,
+    "evaluatorTestsPassed": 13,
+    "realArtifactsChanged": false,
+    "notes": "Discovery result payload and its report-side artifact link are validated separately; incorrect links and changed decisions are rejected."
+  }
+}

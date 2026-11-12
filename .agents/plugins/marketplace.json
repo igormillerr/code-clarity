@@ -1,0 +1,12 @@
+{
+  "name": "codeclarity-local",
+  "interface": {"displayName": "CodeClarity Local"},
+  "plugins": [
+    {
+      "name": "codeclarity",
+      "source": {"source": "local", "path": "./plugin"},
+      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "scenarioId": "python-naming",
+  "executionLevel": "ARTIFACT_CHECK",
+  "status": "PASS",
+  "errors": [],
+  "note": "Checks supplied artifacts, not independent proof that Codex generated them."
+}

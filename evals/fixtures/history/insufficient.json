@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "provenance": "Hand-authored synthetic no-suggestion fixture. One pending finding is not evidence of a confirmed fix.",
+  "reviews": [{"reviewId": "demo-pending-review", "synthetic": true}],
+  "categories": [{"categoryId": "opaque_names", "name": "Opaque domain names"}],
+  "findings": [
+    {"findingId": "demo-pending-finding", "reviewId": "demo-pending-review", "snapshotId": "dddddddddddddddddddddddddddddddddddddddd", "source": "AI_REVIEW", "categoryId": "opaque_names", "location": {"path": "totals.py", "startLine": 1, "endLine": 2}, "description": "Opaque names in a synthetic example.", "recommendation": "Use domain-specific names.", "evidence": ["Synthetic example: def total(a, b): return a * b"], "reviewStatus": "PENDING_FEEDBACK", "synthetic": true}
+  ],
+  "feedback": [],
+  "ruleCandidates": []
+}

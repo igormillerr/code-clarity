@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "INSTALLED_PLUGIN_CODEX_CLI",
+  "status": "PASS",
+  "errors": [],
+  "plugin": "codeclarity@codeclarity-local",
+  "attempt": {
+    "executionLevel": "CODEX_CLI_ATTEMPT",
+    "mode": "review",
+    "repo": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\python-integration-demo\\repo",
+    "plugin": "codeclarity@codeclarity-local",
+    "languages": [
+      "python"
+    ],
+    "pythonExecutable": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.venv\\Scripts\\python.exe",
+    "status": "COMPLETED",
+    "note": "Inspect raw events for actual tool calls; exit code alone does not prove E2E.",
+    "exitCode": 0,
+    "temporaryRepoConfigRestored": true
+  },
+  "languages": [
+    "python"
+  ],
+  "eventsSha256": "75093799dbf8de4bad552114f2ce1bb62871a9cb88cd3251cad6a60edf91cb9e",
+  "rawEvents": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\codex-python-integration-verified\\events.jsonl",
+  "calls": [
+    {
+      "eventIndex": 4,
+      "id": "item_1",
+      "tool": "list_python_changes",
+      "arguments": {
+        "baseRef": "main",
+        "headRef": "HEAD"
+      }
+    },
+    {
+      "eventIndex": 16,
+      "id": "item_9",
+      "tool": "inspect_python_function",
+      "arguments": {
+        "commitSha": "4dcbe93bd635a27d51f6eab19d1870955f4050e6",
+        "path": "structure.py",
+        "line": 1
+      }
+    },
+    {
+      "eventIndex": 17,
+      "id": "item_7",
+      "tool": "inspect_python_function",
+      "arguments": {
+        "commitSha": "4dcbe93bd635a27d51f6eab19d1870955f4050e6",
+        "path": "naming.py",
+        "line": 1
+      }
+    },
+    {
+      "eventIndex": 18,
+      "id": "item_8",
+      "tool": "inspect_python_function",
+      "arguments": {
+        "commitSha": "a9b7fb2f15e1f72f2ca15852920c7c59337abbcc",
+        "path": "structure.py",
+        "line": 1
+      }
+    },
+    {
+      "eventIndex": 19,
+      "id": "item_6",
+      "tool": "inspect_python_function",
+      "arguments": {
+        "commitSha": "a9b7fb2f15e1f72f2ca15852920c7c59337abbcc",
+        "path": "naming.py",
+        "line": 1
+      }
+    },
+    {
+      "eventIndex": 46,
+      "id": "item_23",
+      "tool": "analyze_python_changes",
+      "arguments": {
+        "baseSha": "a9b7fb2f15e1f72f2ca15852920c7c59337abbcc",
+        "headSha": "4dcbe93bd635a27d51f6eab19d1870955f4050e6",
+        "paths": [
+          "naming.py",
+          "structure.py"
+        ]
+      }
+    }
+  ],
+  "freeze": [
+    {
+      "eventIndex": 40,
+      "event": "independent_review_frozen",
+      "reviewId": "review-ccd9677c0a8fd22f0785bd52479b120ffa095d77a808a67a44a9d67c3d832fd7",
+      "artifact": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\codex-python-integration-verified\\python-main-4dcbe93-20261112T142311056Z\\independent.frozen.json",
+      "sha256": "004ab7eb22d586081d1530e27a66d8c63ca76342570e2607a803db16af532303"
+    }
+  ],
+  "analysisStartedEventIndices": [
+    45
+  ],
+  "report": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\codex-python-integration-verified\\python-main-4dcbe93-20261112T142311056Z\\report.final.json",
+  "markdown": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\codex-python-integration-verified\\python-main-4dcbe93-20261112T142311056Z\\report.final.md",
+  "reportSha256": "13d299fbfd011adbc19a066afb837fd35a720bd7ab14df01b509570d39ed7568",
+  "scope": {
+    "repoRoot": "C:/Users/Igor Miller/Documents/projects/code-clarity/.codeclarity/python-integration-demo/repo",
+    "baseSha": "a9b7fb2f15e1f72f2ca15852920c7c59337abbcc",
+    "headSha": "4dcbe93bd635a27d51f6eab19d1870955f4050e6",
+    "snapshotId": "4dcbe93bd635a27d51f6eab19d1870955f4050e6",
+    "languages": [
+      "python"
+    ],
+    "paths": [
+      "naming.py",
+      "structure.py"
+    ]
+  },
+  "verdict": "INCOMPLETE",
+  "findings": [],
+  "metrics": [
+    {
+      "path": "naming.py",
+      "entity": "remaining(capacity, reserved)",
+      "metric": "cyclomatic_complexity",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "cyclomatic_complexity",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-cyclo/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 2,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "cyclomatic_complexity",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-cyclo/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 2,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "naming.py",
+      "entity": "remaining(capacity, reserved)",
+      "metric": "cognitive_complexity",
+      "status": "UNAVAILABLE",
+      "before": {
+        "definition": {
+          "id": "cognitive_complexity",
+          "language": "python",
+          "analyzer": "complexipy/8.3.0",
+          "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+        },
+        "status": "ERROR",
+        "value": null,
+        "reason": "Cognitive Complexity unavailable: PackageNotFoundError: No package metadata was found for complexipy Install complexipy==8.3.0 in the selected Python interpreter."
+      },
+      "after": {
+        "definition": {
+          "id": "cognitive_complexity",
+          "language": "python",
+          "analyzer": "complexipy/8.3.0",
+          "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+        },
+        "status": "ERROR",
+        "value": null,
+        "reason": "Cognitive Complexity unavailable: PackageNotFoundError: No package metadata was found for complexipy Install complexipy==8.3.0 in the selected Python interpreter."
+      },
+      "delta": null
+    },
+    {
+      "path": "naming.py",
+      "entity": "remaining(capacity, reserved)",
+      "metric": "function_sloc",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "function_sloc",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-physical-sloc/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 5,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "function_sloc",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-physical-sloc/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 5,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "naming.py",
+      "entity": "remaining(capacity, reserved)",
+      "metric": "max_nesting_depth",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "max_nesting_depth",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-nesting/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 1,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "max_nesting_depth",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-nesting/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 1,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "naming.py",
+      "entity": "remaining(capacity, reserved)",
+      "metric": "parameter_count",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "parameter_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 2,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "parameter_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 2,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "naming.py",
+      "entity": "remaining(capacity, reserved)",
+      "metric": "return_count",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "return_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-explicit-returns/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 2,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "return_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-explicit-returns/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 2,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "structure.py",
+      "entity": "shipping_fee(order)",
+      "metric": "cyclomatic_complexity",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "cyclomatic_complexity",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-cyclo/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 5,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "cyclomatic_complexity",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-cyclo/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 5,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "structure.py",
+      "entity": "shipping_fee(order)",
+      "metric": "cognitive_complexity",
+      "status": "UNAVAILABLE",
+      "before": {
+        "definition": {
+          "id": "cognitive_complexity",
+          "language": "python",
+          "analyzer": "complexipy/8.3.0",
+          "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+        },
+        "status": "ERROR",
+        "value": null,
+        "reason": "Cognitive Complexity unavailable: PackageNotFoundError: No package metadata was found for complexipy Install complexipy==8.3.0 in the selected Python interpreter."
+      },
+      "after": {
+        "definition": {
+          "id": "cognitive_complexity",
+          "language": "python",
+          "analyzer": "complexipy/8.3.0",
+          "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+        },
+        "status": "ERROR",
+        "value": null,
+        "reason": "Cognitive Complexity unavailable: PackageNotFoundError: No package metadata was found for complexipy Install complexipy==8.3.0 in the selected Python interpreter."
+      },
+      "delta": null
+    },
+    {
+      "path": "structure.py",
+      "entity": "shipping_fee(order)",
+      "metric": "function_sloc",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "function_sloc",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-physical-sloc/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 12,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "function_sloc",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-physical-sloc/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 10,
+        "reason": null
+      },
+      "delta": -2
+    },
+    {
+      "path": "structure.py",
+      "entity": "shipping_fee(order)",
+      "metric": "max_nesting_depth",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "max_nesting_depth",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-nesting/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 4,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "max_nesting_depth",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-nesting/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 1,
+        "reason": null
+      },
+      "delta": -3
+    },
+    {
+      "path": "structure.py",
+      "entity": "shipping_fee(order)",
+      "metric": "parameter_count",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "parameter_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 1,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "parameter_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 1,
+        "reason": null
+      },
+      "delta": 0
+    },
+    {
+      "path": "structure.py",
+      "entity": "shipping_fee(order)",
+      "metric": "return_count",
+      "status": "COMPARED",
+      "before": {
+        "definition": {
+          "id": "return_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-explicit-returns/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 1,
+        "reason": null
+      },
+      "after": {
+        "definition": {
+          "id": "return_count",
+          "language": "python",
+          "analyzer": "codeclarity-python-ast/1",
+          "algorithm": "codeclarity/python-explicit-returns/v1"
+        },
+        "status": "AVAILABLE",
+        "value": 5,
+        "reason": null
+      },
+      "delta": 4
+    }
+  ],
+  "ruleDiscovery": {
+    "status": "UNAVAILABLE",
+    "reason": "В подключённом CodeClarity MCP отсутствуют get_review_history, append_review_result и propose_rule_candidate либо документированные эквиваленты. Пользователь запрещает запись истории и feedback. История и evaluation expected answers не читались; замена истории локальным JSON не выполнялась."
+  },
+  "limitations": [
+    "This verifier does not establish Core history persistence, feedback authorization or idempotence.",
+    "One observed live run is not proof of deterministic model behavior.",
+    "The main review is INCOMPLETE; see its recorded skips and metric statuses."
+  ],
+  "entityMatches": [
+    {
+      "path": "naming.py",
+      "oldPath": "naming.py",
+      "newPath": "naming.py",
+      "key": "remaining",
+      "status": "MATCHED",
+      "before": [
+        {
+          "signature": "remaining(a, b)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 5
+          },
+          "matchingKey": "remaining",
+          "matchingAmbiguous": false
+        }
+      ],
+      "after": [
+        {
+          "signature": "remaining(capacity, reserved)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 5
+          },
+          "matchingKey": "remaining",
+          "matchingAmbiguous": false
+        }
+      ]
+    },
+    {
+      "path": "structure.py",
+      "oldPath": "structure.py",
+      "newPath": "structure.py",
+      "key": "shipping_fee",
+      "status": "MATCHED",
+      "before": [
+        {
+          "signature": "shipping_fee(order)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 12
+          },
+          "matchingKey": "shipping_fee",
+          "matchingAmbiguous": false
+        }
+      ],
+      "after": [
+        {
+          "signature": "shipping_fee(order)",
+          "lines": {
+            "startLine": 1,
+            "endLine": 10
+          },
+          "matchingKey": "shipping_fee",
+          "matchingAmbiguous": false
+        }
+      ]
+    }
+  ]
+}

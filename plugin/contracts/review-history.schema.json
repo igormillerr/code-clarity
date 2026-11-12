@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:codeclarity:review-history:1",
+  "title": "Persistent CodeClarity review history",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "revision", "reviews", "categories", "findings", "feedback", "ruleCandidates", "statistics"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "revision": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+    "reviews": {"type": "array", "items": {"type": "object", "required": ["reviewId", "scope", "findings"]}},
+    "categories": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["categoryId", "name", "statistics", "examples"],
+        "properties": {
+          "categoryId": {"type": "string", "minLength": 1},
+          "name": {"type": "string", "minLength": 1},
+          "description": {"type": "string"},
+          "statistics": {"$ref": "#/$defs/statistics"},
+          "examples": {"type": "array", "items": {"type": "object", "required": ["findingId", "reviewId", "snapshotId", "location", "description", "recommendation", "evidence", "status", "feedbackIds"]}}
+        }
+      }
+    },
+    "findings": {"type": "array", "items": {"type": "object", "required": ["findingId", "reviewId", "categoryId", "status"], "properties": {"status": {"enum": ["DETECTED", "FIXED", "REJECTED"]}}}},
+    "feedback": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["feedbackId", "reviewId", "findingId", "decision", "source", "authority", "confirmedBy", "confirmationEvidence", "recordedAt"],
+        "properties": {
+          "feedbackId": {"type": "string", "minLength": 1},
+          "reviewId": {"type": "string", "minLength": 1},
+          "findingId": {"type": "string", "minLength": 1},
+          "decision": {"enum": ["FIXED", "REJECTED"]},
+          "source": {"const": "HUMAN"}, "authority": {"const": "LOCAL_CLI"},
+          "confirmedBy": {"type": "string", "minLength": 1},
+          "confirmationEvidence": {"type": "string", "minLength": 1},
+          "recordedAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "ruleCandidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+    "statistics": {
+      "allOf": [{"$ref": "#/$defs/statistics"}],
+      "required": ["reviewCount", "categoryCount"],
+      "properties": {"reviewCount": {"type": "integer", "minimum": 0}, "categoryCount": {"type": "integer", "minimum": 0}}
+    }
+  },
+  "$defs": {
+    "statistics": {
+      "type": "object", "required": ["occurrenceCount", "detectedCount", "fixedCount", "rejectedCount"],
+      "properties": {
+        "occurrenceCount": {"type": "integer", "minimum": 0},
+        "detectedCount": {"type": "integer", "minimum": 0},
+        "fixedCount": {"type": "integer", "minimum": 0},
+        "rejectedCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateId",
+        "categoryId",
+        "status",
+        "title",
+        "description",
+        "supportingFindingIds",
+        "confirmedFeedbackIds",
+        "examples",
+        "exceptions"
+      ],
+      "properties": {
+        "candidateId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "const": "PROPOSED"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supportingFindingIds": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confirmedFeedbackIds": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "examples": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        },
+        "exceptions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "synthetic": {
+          "const": false
+        }
+      }
+    },
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findingId"
+      ],
+      "properties": {
+        "findingId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshotId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "location": {
+          "type": "object"
+        },
+        "description": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

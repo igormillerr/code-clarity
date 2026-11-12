@@ -1,0 +1,5 @@
+# Preserve captured demo artifacts byte-for-byte across platforms.
+docs/defense-demo/report.* -text
+docs/defense-demo/history.json -text
+docs/defense-demo/independent.frozen.json -text
+docs/defense-demo/snapshots/** -text
