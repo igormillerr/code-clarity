@@ -22,6 +22,61 @@ The baseline JAR lacks four required metrics and Python Cognitive Complexity;
 the complete review verdict for these fixtures must therefore be `INCOMPLETE`.
 MCP protocol PASS does not change that verdict.
 
+## Unified MCP API smoke checks
+
+```bash
+python3 scripts/mcp_smoke_test.py target/codeclarity-mcp.jar
+python3 scripts/mcp_codex_smoke.py --output .codeclarity/evals/api-run --jar target/codeclarity-mcp.jar
+```
+
+The first command is a standalone real-STDIO smoke check: handshake, discovery,
+get_changes, mixed analyze_changes, get_symbol_context for both languages,
+committed source and line ranges, partial/truncation warnings, argument errors,
+and compatibility with compact context tools. The second starts a fresh Codex
+session with read-only sandboxing, default model and existing authentication;
+pass `--codex /path/to/codex` if needed. It records native MCP calls and verifies
+all three required tools were called, both languages retained metrics, and both
+contexts came from the resolved commit. The MCP configuration is process-local.
+
+The 12.11.2026 run is retained in
+[`results/unified-mcp-api.json`](results/unified-mcp-api.json): PASS, four native
+Codex MCP calls covering all three required operations and both languages.
+
+## Live Java Skill check with six metrics
+
+For server 0.1.3, run a fresh agent against the repository's current
+`readability-review` Skill and actual MCP tools:
+
+```bash
+python3 scripts/llm_java_skill_e2e.py --output .codeclarity/evals/java-skill-run
+python3 scripts/llm_java_skill_e2e.py --output .codeclarity/evals/java-skill-run --verify-only
+```
+
+Pass `--codex /absolute/path/to/codex` if the CLI is not on PATH. The run uses
+existing CLI authentication and its default model. It creates a disposable Java-only
+Git fixture with two methods, configures the bundled MCP JAR for this process only,
+and directs the agent to the current Skill without providing the expected verdict.
+It does not install/update a plugin or change the home repository configuration.
+Use a new output directory for every agent run; verification can be repeated.
+
+`events.jsonl` retains raw CLI/MCP events. `evidence.json` verifies actual MCP calls,
+freeze before analysis starts, six numerical metric comparisons for each method,
+exact preservation of returned values/definitions/deltas, report coverage and
+`PASS`/`WARN` completeness, final Markdown rendering, and an unchanged input fixture.
+Full Draft 2020-12 report-schema validation uses the validator bundled in the JAR;
+its output is retained in `schema-validation.log`. The agent creates the independent,
+main, discovery and final artifacts under `artifacts/`.
+
+This checks the Skill and real MCP in a fresh agent, separately from the historical
+installed-plugin runs below. It does not verify an installed plugin cache or history
+persistence, and a single successful run does not guarantee future model behavior.
+
+The verified 12.11.2026 run is retained in
+[`results/java-six-metrics-skill.json`](results/java-six-metrics-skill.json):
+two Java files/methods, 12 numerical comparisons, freeze before analysis, complete
+coverage, one source-backed finding and final verdict `WARN`. History discovery
+is `UNAVAILABLE`; it does not make the main Java review incomplete.
+
 ## Reproduce the protocol results
 
 Requires Java 21+, Git and Python 3.10+ in PATH; no PyPI dependencies. Use a new

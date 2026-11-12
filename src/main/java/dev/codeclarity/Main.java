@@ -30,13 +30,22 @@ public final class Main {
     public static void main(String[] args) throws IOException {
         var git = new GitRepository(repositoryPath(args));
         var languages = new LanguageRegistry(List.of(new JavaLanguageSupport(), new PythonLanguageSupport()));
+        var service = new AnalysisService(git, languages);
         List<SyncToolSpecification> tools = new ArrayList<>();
+        tools.addAll(analysisTools(service,
+                "get_changes", "analyze_changes", "inspect_symbol_ast", "Java and Python", "entity"));
+        tools.add(tool("get_symbol_context",
+                "Get committed Java/Python entity source, repository path, language, inclusive line range, calls and enclosing if branches. "
+                        + "Select the adapter by file path. Truncated context is explicitly partial with warnings.",
+                Map.of("commitSha", STRING, "path", STRING, "line", Map.of("type", "integer", "minimum", 1)),
+                List.of("commitSha", "path", "line"),
+                input -> service.getSymbolContext(required(input, "commitSha"), required(input, "path"), line(input))));
         tools.addAll(languageTools(new AnalysisService(git, languages, "java"), "java", "Java", "method"));
         tools.addAll(languageTools(new AnalysisService(git, languages, "python"), "python", "Python", "function"));
         var transport = new StdioServerTransportProvider(McpJsonDefaults.getMapper());
 
         McpServer.sync(transport)
-                .serverInfo("codeclarity", "0.1.1")
+                .serverInfo("codeclarity", "0.1.4")
                 .capabilities(ServerCapabilities.builder().tools(false).build())
                 .tools(tools.toArray(SyncToolSpecification[]::new))
                 .build();
@@ -44,21 +53,29 @@ public final class Main {
 
     private static List<SyncToolSpecification> languageTools(AnalysisService service, String id,
                                                             String label, String entity) {
+        return analysisTools(service, "list_" + id + "_changes", "analyze_" + id + "_changes",
+                "inspect_" + id + "_" + entity, label, entity);
+    }
+
+    private static List<SyncToolSpecification> analysisTools(AnalysisService service, String listName,
+                                                            String analyzeName, String inspectName,
+                                                            String label, String entity) {
         return List.of(
-                tool("list_" + id + "_changes",
+                tool(listName,
                         "Find changed " + label + " files and line ranges between the merge base and target commit. "
                                 + "Call first to resolve branch names into commit SHAs.",
                         Map.of("baseRef", STRING, "headRef", STRING), List.of("baseRef", "headRef"),
                         input -> service.listChanges(required(input, "baseRef"), required(input, "headRef"))),
-                tool("analyze_" + id + "_changes",
-                        "Compare " + label + " numeric complexity metrics (before, after, delta) and rule findings on the SHAs returned by list_" + id
-                                + "_changes. Pass paths in batches of up to " + AnalysisService.MAX_ANALYSIS_FILES + " files.",
+                tool(analyzeName,
+                        "Compare " + label + " numeric metrics (before, after, delta) and rule findings on the SHAs returned by " + listName
+                                + ". Select the adapter automatically by file path. Pass paths in batches of up to "
+                                + AnalysisService.MAX_ANALYSIS_FILES + " files.",
                         Map.of("baseSha", STRING, "headSha", STRING,
                                 "paths", Map.of("type", "array", "items", STRING, "minItems", 1,
                                         "maxItems", AnalysisService.MAX_ANALYSIS_FILES)),
                         List.of("baseSha", "headSha"),
                         input -> service.analyzeChanges(required(input, "baseSha"), required(input, "headSha"), paths(input))),
-                tool("inspect_" + id + "_" + entity,
+                tool(inspectName,
                         "Show the " + label + " " + entity + " containing the given line, its calls and enclosing if branches.",
                         Map.of("commitSha", STRING, "path", STRING, "line", Map.of("type", "integer", "minimum", 1)),
                         List.of("commitSha", "path", "line"),
@@ -86,8 +103,9 @@ public final class Main {
                         Object result = action.apply(input);
                         String json = McpJsonDefaults.getMapper().writeValueAsString(result);
                         return CallToolResult.builder().structuredContent(result).textContent(List.of(json)).build();
-                    } catch (IllegalArgumentException exception) {
-                        return CallToolResult.builder().isError(true).textContent(List.of(exception.getMessage())).build();
+                    } catch (RuntimeException exception) {
+                        String message = exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
+                        return CallToolResult.builder().isError(true).textContent(List.of(message)).build();
                     } catch (IOException exception) {
                         System.err.println("Could not encode tool result: " + exception.getMessage());
                         return CallToolResult.builder().isError(true).textContent(List.of("Could not encode tool result.")).build();

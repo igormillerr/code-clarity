@@ -64,6 +64,8 @@ def check_analysis_batches(client, root):
     over_limit = client.tool("analyze_java_changes", shas, error=True)
     message = over_limit["content"][0]["text"]
     assert "94" in message and "50" in message and "paths" in message, over_limit
+    unified_over_limit = client.tool("analyze_changes", shas, error=True)
+    assert "94" in unified_over_limit["content"][0]["text"] and "50" in unified_over_limit["content"][0]["text"], unified_over_limit
 
     analyzed = []
     findings = []
@@ -132,6 +134,7 @@ def main():
                 assert hello["serverInfo"]["name"] == "codeclarity", hello
                 client.send("notifications/initialized", notification=True)
                 assert {tool["name"] for tool in client.send("tools/list")["tools"]} == {
+                    "get_changes", "analyze_changes", "get_symbol_context", "inspect_symbol_ast",
                     "list_java_changes", "analyze_java_changes", "inspect_java_method",
                     "list_python_changes", "analyze_python_changes", "inspect_python_function"
                 }

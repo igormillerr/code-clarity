@@ -13,7 +13,8 @@ def main():
     project = Path(__file__).resolve().parents[1]
     base = project / "src/main/java/dev/codeclarity"
     sources = [*base.joinpath("core").rglob("*.java"), *base.joinpath("git").rglob("*.java"),
-               project / "src/test/java/dev/codeclarity/CoreBoundaryTest.java"]
+               project / "src/test/java/dev/codeclarity/CoreBoundaryTest.java",
+               project / "src/test/java/dev/codeclarity/CoreRoutingTest.java"]
 
     def executable(name):
         return str(args.java_home / "bin" / name) if args.java_home else name
@@ -54,6 +55,29 @@ def main():
         git("commit", "-m", "head")
         write("changed.fixture", "working tree must be ignored\n")
         subprocess.run([executable("java"), "-cp", str(classes), "dev.codeclarity.CoreBoundaryTest", str(repo)],
+                       check=True)
+
+        repo = root / "routing"
+        repo.mkdir()
+        git("init", "-b", "main")
+        git("config", "user.name", "Core routing test")
+        git("config", "user.email", "routing@example.test")
+        for path in ("a-good.one", "z-good.two", "crash.one", "malformed.one", "incomplete.two"):
+            write(path, "simple\n")
+        write("cross.one", "cross language unique\n")
+        write("ignored.txt", "before\n")
+        git("add", ".")
+        git("commit", "-m", "base")
+        git("switch", "-c", "feature")
+        for path, content in {"a-good.one": "complex", "z-good.two": "complex", "crash.one": "crash",
+                              "malformed.one": "malformed", "incomplete.two": "incomplete"}.items():
+            write(path, content + "\n")
+        git("mv", "cross.one", "cross.two")
+        write("oversized.one", "x" * 250001)
+        write("ignored.txt", "after\n")
+        git("add", ".")
+        git("commit", "-m", "head")
+        subprocess.run([executable("java"), "-cp", str(classes), "dev.codeclarity.CoreRoutingTest", str(repo)],
                        check=True)
 
 

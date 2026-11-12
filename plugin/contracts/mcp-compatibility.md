@@ -5,10 +5,18 @@ Owner: Java / LLM Engineer for plugin/Skills/review format; Java Core engineer f
 MCP schemas, snapshots, measurements, persistence and feedback authorization;
 Python engineer for Python analysis. Discover the actual tool schemas before use.
 
-## Existing JAR from feature/python ec6a3ed
+## Current server 0.1.4
+
+The server includes the six Java metrics and both language adapters behind the
+same LanguageSupport / AnalysisService boundary. The checked-in historical eval
+receipts refer to the older 0.1.1 JAR from feature/python ec6a3ed.
 
 | Operation | Actual tool and required arguments |
 |---|---|
+| Resolve mixed scope | `get_changes(baseRef, headRef)` |
+| Mixed measurements | `analyze_changes(baseSha, headSha, paths?)` |
+| Committed source and AST context | `get_symbol_context(commitSha, path, line)` |
+| Legacy compact AST context | `inspect_symbol_ast(commitSha, path, line)` |
 | Resolve Java scope | `list_java_changes(baseRef, headRef)` |
 | Resolve Python scope | `list_python_changes(baseRef, headRef)` |
 | Java measurements | `analyze_java_changes(baseSha, headSha, paths?)` |
@@ -16,39 +24,57 @@ Python engineer for Python analysis. Discover the actual tool schemas before use
 | Java AST context | `inspect_java_method(commitSha, path, line)` |
 | Python AST context | `inspect_python_function(commitSha, path, line)` |
 
-The list response has `baseSha` (merge-base), `headSha`, `files` with old/new
+The list response has `baseSha` (merge-base), `headSha`, `status`, `warnings`, `files` with old/new
 paths and inclusive one-based `baseLines`/`headLines`. Match snapshots between
 languages; do not mix commits across batches. Analysis batches contain <=50
 changed paths. Rename selection uses newPath; deletion selection uses oldPath.
 Current scope is committed code, not staged/worktree/untracked.
+Mixed tools choose the adapter using supports(path); no language argument is
+needed. Language tools restrict the same service to one adapter and remain
+available for compatibility. A cross-language rename becomes separate deletion
+and addition entries, selected by the old and new paths respectively; entities
+are not matched between languages. Each entry counts towards the 50-entry limit.
 
 Analyze returns `{baseSha,headSha,status,files,warnings}`. Each file contains
-`changedMethods`, diagnostic `findings`, and numerical `metrics`. Keep diagnostic
+`language`, `changedMethods`, diagnostic `findings`, and numerical `metrics`. Keep diagnostic
 Finding `{rule,line,column,message}` separate from an AI Finding in
 [review.schema.json](review.schema.json). `RESOLVED` is a static rule status,
 not a confirmed human `FIXED` event. `ok` does not imply all six metrics exist.
+File read/adapter/comparison RuntimeExceptions are isolated: retain the file entry,
+add a path-specific warning and return `partial` without discarding healthy files.
+An adapter's complete=false also forces partial even with no supplied warnings.
+Failed versions have no fabricated numeric value or delta. Request/SHA/routing
+configuration errors are tool errors rather than successful empty reports.
 
 Each metric comparison is `{entity,metric,status,before,after,delta}`. Add only
 the owning file's path when normalizing into a review; preserve the two MetricValue
 objects and delta from MCP. Definitions use `{id,language,analyzer,algorithm}`:
 analyzer includes its version, algorithm includes algorithm/settings version.
 Do not rename these to a guessed future shape. Before/after SHA live in scope.
-Java has numeric CC and CogC. Python has numeric CC and explicit UNSUPPORTED
-CogC. SLOC, nesting, parameters, returns are currently missing. A review of
-affected functions on this JAR must therefore report INCOMPLETE, even if empty
-AI findings or a server `ok` would otherwise suggest PASS.
+Java has numeric CC, CogC, function SLOC, max nesting depth, parameter count and
+return count. Bodyless declarations expose SLOC/parameters and UNSUPPORTED body
+metrics; compact record constructors expose UNSUPPORTED PMD complexity metrics.
+Definitions and scope rules are documented in the main README. Python has numeric
+CC and explicit UNSUPPORTED CogC; its SLOC, nesting, parameters and returns remain
+missing. A review requiring all six Python metrics must therefore report INCOMPLETE,
+even if empty AI findings or a server `ok` would otherwise suggest PASS.
 
-Inspection provides signatures, lines, calls and enclosing if branches, not full
-source or semantic definitions. Read full code and diff using read-only Git
+`get_symbol_context` returns `{commitSha,path,language,status,signature,lines,source,calls,truncated,warnings}`.
+The source is the complete entity declaration at the inclusive one-based range
+in the specified commit, with LF line endings and no trailing newline. A truncated
+call list sets `truncated:true`, `status:partial` and a warning without truncating
+the source. The legacy `inspect_*` operations retain their compact signatures,
+lines, calls and enclosing if branches, without full source or semantic definitions.
+Read surrounding code and diff using read-only Git
 commands against the resolved SHAs; never substitute worktree source. No LSP or
 history tools exist in this JAR. LSP unavailability alone need not invalidate a
 complete AST review. Missing required code coverage or measurements does.
 
-## Target tools, not implemented by this plugin
+## Universal tools and remaining target tools
 
-Prefer `get_changes`, `analyze_changes`, `inspect_symbol_ast` when discovered,
+Server 0.1.4 implements `get_changes`, `analyze_changes`, `get_symbol_context`. Prefer them when discovered,
 using their advertised schemas and returned snapshot format. Retain the existing
-tools as a compatibility path; do not call speculative tools or guess arguments.
+`inspect_symbol_ast` and language tools as a compatibility path; do not call speculative tools or guess arguments.
 `get_symbol_definition` and `find_symbol_references` are optional/context only.
 
 Proposed history operations for Core review:

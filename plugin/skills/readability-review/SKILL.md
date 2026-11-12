@@ -15,8 +15,12 @@ are [independent-review](../independent-review/SKILL.md),
 ## Establish the scope
 
 1. Discover the tools exposed by the connected CodeClarity server and read their
-   actual schemas. Prefer the universal operations only when advertised; otherwise
-   use `list_java_changes`, `list_python_changes`, `analyze_java_changes`,
+   actual schemas. When advertised, use `get_changes(baseRef, headRef)`,
+   `analyze_changes(baseSha, headSha, paths?)`, and
+   `get_symbol_context(commitSha, path, line)`. They route Java/Python files
+   automatically; no language or metric-selection argument is needed. Otherwise
+   use the advertised `inspect_symbol_ast` for compact AST context and/or
+   `list_java_changes`, `list_python_changes`, `analyze_java_changes`,
    `analyze_python_changes`, `inspect_java_method`, and `inspect_python_function`.
    Never invent a tool or argument. Missing MCP access is an explicit limitation.
 2. Resolve the user's base/head through the change-list tool before reading code.
@@ -28,6 +32,8 @@ are [independent-review](../independent-review/SKILL.md),
    Collect the complete selected change list for both languages and verify that all
    calls refer to the same snapshots. Record explicitly excluded/unsupported files.
    A selected path not returned by the tool must be reported, not silently dropped.
+   Preserve listing `partial` status and warnings; empty ranges from a failed file
+   do not establish that the file has no changed entities.
 4. Obtain a deterministic `reviewId` with
    [scripts/review_ids.py](scripts/review_ids.py), passing JSON `{ "scope": ...,
    "findings": [] }` on stdin. Do not include timestamps in scope identity.
@@ -51,9 +57,19 @@ claiming a successful review of those files.
    frozen independent result. Separate Skills provide logical ordering in the same
    conversation; they do not guarantee isolated model contexts.
 2. **Measured results.** Call the discovered analysis operation(s), using exactly
-   the resolved SHAs and the selected files. For the current tools, batch at most
-   50 paths per call and retain every result/warning. Preserve raw tool results or
+   the resolved SHAs and the selected files. Prefer one `analyze_changes` call for
+   a mixed Java/Python batch; use the language-specific analysis tools as fallback.
+   Batch at most 50 paths per call and retain every result/warning, including
+   healthy file results from a `partial` response. Preserve raw tool results or
    trace references; retry only the failed batch, without replacing prior results.
+   Read numerical measurements from `files[].metrics[]`, including entities with
+   no threshold findings. For every touched entity check all six metric IDs:
+   `cyclomatic_complexity`, `cognitive_complexity`, `function_sloc`,
+   `max_nesting_depth`, `parameter_count`, and `return_count`.
+   One analysis call returns all implemented metrics; no separate calls per metric
+   are needed. Preserve each measurement's `before`, `after`, `delta`, comparison
+   status, and both analyzer/algorithm definitions. Do not substitute `findings`
+   for numerical measurements or calculate missing values yourself.
 3. **Correlation.** Apply `metrics-correlation` to the frozen independent artifact
    and measured results. Deduplicate observations about the same issue/location,
    retaining their evidence. A static `Finding` is a rule diagnostic, not an AI
@@ -90,10 +106,20 @@ claiming a successful review of those files.
 - `WARN` means the required review is complete and has justified findings/signals.
   `PASS` means the required review is complete with no such findings under this
   policy; it does not establish ideal code. `FAIL` is not an MVP verdict.
-- Check all six metrics independently of the server's `ok` status. The current JAR
-  supplies Java CC/CogC and Python CC only; absent metrics are `MISSING`, Python
-  CogC is `UNSUPPORTED`, and a nonempty review is therefore `INCOMPLETE` for the
-  six-metric MVP. Do not hide the useful partial results.
+- Determine metric completeness from the actual response, independently of the
+  server's `ok` status or an assumed server version. Server 0.1.3 supplies all six
+  Java metrics for methods and ordinary constructors with bodies. A Java-only
+  review with complete coverage, stages, and required measurements can be `PASS`
+  or `WARN`; do not force `INCOMPLETE` merely because the diff is nonempty.
+- Preserve unavailable states: bodyless Java declarations have SLOC/parameters
+  but `UNSUPPORTED` body metrics; compact record constructors have `UNSUPPORTED`
+  PMD complexity metrics. Python currently supplies CC, explicit `UNSUPPORTED`
+  CogC, and no other four metrics. If required values are unavailable or absent,
+  record the per-entity/per-metric limitation and use `INCOMPLETE` under the
+  six-metric policy. An `ENTITY_ABSENT` side of an added/deleted entity is legitimate
+  and does not alone make the review incomplete. Preserve available measurements;
+  never fabricate the other metrics or a delta. A newer server's actual returned
+  measurements take precedence over these documented availability examples.
 - LSP is optional: unavailable definition/references must be stated but do not
   invalidate otherwise complete AST/metric review. History failure alone likewise
   does not change an otherwise complete main-review verdict.

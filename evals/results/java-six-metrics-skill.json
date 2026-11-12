@@ -1,0 +1,583 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "CODEX_CLI_WITH_REAL_MCP",
+  "status": "PASS",
+  "errors": [],
+  "attempt": {
+    "status": "COMPLETED",
+    "repo": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/fixture/repo",
+    "skill": "/Users/andrey_vorotnikov/Documents/code-clarity/plugin/skills/readability-review/SKILL.md",
+    "skillSha256": "b5ca3773d60e7f4e0282d14efa1059ec1708b3510dee3f43515102f0f8f5fba8",
+    "jar": "/Users/andrey_vorotnikov/Documents/code-clarity/plugin/server/codeclarity-mcp.jar",
+    "jarSha256": "91de95b87ec65e8f8f67dbc4c5570245980a54147207909f56794574e3d68a88",
+    "command": [
+      "/Users/andrey_vorotnikov/Library/Caches/JetBrains/IntelliJIdea2026.3/acp-agents/codex-acp/2.6.0/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex",
+      "exec",
+      "--ephemeral",
+      "--json",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/fixture/repo",
+      "--add-dir",
+      "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/artifacts",
+      "-c",
+      "mcp_servers={codeclarity={command=\"java\",args=[\"-jar\", \"/Users/andrey_vorotnikov/Documents/code-clarity/plugin/server/codeclarity-mcp.jar\", \"--repo-root\", \"/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/fixture/repo\"]}}",
+      "-o",
+      "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/last-message.md",
+      "<see prompt.txt>"
+    ],
+    "configuration": "process-local MCP override",
+    "exitCode": 0
+  },
+  "eventsSha256": "32f9edc981621afddf9a560557ad9831ef60b8c1ebb68068a8bb59ffaf44e758",
+  "rawEvents": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/events.jsonl",
+  "calls": [
+    {
+      "eventIndex": 15,
+      "event": "tool_call",
+      "tool": "get_changes",
+      "arguments": {
+        "baseRef": "main",
+        "headRef": "HEAD"
+      },
+      "result": {
+        "baseSha": "02578158bcdc02e4f0d01c33bf10d06846568606",
+        "headSha": "124ed24bb84ee28a6b96ae8cbc1ac23b9673f13b",
+        "status": "ok",
+        "files": [
+          {
+            "oldPath": "Eligibility.java",
+            "newPath": "Eligibility.java",
+            "baseLines": [
+              {
+                "startLine": 4,
+                "endLine": 4
+              }
+            ],
+            "headLines": [
+              {
+                "startLine": 4,
+                "endLine": 17
+              }
+            ]
+          },
+          {
+            "oldPath": "Totals.java",
+            "newPath": "Totals.java",
+            "baseLines": [
+              {
+                "startLine": 3,
+                "endLine": 3
+              }
+            ],
+            "headLines": [
+              {
+                "startLine": 3,
+                "endLine": 3
+              }
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "eventIndex": 35,
+      "event": "tool_call",
+      "tool": "inspect_symbol_ast",
+      "arguments": {
+        "commitSha": "02578158bcdc02e4f0d01c33bf10d06846568606",
+        "path": "Totals.java",
+        "line": 3
+      },
+      "result": {
+        "signature": "Totals#lineTotal(long, long)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 4
+        },
+        "calls": [],
+        "truncated": false
+      }
+    },
+    {
+      "eventIndex": 36,
+      "event": "tool_call",
+      "tool": "inspect_symbol_ast",
+      "arguments": {
+        "commitSha": "124ed24bb84ee28a6b96ae8cbc1ac23b9673f13b",
+        "path": "Eligibility.java",
+        "line": 4
+      },
+      "result": {
+        "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 18
+        },
+        "calls": [],
+        "truncated": false
+      }
+    },
+    {
+      "eventIndex": 37,
+      "event": "tool_call",
+      "tool": "inspect_symbol_ast",
+      "arguments": {
+        "commitSha": "124ed24bb84ee28a6b96ae8cbc1ac23b9673f13b",
+        "path": "Totals.java",
+        "line": 3
+      },
+      "result": {
+        "signature": "Totals#lineTotal(long, long)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 4
+        },
+        "calls": [],
+        "truncated": false
+      }
+    },
+    {
+      "eventIndex": 38,
+      "event": "tool_call",
+      "tool": "inspect_symbol_ast",
+      "arguments": {
+        "commitSha": "02578158bcdc02e4f0d01c33bf10d06846568606",
+        "path": "Eligibility.java",
+        "line": 4
+      },
+      "result": {
+        "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 5
+        },
+        "calls": [],
+        "truncated": false
+      }
+    },
+    {
+      "eventIndex": 52,
+      "event": "tool_call",
+      "tool": "analyze_changes",
+      "arguments": {
+        "baseSha": "02578158bcdc02e4f0d01c33bf10d06846568606",
+        "headSha": "124ed24bb84ee28a6b96ae8cbc1ac23b9673f13b",
+        "paths": [
+          "Eligibility.java",
+          "Totals.java"
+        ]
+      },
+      "result": {
+        "baseSha": "02578158bcdc02e4f0d01c33bf10d06846568606",
+        "headSha": "124ed24bb84ee28a6b96ae8cbc1ac23b9673f13b",
+        "status": "ok",
+        "files": [
+          {
+            "oldPath": "Eligibility.java",
+            "newPath": "Eligibility.java",
+            "language": "java",
+            "changedMethods": [
+              "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)"
+            ],
+            "findings": [
+              {
+                "method": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "rule": "CognitiveComplexity",
+                "status": "INTRODUCED",
+                "before": null,
+                "after": {
+                  "rule": "CognitiveComplexity",
+                  "line": 2,
+                  "column": 20,
+                  "message": "The method 'shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)' has a cognitive complexity of 21, current threshold is 15"
+                }
+              }
+            ],
+            "metrics": [
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 7.0,
+                  "reason": null
+                },
+                "delta": 6.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 21.0,
+                  "reason": null
+                },
+                "delta": 21.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 4.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 17.0,
+                  "reason": null
+                },
+                "delta": 13.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 6.0,
+                  "reason": null
+                },
+                "delta": 6.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 6.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 6.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              }
+            ]
+          },
+          {
+            "oldPath": "Totals.java",
+            "newPath": "Totals.java",
+            "language": "java",
+            "changedMethods": [
+              "Totals#lineTotal(long, long)"
+            ],
+            "findings": [],
+            "metrics": [
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Totals#lineTotal(long, long)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              }
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    }
+  ],
+  "freeze": [
+    {
+      "eventIndex": 47,
+      "event": "independent_review_frozen",
+      "reviewId": "review-5a0c05429e1ab2979e590c3c5ffa66d4615ca9f55c1380c786b5acfed6edd296",
+      "artifact": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/artifacts/independent.frozen.json",
+      "sha256": "0765d96a706d60cf6598dc8db482198f1a4e9b83417b5c71b75a3eb65a69f1dc"
+    }
+  ],
+  "analysisStartedEventIndices": [
+    51
+  ],
+  "entitiesMeasured": 2,
+  "metricComparisons": 12,
+  "report": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/java-skill-live-02/artifacts/report.final.json",
+  "reportSha256": "a12b2e4e66be5794f20364da15c330b44bcc8427e831f52adb736adad6307dd2",
+  "schemaValidation": "PASS",
+  "coverage": {
+    "filesExpected": 2,
+    "filesAnalyzed": 2,
+    "entitiesExpected": 2,
+    "entitiesAnalyzed": 2
+  },
+  "findingsCount": 1,
+  "verdict": "WARN",
+  "limitations": [
+    "Tests repository Skill and JAR via process-local MCP configuration; does not verify installed plugin cache.",
+    "No history persistence E2E claim; one agent run does not guarantee deterministic future behavior."
+  ]
+}

@@ -29,7 +29,7 @@ message. This mode never substitutes for unavailable history in a normal review.
 
 1. Discover `get_review_history`, `append_review_result`, and
    `propose_rule_candidate`, or documented equivalents, and inspect their schemas.
-   The existing six-tool prototype does not include them. If any required history
+   The current server does not include them. If any required history
    operation is absent, return machine status `UNAVAILABLE` and its reason. Do not
    write `.codeclarity/review-history.json` directly or implement substitute storage.
    Preserve the main report and verdict.

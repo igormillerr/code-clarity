@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "CODEX_CLI_WITH_REAL_STDIO_MCP",
+  "status": "PASS",
+  "errors": [],
+  "repo": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/unified-api-codex-01/repo",
+  "jar": "/Users/andrey_vorotnikov/Documents/code-clarity/target/codeclarity-mcp.jar",
+  "jarSha256": "ad5720c806c694f0581c432b87f015cab6406d71fbe77bfd31a0f2e5c662d78c",
+  "rawEvents": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/unified-api-codex-01/events.jsonl",
+  "eventsSha256": "5713b4e9f7cd965d9bb50a1d6419a0d6f35d0742e8d76fb813222eed6f070743",
+  "calls": [
+    {
+      "tool": "get_changes",
+      "arguments": {
+        "baseRef": "main",
+        "headRef": "HEAD"
+      },
+      "result": {
+        "baseSha": "66c3e1a8a065c6fdafc28093849db5c3c4556b92",
+        "headSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "status": "ok",
+        "files": [
+          {
+            "oldPath": null,
+            "newPath": "broken.py",
+            "baseLines": [],
+            "headLines": [
+              {
+                "startLine": 1,
+                "endLine": 1
+              }
+            ]
+          },
+          {
+            "oldPath": "scripts/example.py",
+            "newPath": "scripts/example.py",
+            "baseLines": [],
+            "headLines": [
+              {
+                "startLine": 2,
+                "endLine": 2
+              }
+            ]
+          },
+          {
+            "oldPath": "src/Example file.java",
+            "newPath": "src/Example file.java",
+            "baseLines": [],
+            "headLines": [
+              {
+                "startLine": 3,
+                "endLine": 3
+              }
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "tool": "analyze_changes",
+      "arguments": {
+        "baseSha": "66c3e1a8a065c6fdafc28093849db5c3c4556b92",
+        "headSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "paths": [
+          "broken.py",
+          "scripts/example.py",
+          "src/Example file.java"
+        ]
+      },
+      "result": {
+        "baseSha": "66c3e1a8a065c6fdafc28093849db5c3c4556b92",
+        "headSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "status": "partial",
+        "files": [
+          {
+            "oldPath": null,
+            "newPath": "broken.py",
+            "language": "python",
+            "changedMethods": [],
+            "findings": [],
+            "metrics": []
+          },
+          {
+            "oldPath": "scripts/example.py",
+            "newPath": "scripts/example.py",
+            "language": "python",
+            "changedMethods": [
+              "adjust(value)"
+            ],
+            "findings": [],
+            "metrics": [
+              {
+                "entity": "adjust(value)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-cyclo/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "codeclarity/python-cyclo/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "adjust(value)",
+                "metric": "cognitive_complexity",
+                "status": "UNAVAILABLE",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "unsupported"
+                  },
+                  "status": "UNSUPPORTED",
+                  "value": null,
+                  "reason": "Not implemented for Python."
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "python",
+                    "analyzer": "codeclarity-python-ast/1",
+                    "algorithm": "unsupported"
+                  },
+                  "status": "UNSUPPORTED",
+                  "value": null,
+                  "reason": "Not implemented for Python."
+                },
+                "delta": null
+              }
+            ]
+          },
+          {
+            "oldPath": "src/Example file.java",
+            "newPath": "src/Example file.java",
+            "language": "java",
+            "changedMethods": [
+              "Example#adjust(int)"
+            ],
+            "findings": [],
+            "metrics": [
+              {
+                "entity": "Example#adjust(int)",
+                "metric": "cyclomatic_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cyclomatic_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/CYCLO/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "Example#adjust(int)",
+                "metric": "cognitive_complexity",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "cognitive_complexity",
+                    "language": "java",
+                    "analyzer": "pmd/7.29.0",
+                    "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "Example#adjust(int)",
+                "metric": "function_sloc",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 3.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "function_sloc",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/physical-code-lines/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 4.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "Example#adjust(int)",
+                "metric": "max_nesting_depth",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 0.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "max_nesting_depth",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/control-nesting/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              },
+              {
+                "entity": "Example#adjust(int)",
+                "metric": "parameter_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "parameter_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/formal-parameters/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "delta": 0.0
+              },
+              {
+                "entity": "Example#adjust(int)",
+                "metric": "return_count",
+                "status": "COMPARED",
+                "before": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 1.0,
+                  "reason": null
+                },
+                "after": {
+                  "definition": {
+                    "id": "return_count",
+                    "language": "java",
+                    "analyzer": "javaparser/3.28.2",
+                    "algorithm": "codeclarity/java/owned-return-statements/v1"
+                  },
+                  "status": "AVAILABLE",
+                  "value": 2.0,
+                  "reason": null
+                },
+                "delta": 1.0
+              }
+            ]
+          }
+        ],
+        "warnings": [
+          "head broken.py: IllegalArgumentException: Python analysis: invalid syntax (broken.py, line 1)"
+        ]
+      }
+    },
+    {
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "path": "src/Example file.java",
+        "line": 3
+      },
+      "result": {
+        "commitSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "path": "src/Example file.java",
+        "language": "java",
+        "status": "ok",
+        "signature": "Example#adjust(int)",
+        "lines": {
+          "startLine": 2,
+          "endLine": 5
+        },
+        "source": "    int adjust(int value) {\n        if (value < 0) return Math.abs(value);\n        return value;\n    }",
+        "calls": [
+          {
+            "line": 3,
+            "expression": "Math.abs(value)",
+            "enclosingIfs": [
+              {
+                "line": 3,
+                "condition": "value < 0",
+                "branch": "then"
+              }
+            ]
+          }
+        ],
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    {
+      "tool": "get_symbol_context",
+      "arguments": {
+        "commitSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "path": "scripts/example.py",
+        "line": 2
+      },
+      "result": {
+        "commitSha": "0eaf3d3b2f6585d7d4f81255e6d4a19d75ec91b1",
+        "path": "scripts/example.py",
+        "language": "python",
+        "status": "ok",
+        "signature": "adjust(value)",
+        "lines": {
+          "startLine": 1,
+          "endLine": 3
+        },
+        "source": "def adjust(value):\n    if value < 0: return abs(value)\n    return value",
+        "calls": [
+          {
+            "line": 2,
+            "expression": "abs(value)",
+            "enclosingIfs": [
+              {
+                "line": 2,
+                "condition": "value < 0",
+                "branch": "then"
+              }
+            ]
+          }
+        ],
+        "truncated": false,
+        "warnings": []
+      }
+    }
+  ],
+  "configuration": "process-local MCP override; no installed plugin or home config changes"
+}

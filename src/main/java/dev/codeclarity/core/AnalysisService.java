@@ -21,21 +21,31 @@ public final class AnalysisService {
     public static final int MAX_ANALYSIS_FILES = 50;
 
     private final GitRepository git;
-    private final LanguageSupport language;
+    private final LanguageRegistry languages;
 
-    public AnalysisService(GitRepository git, LanguageRegistry languages, String languageId) {
+    public AnalysisService(GitRepository git, LanguageRegistry languages) {
         this.git = git;
-        this.language = languages.require(languageId);
+        this.languages = languages;
     }
 
-    public record Changes(String baseSha, String headSha, List<GitRepository.Change> files) {}
+    public AnalysisService(GitRepository git, LanguageRegistry languages, String languageId) {
+        this(git, new LanguageRegistry(List.of(languages.require(languageId))));
+    }
+
+    public record Changes(String baseSha, String headSha, String status,
+                          List<GitRepository.Change> files, List<String> warnings) {}
 
     public record Diagnostic(String method, String rule, String status, Finding before, Finding after) {}
 
-    public record FileAnalysis(String oldPath, String newPath, List<String> changedMethods, List<Diagnostic> findings,
+    public record FileAnalysis(String oldPath, String newPath, String language,
+                               List<String> changedMethods, List<Diagnostic> findings,
                                List<MetricComparison> metrics) {}
 
     public record Review(String baseSha, String headSha, String status, List<FileAnalysis> files, List<String> warnings) {}
+
+    public record SymbolContext(String commitSha, String path, String language, String status,
+                                String signature, SourceRange lines, String source,
+                                List<EntityContext.Call> calls, boolean truncated, List<String> warnings) {}
 
     private record Version(List<SourceEntity> entities, List<Finding> findings, boolean complete, List<MetricMeasurement> metrics) {
         static Version empty(boolean complete) {
@@ -97,28 +107,52 @@ public final class AnalysisService {
         }
     }
 
-    private List<GitRepository.ChangedFile> changedFiles(GitRepository.Snapshot snapshot) {
-        return git.changedFiles(snapshot).stream()
-                .map(file -> new GitRepository.ChangedFile(
-                        file.oldPath() != null && language.supports(file.oldPath()) ? file.oldPath() : null,
-                        file.newPath() != null && language.supports(file.newPath()) ? file.newPath() : null))
-                .filter(file -> file.oldPath() != null || file.newPath() != null)
-                .toList();
+    private record RoutedFile(GitRepository.ChangedFile file, LanguageSupport language) {}
+
+    private List<RoutedFile> changedFiles(GitRepository.Snapshot snapshot) {
+        List<RoutedFile> files = new ArrayList<>();
+        for (var file : git.changedFiles(snapshot)) {
+            var before = languages.find(file.oldPath()).orElse(null);
+            var after = languages.find(file.newPath()).orElse(null);
+            if (before != null && before == after) {
+                files.add(new RoutedFile(file, before));
+            } else {
+                // A change of language is a deletion plus an addition, never an entity match.
+                if (before != null) {
+                    files.add(new RoutedFile(new GitRepository.ChangedFile(file.oldPath(), null), before));
+                }
+                if (after != null) {
+                    files.add(new RoutedFile(new GitRepository.ChangedFile(null, file.newPath()), after));
+                }
+            }
+        }
+        return files;
     }
 
     public Changes listChanges(String baseRef, String headRef) {
         var snapshot = git.snapshot(baseRef, headRef);
-        var changes = changedFiles(snapshot).stream().map(file -> git.ranges(snapshot, file)).toList();
-        return new Changes(snapshot.baseSha(), snapshot.headSha(), changes);
+        List<GitRepository.Change> changes = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        for (var routed : changedFiles(snapshot)) {
+            var file = routed.file();
+            try {
+                changes.add(git.ranges(snapshot, file));
+            } catch (RuntimeException exception) {
+                warnings.add(file.path() + ": " + failure(exception));
+                changes.add(new GitRepository.Change(file.oldPath(), file.newPath(), List.of(), List.of()));
+            }
+        }
+        return new Changes(snapshot.baseSha(), snapshot.headSha(), warnings.isEmpty() ? "ok" : "partial",
+                changes, warnings);
     }
 
     public Review analyzeChanges(String baseSha, String headSha, List<String> paths) {
         var snapshot = new GitRepository.Snapshot(git.commit(baseSha), git.commit(headSha));
         var changedFiles = changedFiles(snapshot);
-        var selected = changedFiles.stream().filter(file -> paths.isEmpty() || paths.contains(file.path())).toList();
-        var selectedPaths = selected.stream().map(GitRepository.ChangedFile::path).toList();
+        var selected = changedFiles.stream().filter(routed -> paths.isEmpty() || paths.contains(routed.file().path())).toList();
+        var selectedPaths = selected.stream().map(routed -> routed.file().path()).toList();
         if (!selectedPaths.containsAll(paths)) {
-            throw new IllegalArgumentException("paths must identify changed files for the selected language.");
+            throw new IllegalArgumentException("paths must identify changed files supported by this service.");
         }
         if (selected.size() > MAX_ANALYSIS_FILES) {
             throw new IllegalArgumentException("Analysis selected " + selected.size() + " changed files. "
@@ -127,24 +161,51 @@ public final class AnalysisService {
 
         List<FileAnalysis> files = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
-        for (var file : selected) {
-            files.add(analyzeFile(snapshot, file, warnings));
+        for (var routed : selected) {
+            var file = routed.file();
+            try {
+                files.add(analyzeFile(snapshot, file, routed.language(), warnings));
+            } catch (RuntimeException exception) {
+                warnings.add(file.path() + ": " + failure(exception));
+                files.add(new FileAnalysis(file.oldPath(), file.newPath(), routed.language().languageId(),
+                        List.of(), List.of(), List.of()));
+            }
         }
-        return new Review(baseSha, headSha, warnings.isEmpty() ? "ok" : "partial", files, warnings);
+        return new Review(snapshot.baseSha(), snapshot.headSha(), warnings.isEmpty() ? "ok" : "partial", files, warnings);
     }
 
     public EntityContext inspectEntity(String sha, String path, int line) {
-        String source = git.source(git.commit(sha), path);
-        if (!language.supports(path)) {
-            throw new IllegalArgumentException("Unsupported path for " + language.languageId() + ": " + path);
-        }
-        return language.inspect(path, source, line);
+        return inspect(sha, path, line).context();
     }
 
-    private FileAnalysis analyzeFile(GitRepository.Snapshot snapshot, GitRepository.ChangedFile file, List<String> warnings) {
+    public SymbolContext getSymbolContext(String sha, String path, int line) {
+        var inspected = inspect(sha, path, line);
+        var context = inspected.context();
+        var lines = inspected.source().lines().toList();
+        if (!context.lines().contains(line) || context.lines().endLine() > lines.size()) {
+            throw new IllegalStateException("Adapter returned an invalid entity range for " + path);
+        }
+        var warnings = context.truncated() ? List.of(path + ": Call context truncated to analyzer limit.") : List.<String>of();
+        return new SymbolContext(inspected.sha(), path, inspected.language(), warnings.isEmpty() ? "ok" : "partial",
+                context.signature(), context.lines(),
+                String.join("\n", lines.subList(context.lines().startLine() - 1, context.lines().endLine())),
+                context.calls(), context.truncated(), warnings);
+    }
+
+    private record InspectedEntity(String sha, String language, String source, EntityContext context) {}
+
+    private InspectedEntity inspect(String sha, String path, int line) {
+        var language = languages.find(path).orElseThrow(() -> new IllegalArgumentException("Unsupported path: " + path));
+        var commit = git.commit(sha);
+        String source = git.source(commit, path);
+        return new InspectedEntity(commit, language.languageId(), source, language.inspect(path, source, line));
+    }
+
+    private FileAnalysis analyzeFile(GitRepository.Snapshot snapshot, GitRepository.ChangedFile file,
+                                     LanguageSupport language, List<String> warnings) {
         var change = git.ranges(snapshot, file);
-        Version before = load(snapshot.baseSha(), change.oldPath(), "base", warnings);
-        Version after = load(snapshot.headSha(), change.newPath(), "head", warnings);
+        Version before = load(snapshot.baseSha(), change.oldPath(), "base", language, warnings);
+        Version after = load(snapshot.headSha(), change.newPath(), "head", language, warnings);
         Set<String> touched = before.touched(change.baseLines());
         touched.addAll(after.touched(change.headLines()));
 
@@ -185,10 +246,10 @@ public final class AnalysisService {
                 findings.add(new Diagnostic(signature, rule, status, oldFinding, newFinding));
             }
         }
-        return new FileAnalysis(change.oldPath(), change.newPath(), List.copyOf(touched), findings, metrics);
+        return new FileAnalysis(change.oldPath(), change.newPath(), language.languageId(), List.copyOf(touched), findings, metrics);
     }
 
-    private Version load(String sha, String path, String side, List<String> warnings) {
+    private Version load(String sha, String path, String side, LanguageSupport language, List<String> warnings) {
         if (path == null) {
             return Version.empty(true);
         }
@@ -201,9 +262,14 @@ public final class AnalysisService {
                 warnings.add(label + "Incomplete language analysis.");
             }
             return new Version(result.entities(), result.findings(), result.complete(), result.metrics());
-        } catch (IllegalArgumentException exception) {
-            warnings.add(label + exception.getMessage());
+        } catch (RuntimeException exception) {
+            warnings.add(label + failure(exception));
             return Version.empty(false);
         }
+    }
+
+    private static String failure(RuntimeException exception) {
+        return exception.getClass().getSimpleName()
+                + (exception.getMessage() == null ? "" : ": " + exception.getMessage());
     }
 }
