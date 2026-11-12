@@ -13,6 +13,8 @@ import sys
 METRICS = ("cyclomatic_complexity", "cognitive_complexity", "function_sloc",
            "max_nesting_depth", "parameter_count", "return_count")
 STATUSES = {"AVAILABLE", "UNSUPPORTED", "MISSING", "ERROR", "ENTITY_ABSENT"}
+COVERAGE_UNITS = {"SNAPSHOT_ENTITY", "MATCH_GROUP", "LEGACY_METRIC_ENTITY"}
+MATCH_STATUSES = {"MATCHED", "ADDED", "REMOVED", "AMBIGUOUS", "UNVERIFIED"}
 
 
 def load(path):
@@ -71,6 +73,8 @@ def check_finding(finding, report):
 
 
 def check_coverage(coverage, reviewed_key, entities_key):
+    require(coverage.get("entityUnit") is None or coverage["entityUnit"] in COVERAGE_UNITS,
+            "Invalid entity coverage unit")
     for key in ("filesExpected", reviewed_key, "entitiesExpected", entities_key):
         require((key in ("entitiesExpected", entities_key) and coverage.get(key) is None)
                 or (type(coverage.get(key)) is int and coverage[key] >= 0), "Invalid coverage count: " + key)
@@ -100,6 +104,8 @@ def check_independent(artifact):
     require(artifact.get("coverage", {}).get("filesExpected") == len(artifact["scope"]["paths"]),
             "Independent coverage denominator differs from selected paths")
     complete = check_coverage(artifact.get("coverage", {}), "filesReviewed", "entitiesReviewed")
+    require(artifact["coverage"].get("entityUnit") in (None, "SNAPSHOT_ENTITY", "LEGACY_METRIC_ENTITY"),
+            "Independent coverage must describe source entities, not metric match groups")
     require(artifact["status"] != "COMPLETE" or complete, "Independent COMPLETE contradicts coverage")
     require(isinstance(artifact.get("findings"), list), "Independent findings missing")
     ids = []
@@ -108,6 +114,53 @@ def check_independent(artifact):
         require(finding["source"] == "AI_REVIEW", "Independent stage contains a metric signal")
         ids.append(finding["findingId"])
     require(len(ids) == len(set(ids)), "Duplicate independent finding IDs")
+
+
+def check_entity_matches(matches):
+    """Validate supplied Core pairing records; never infer or calculate pairings."""
+    require(isinstance(matches, list), "entityMatches must be an array")
+    identities, displays = set(), {}
+    incomplete = False
+    for match in matches:
+        safe_path(match.get("path"))
+        for key in ("oldPath", "newPath"):
+            require(key in match, "Entity match missing " + key)
+            if match[key] is not None:
+                safe_path(match[key])
+        require(match["path"] == (match["newPath"] or match["oldPath"]), "Entity match owning path mismatch")
+        require(isinstance(match.get("key"), str) and match["key"], "Entity match key missing")
+        identity = (match["path"], match["key"])
+        require(identity not in identities, "Duplicate entity match group")
+        identities.add(identity)
+        require(match.get("status") in MATCH_STATUSES, "Invalid entity match status")
+        before, after = match.get("before"), match.get("after")
+        require(isinstance(before, list) and isinstance(after, list) and (before or after),
+                "Entity match needs at least one supplied source entity")
+        for side, path in ((before, match["oldPath"]), (after, match["newPath"])):
+            require(not side or path is not None, "Entity match source side has no file path")
+            for entity in side:
+                require(isinstance(entity.get("signature"), str) and entity["signature"], "Source entity signature missing")
+                require(entity.get("matchingKey") == match["key"], "Source entity matchingKey differs from group")
+                require(type(entity.get("matchingAmbiguous")) is bool, "Source entity ambiguity status missing")
+                lines = entity.get("lines", {})
+                start, end = lines.get("startLine"), lines.get("endLine")
+                require(type(start) is int and type(end) is int and 0 < start <= end,
+                        "Invalid source entity line range")
+        if match["status"] == "MATCHED":
+            require(len(before) == len(after) == 1, "MATCHED requires one entity on each side")
+            require(not before[0]["matchingAmbiguous"] and not after[0]["matchingAmbiguous"],
+                    "MATCHED cannot assert an ambiguous pair")
+        elif match["status"] == "ADDED":
+            require(not before and len(after) == 1, "ADDED requires only a head entity")
+        elif match["status"] == "REMOVED":
+            require(len(before) == 1 and not after, "REMOVED requires only a base entity")
+        else:
+            incomplete = True
+        # Presentation identity comes from Core candidates, not a new matching algorithm.
+        display = after[0]["signature"] if len(after) == 1 else before[0]["signature"] if len(before) == 1 else match["key"]
+        require((match["path"], display) not in displays, "Entity match display identity is ambiguous")
+        displays[(match["path"], display)] = match
+    return displays, incomplete
 
 
 def validate(report, independent=None):
@@ -136,6 +189,16 @@ def validate(report, independent=None):
     require(report["coverage"]["filesExpected"] == len(scope["paths"]),
             "Report coverage denominator differs from selected paths")
     independent_complete = stage["status"] == "COMPLETE"
+    matches, matches_incomplete = check_entity_matches(report["entityMatches"]) if "entityMatches" in report else ({}, False)
+    coverage_unit = report["coverage"].get("entityUnit")
+    require(coverage_unit != "SNAPSHOT_ENTITY", "Final coverage must describe match groups or legacy metric entities")
+    if coverage_unit == "MATCH_GROUP":
+        require("entityMatches" in report, "MATCH_GROUP coverage needs supplied Core entityMatches")
+    if "entityMatches" in report:
+        require(coverage_unit in (None, "MATCH_GROUP"), "Supplied matches require MATCH_GROUP final coverage")
+        require(report["coverage"]["entitiesExpected"] is None
+                or report["coverage"]["entitiesExpected"] == len(matches),
+                "Final coverage denominator differs from supplied match groups")
     groups = {}
     seen = set()
     metrics_complete = True
@@ -147,6 +210,8 @@ def validate(report, independent=None):
         require(key not in seen, "Duplicate metric comparison")
         seen.add(key)
         groups.setdefault(key[:2], set()).add(metric_id)
+        if "entityMatches" in report:
+            require(key[:2] in matches, "Metric row has no supplied Core match group")
         before, after = metric["before"], metric["after"]
         for side in (before, after):
             status = side.get("status")
@@ -169,6 +234,8 @@ def validate(report, independent=None):
         if expected == "INCOMPATIBLE":
             metrics_complete = False
     metrics_complete = metrics_complete and all(set(METRICS) == values for values in groups.values())
+    if "entityMatches" in report:
+        metrics_complete = metrics_complete and set(matches) == set(groups) and not matches_incomplete
     if report["coverage"]["entitiesExpected"] and not groups:
         metrics_complete = False
     require(report["coverage"]["entitiesAnalyzed"] is None
@@ -214,8 +281,18 @@ def render(report):
     lines = ["# CodeClarity readability review", "", f"**{report['verdict']}** · `{report['reviewId']}`", "",
              f"Repository: {scope['repoRoot']}", f"Snapshots: `{scope['baseSha']}` → `{scope['headSha']}`", "",
              "Selected paths: " + (", ".join(scope["paths"]) or "none"),
-             "Coverage: " + json.dumps(report["coverage"], ensure_ascii=False), "",
-             "| File / entity | Metric | Before | After | Delta |", "|---|---|---|---|---|"]
+             "Independent coverage: " + json.dumps(report["independentReview"]["coverage"], ensure_ascii=False),
+             "Analysis coverage: " + json.dumps(report["coverage"], ensure_ascii=False)]
+    if "entityMatches" in report:
+        lines += ["", "Core entity matches:", "", "| Group | Status | Base source | Head source |", "|---|---|---|---|"]
+        for match in report["entityMatches"]:
+            def source_entities(side, path, sha):
+                return "; ".join(f"{sha}:{path}:{entity['lines']['startLine']}-{entity['lines']['endLine']} {entity['signature']}"
+                                 for entity in side) or "—"
+            lines.append("| " + " | ".join(map(cell, [match["path"] + " / " + match["key"], match["status"],
+                         source_entities(match["before"], match["oldPath"], scope["baseSha"]),
+                         source_entities(match["after"], match["newPath"], scope["headSha"])])) + " |")
+    lines += ["", "| File / entity | Metric | Before | After | Delta |", "|---|---|---|---|---|"]
     for entry in report["metrics"]:
         def measured(side):
             return str(side["value"]) if side["status"] == "AVAILABLE" else side["status"]

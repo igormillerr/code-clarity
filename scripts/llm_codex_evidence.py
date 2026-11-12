@@ -8,6 +8,28 @@ import sys
 
 from llm_evals import check_report
 
+LANGUAGE_TOOLS = {
+    "java": ("list_java_changes", "analyze_java_changes"),
+    "python": ("list_python_changes", "analyze_python_changes"),
+}
+
+
+def language_errors(languages, scope, calls):
+    """Compare the requested scope with actual tool invocations, not model prose."""
+    errors = []
+    reported = scope.get("languages")
+    if (not isinstance(reported, list) or not all(isinstance(item, str) for item in reported)
+            or len(reported) != len(set(reported)) or set(reported) != set(languages)):
+        errors.append("Reported scope.languages differs from the selected probe languages")
+    names = {call["tool"] for call in calls}
+    required = {tool for language in languages for tool in LANGUAGE_TOOLS[language]}
+    if not required <= names:
+        errors.append("Missing actual selected-language list/analysis calls: " + ", ".join(sorted(required - names)))
+    unexpected = {tools[1] for language, tools in LANGUAGE_TOOLS.items() if language not in languages} & names
+    if unexpected:
+        errors.append("Analysis exceeded the selected language scope: " + ", ".join(sorted(unexpected)))
+    return errors
+
 
 def objects(value):
     if isinstance(value, dict):
@@ -23,7 +45,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--languages", nargs="+", choices=tuple(LANGUAGE_TOOLS),
+                        default=["java", "python"], help="Languages selected for this probe (default: both)")
     args = parser.parse_args()
+    if len(args.languages) != len(set(args.languages)):
+        parser.error("--languages must not contain duplicates")
     run = args.run.resolve()
     attempt = json.loads((run / "attempt.json").read_text(encoding="utf-8"))
     raw = (run / "events.jsonl").read_bytes()
@@ -66,8 +92,7 @@ def main():
         errors.append("Codex invocation did not finish successfully")
     if len(freezes) != 1 or not analysis_started or freezes[0]["eventIndex"] >= min(analysis_started):
         errors.append("Raw Codex event order does not prove freeze BEFORE analysis invocation")
-    if not {"list_java_changes", "list_python_changes", "analyze_java_changes", "analyze_python_changes"} <= {call["tool"] for call in calls}:
-        errors.append("Missing actual Java/Python list/analysis calls in installed plugin run")
+    errors.extend(language_errors(args.languages, report.get("scope", {}), calls))
     errors.extend(check_report(report, trace, Path(attempt["repo"])))
     project = Path(__file__).resolve().parents[1]
     specification = importlib.util.spec_from_file_location("review_artifacts", project / "plugin/scripts/review_artifacts.py")
@@ -81,16 +106,19 @@ def main():
             errors.append("Artifact validation: " + str(error))
     summary = {"schemaVersion": 1, "executionLevel": "INSTALLED_PLUGIN_CODEX_CLI",
                "status": "FAIL" if errors else "PASS", "errors": errors,
-               "plugin": attempt["plugin"], "attempt": attempt,
+               "plugin": attempt["plugin"], "attempt": attempt, "languages": args.languages,
                "eventsSha256": hashlib.sha256(raw).hexdigest(), "rawEvents": str(run / "events.jsonl"),
                "calls": calls, "freeze": freezes, "analysisStartedEventIndices": analysis_started,
                "report": str(report_path), "markdown": str(report_path.with_suffix(".md")),
                "reportSha256": hashlib.sha256(report_path.read_bytes()).hexdigest(),
                "scope": report["scope"], "verdict": report["verdict"], "findings": report["findings"],
                "metrics": report["metrics"], "ruleDiscovery": report["ruleDiscovery"],
-               "limitations": ["Core history tools are absent: no persistence/feedback/idempotence E2E claim.",
-                               "Current Core lacks mandatory metrics: INCOMPLETE is the correct review verdict.",
+               "limitations": ["This verifier does not establish Core history persistence, feedback authorization or idempotence.",
                                "One observed live run is not proof of deterministic model behavior."]}
+    if "entityMatches" in report:
+        summary["entityMatches"] = report["entityMatches"]
+    if report["verdict"] == "INCOMPLETE":
+        summary["limitations"].append("The main review is INCOMPLETE; see its recorded skips and metric statuses.")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": summary["status"], "errors": errors, "calls": len(calls),

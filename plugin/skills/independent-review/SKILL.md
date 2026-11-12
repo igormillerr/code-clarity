@@ -57,6 +57,15 @@ Return an artifact with `reviewId`, `scope`, `status` (`COMPLETE` or `INCOMPLETE
 explain why. `findings` may be empty. The orchestrator retains an artifact reference
 under `independentReview.artifact` and freezes it before metric tool calls.
 
+Set `coverage.entityUnit: SNAPSHOT_ENTITY`: count affected source declarations
+separately in each snapshot. The reviewed base and head declarations of a function
+are two source occurrences even if Core will later match them. Record which
+snapshot/path/range was inspected so the count is auditable. This is source-review
+coverage, not a code metric or an attempt to reproduce Core matching. The final
+report may count `MATCH_GROUP` units after analysis; that different denominator
+does not change this frozen artifact. Do not fetch current metrics to discover
+those groups, infer equivalence from signatures, or fill unknown counts with zero.
+
 For each finding provide:
 
 - `findingId`, `reviewId`, `snapshotId`, `source: AI_REVIEW`, `categoryId`;

@@ -1,14 +1,83 @@
 # CodeClarity: локальная установка и запуск LLM-части
 
-Эта ветка реализует Task 03 (Java / LLM Engineer). Основа — `feature/python`
-`ec6a3ed`; сервер и анализаторы не изменены. Версия пакета плагина — `0.2.0`,
-версия существующего сервера — `0.1.1`. Требуются Java 21+, Git, Python 3.10+
-и локальный Codex с поддержкой плагинов. Проверяемая здесь версия CLI:
-`0.167.0-alpha.3.2`.
+В `codex/llm-workflow` интегрирована Python-ветка
+`feature/python-metrics-integration` (`dc9d957`, merge `a922e40`). Версия пакета
+плагина — `0.3.2`, serverInfo существующего Java-сервера — `0.1.1`.
+По одной версии сервера нельзя определять набор метрик: проверяйте реальные ответы.
+Требуются JDK 21+ (с компилятором для Java source-file launcher), Git, Python с зависимостями и локальный Codex с поддержкой
+плагинов. Использовавшаяся версия CLI — `0.167.0-alpha.3.2`;
+фактические результаты текущей интеграции — в [статусе](llm-status.md).
 
-## Установка
+## Python-окружение
 
-Из корня репозитория, PowerShell:
+Для всех шести Python-метрик требуется **complexipy 8.3.0** из
+`requirements-python.txt`. Установите её в отдельное окружение. PowerShell,
+из корня проекта:
+
+```powershell
+python -m venv .venv
+& '.venv/Scripts/python.exe' -m pip install -r requirements-python.txt
+$codeclarityPython = (Resolve-Path '.venv/Scripts/python.exe').Path
+$env:CODECLARITY_PYTHON = $codeclarityPython
+```
+
+Для проверки Skills и полной JSON Schema дополнительно доступны закреплённые
+инструменты из `requirements-llm-dev.txt`:
+
+```powershell
+& $codeclarityPython -m pip install -r requirements-llm-dev.txt
+```
+
+Переменная содержит путь к одному исполняемому файлу, без аргументов.
+Worker запускается с `-I`: установка зависимости через `pip --user` не заменяет
+установку в выбранный интерпретатор. При отсутствии или другой версии complexipy
+CogC получает `ERROR`, остальные пять метрик и AST продолжают работать;
+отчёт будет частичным.
+
+## Выбор Python для установленного плагина
+
+Плагин запускает Java 21 source-file launcher
+`plugin/scripts/LaunchMcp.java`, который передаёт STDIO поставленному Core JAR.
+Он выбирает интерпретатор в таком порядке:
+
+1. Непустая переменная `CODECLARITY_PYTHON`, если хост передал её launcher.
+2. UTF-8 файл `~/.codeclarity/python-path.txt` с одним абсолютным путём к Python.
+3. Стандартный выбор Core — `python` из PATH, если selector не задан.
+
+Проверяемый плагинный loader не принимает `env_vars`, а пользовательское
+окружение может фильтроваться хостом. Поэтому для desktop настройте файл:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.codeclarity" | Out-Null
+Set-Content -LiteralPath "$env:USERPROFILE\.codeclarity\python-path.txt" -Value $codeclarityPython -Encoding utf8NoBOM
+```
+
+Файл содержит путь к исполняемому файлу без аргументов. Launcher явно передаёт
+выбранный путь дочернему Core-процессу. Изменения ограничены упаковкой плагина:
+анализаторы, алгоритмы и поставленный JAR этим launcher не меняются.
+
+На Linux/macOS используйте `.venv/bin/python`:
+
+```bash
+export CODECLARITY_PYTHON="$(pwd)/.venv/bin/python"
+mkdir -p ~/.codeclarity
+printf '%s\n' "$CODECLARITY_PYTHON" > ~/.codeclarity/python-path.txt
+```
+
+Для CLI можно использовать переменную в текущей оболочке. На Windows её также
+можно сохранить для пользователя:
+
+```powershell
+[Environment]::SetEnvironmentVariable('CODECLARITY_PYTHON', $codeclarityPython, 'User')
+```
+
+Существующее приложение получит изменённую пользовательскую переменную после
+перезапуска; переданная переменная имеет приоритет над файлом. Файл selector
+читается при старте launcher, поэтому после его изменения перезапустите
+MCP-сервер/сеанс плагина. Для чтения файла полный перезапуск приложения не нужен.
+В `mcp.json` остаются только `type`, `command`, `args` и `cwd`.
+
+## Установка плагина
 
 ```powershell
 codex plugin marketplace add .
@@ -16,99 +85,110 @@ codex plugin add codeclarity@codeclarity-local
 codex plugin list --marketplace codeclarity-local --json
 ```
 
-Текущий JAR выбирает один репозиторий из UTF-8 файла
-`~/.codeclarity/repo-root.txt`. Укажите абсолютный путь к анализируемому проекту:
+JAR выбирает один репозиторий из UTF-8 файла `~/.codeclarity/repo-root.txt`.
+Укажите абсолютный путь к анализируемому проекту:
 
 ```powershell
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.codeclarity" | Out-Null
 Set-Content -LiteralPath "$env:USERPROFILE\.codeclarity\repo-root.txt" -Value 'C:\work\my-project' -Encoding utf8NoBOM
 ```
 
-Это явная смена анализируемого репозитория: существующий путь следует сохранить,
-если он ещё нужен. Не путать домашний файл выбора репозитория с проектной
-`.codeclarity/review-history.json`, которой управляет Core.
+Это смена анализируемого репозитория: сохраните прежний путь, если он ещё нужен.
+Домашние `repo-root.txt` и `python-path.txt` выбирают соответственно репозиторий
+и интерпретатор. Проектной `.codeclarity/review-history.json` управляет Core.
 
-Для Python при необходимости задайте `CODECLARITY_PYTHON` равной пути к одному
-интерпретатору, без аргументов. Переменная должна быть доступна процессу Codex.
-Java должна быть в PATH. Плагин сам подключает один MCP-сервер через STDIO;
-добавлять каждый Tool или второй сервер через `codex mcp add` не требуется.
-Если сервер ранее зарегистрирован вручную, проверьте `codex mcp list` и выберите
-один способ подключения. Автоматически удалять чужие регистрации не нужно.
+Java должна быть в PATH. Плагин подключает один MCP-сервер через STDIO;
+регистрировать каждый Tool или второй сервер через `codex mcp add` не требуется.
+Если ранее была ручная регистрация, проверьте `codex mcp list` и выберите один
+способ подключения, чтобы избежать дублирования.
 
-Откройте новый локальный чат после установки/обновления. Доступны:
+После установки или обновления откройте новый локальный чат. Доступны:
 
 - `codeclarity:readability-review` — полный процесс;
-- `codeclarity:independent-review` — качественный поиск до численных результатов;
-- `codeclarity:metrics-correlation` — интерпретация реальных измерений;
-- `codeclarity:rule-discovery` — история и предложения при доступных Core Tools.
+- `codeclarity:independent-review` — качественный поиск до текущих измерений;
+- `codeclarity:metrics-correlation` — сопоставление Findings с измерениями;
+- `codeclarity:rule-discovery` — предложения по подтверждённой истории при доступных Core Tools.
 
 Пример запроса:
 
-> Используй CodeClarity readability-review для Java/Python изменений между main и HEAD.
-> Сохрани независимые замечания до получения метрик, затем верни JSON/Markdown,
-> покрытие, пропуски и вердикт. Не меняй исходники.
+> Используй CodeClarity readability-review для Python-изменений между main и HEAD.
+> Сначала прочитай код и зафиксируй независимые Findings, затем вызови анализ
+> метрик через MCP. Верни JSON/Markdown, покрытие, пропуски и вердикт. Исходники не меняй.
 
-Сейчас сравниваются только коммиты, причём база — общий предок `main` и `HEAD`.
+Сравниваются зафиксированные коммиты: база — общий предок `main` и `HEAD`.
 Запрос на worktree/staged нельзя незаметно заменять этим режимом.
 
-## Что проверять при ошибке
+## Полнота и matching
+
+Python-only ревью может завершиться `PASS` или `WARN`, если обработаны исходники,
+обязательные этапы и все шесть метрик. Java пока возвращает CC/CogC: ревью
+затронутых Java-методов, в том числе смешанное, требует `INCOMPLETE` при отсутствии
+четырёх обязательных метрик. `ok` от сервера само по себе не доказывает полноту.
+
+Core возвращает `files[].matches`: логические группы со статусом, ключом,
+сигнатурами и диапазонами обеих сторон. Изменение параметров Python-функции
+может сохранять `MATCHED` и измеренную delta. Skills сохраняют эти данные в
+`entityMatches`, не воспроизводят matching средствами LLM.
+Независимый этап считает исходные сущности снимков (`SNAPSHOT_ENTITY`),
+а итоговое покрытие — группы Core (`MATCH_GROUP`); эти количества могут различаться.
+Недоступность необязательного LSP или истории сама по себе не отменяет полный
+основной отчёт.
+
+## Диагностика
 
 | Симптом | Проверка |
 |---|---|
-| Плагина нет в списке | Корень marketplace, `plugin/plugin.json`, вывод `codex plugin list --available --json` |
-| Skills есть, MCP нет | PATH Java; наличие JAR; абсолютный repo-root.txt; запуск JAR вручную с `--repo-root`; stderr MCP |
-| Инструменты отображаются дважды | Сравнить plugin connection и ручную регистрацию `codex mcp list` |
-| Python partial | PATH/`CODECLARITY_PYTHON`, синтаксис и предупреждения; не терять Java-результат |
-| История UNAVAILABLE | В переданном JAR пока нет history Tools; это зависимость Task 02, не повод писать JSON напрямую |
-| Сервер ok, отчёт INCOMPLETE | В прототипе не хватает обязательных метрик; полнота MVP проверяется отдельно |
+| Плагина нет | Marketplace root, `plugin/plugin.json`, `codex plugin list --available --json` |
+| Skills есть, MCP нет | PATH Java, JAR, абсолютный repo-root.txt, stderr MCP |
+| Tools дублируются | Plugin connection и ручная регистрация `codex mcp list` |
+| Python CogC ERROR | Приоритетная `CODECLARITY_PYTHON`, затем `python-path.txt`; установка complexipy **8.3.0** в выбранный Python; новый запуск launcher после смены selector |
+| Python partial | Причины в warnings и отдельных метриках; сохранить доступные пять значений и Java-результат |
+| История UNAVAILABLE | History Tools ещё отсутствуют; прямой записью JSON это не компенсируется |
+| Сервер ok, ревью INCOMPLETE | Проверить шесть метрик, source coverage, статусы matches и обязательные этапы |
 
-Успешный запуск JAR без протокольного клиента может просто ожидать stdin.
-Для воспроизводимой проверки используйте команды ниже, а не отсутствие вывода.
+Запущенный без протокольного клиента JAR может просто ожидать stdin.
+Отсутствие вывода не подтверждает работоспособность интеграции.
 
 ## Проверки
 
-```powershell
-python plugin/skills/readability-review/scripts/review_ids.py --self-test
-python scripts/llm_evals.py self-test
-python scripts/llm_artifact_test.py
-python scripts/llm_evals.py protocol --jar plugin/server/codeclarity-mcp.jar --output .codeclarity/protocol-run
-```
-
-Каждый `--output` с тестовым репозиторием должен указывать новый/пустой каталог.
-В ограниченном Windows sandbox Java может получить `AccessDeniedException` при
-чтении корня Git; такой запуск — ошибка окружения, а не успешный протокольный тест.
-Создавайте тестовый репозиторий и запускайте MCP под одним пользователем ОС:
-Git также отклоняет fixture другого владельца как `dubious ownership`. Для
-этого теста достаточно нового fixture под нужным пользователем; изменять
-глобальный список `safe.directory` не требуется.
-
-Проверка установленного плагина реальным Codex CLI:
+Запускайте тесты выбранным интерпретатором:
 
 ```powershell
-python scripts/llm_evals.py prepare --scenario python-naming --output .codeclarity/naming-fixture
-python scripts/llm_codex_probe.py --repo .codeclarity/naming-fixture/repo --output .codeclarity/codex-probe --mode discovery --temporary-repo-config
+& $codeclarityPython plugin/skills/readability-review/scripts/review_ids.py --self-test
+& $codeclarityPython scripts/llm_evals.py self-test
+& $codeclarityPython scripts/llm_artifact_test.py
+& $codeclarityPython scripts/llm_evals.py protocol --jar plugin/server/codeclarity-mcp.jar --output .codeclarity/protocol-new
 ```
 
-`--temporary-repo-config` временно задаёт домашний repo-root.txt и восстанавливает
-его после запуска. При обнаружении параллельного изменения конфигурации скрипт
-сохраняет чужое изменение и пишет предупреждение. Запускайте probe без параллельных
-сеансов, использующих этот сервер. Без флага используется изолированный Java
-user.home через JAVA_TOOL_OPTIONS; некоторые клиенты не передают эту переменную
-MCP-процессу. Успех CLI сам по себе не доказывает вызов Tool: проверяйте events.jsonl
-и stderr. Режим `--mode review` запускает полный Skill на той же конфигурации.
+Каждый каталог fixture/output должен быть новым или пустым. Создавайте Git fixture
+и запускайте MCP под одним пользователем ОС: Git отклоняет другой owner как
+`dubious ownership`. В некоторых Windows sandbox Java также получает
+`AccessDeniedException` при чтении Git root. Это ошибки окружения;
+их нельзя считать успешным тестом или обходить глобальным `safe.directory` ради демо.
 
-Завершённый полный прогон можно проверить по исходным JSONL-событиям:
+Реальный Python-only запуск установленного плагина:
 
 ```powershell
-python scripts/llm_codex_evidence.py --run .codeclarity/live-run --output evals/results/codex-live-new.json
+& $codeclarityPython scripts/llm_demo.py --source python-experiments --output .codeclarity/python-demo-new
+& $codeclarityPython scripts/llm_codex_probe.py --repo .codeclarity/python-demo-new/repo --output .codeclarity/python-live-new --mode review --languages python --python $codeclarityPython --temporary-repo-config
+& $codeclarityPython scripts/llm_codex_evidence.py --run .codeclarity/python-live-new --output evals/results/codex-python-new.json --languages python
 ```
 
-Проверка сверяет реальные MCP-ответы, порядок freeze до НАЧАЛА analyze,
-неизменность Findings, source ranges и все численные объекты. Она не считает
-успешный exit code достаточным доказательством. Фактический статус этой поставки:
-[llm-status.md](llm-status.md).
+Probe запускает Codex с `--no-daemon` и явно передаёт выбранный Python в окружение;
+для хоста, фильтрующего его, используется настроенный `python-path.txt`.
+`--temporary-repo-config`
+временно задаёт домашний repo-root.txt и восстанавливает его после завершения.
+Параллельно не запускайте сеансы с этим сервером; обнаруженное чужое изменение
+конфигурации сохраняется. Без флага используется отдельный Java user.home через
+JAVA_TOOL_OPTIONS, которую некоторые клиенты не передают MCP-процессу.
 
-Формат упаковки и `${PLUGIN_ROOT}` сверены с официальными страницами:
-[Package your plugin](https://developers.openai.com/plugins/build/plugins),
-[Local MCP servers](https://developers.openai.com/plugins/deploy/desktop-only).
-Публичная публикация плагина не входит в эту работу.
+Проверка JSONL сверяет реальные Tools, freeze до **начала** analyze, неизменность
+Findings, source ranges и измерения. Успешного exit code CLI недостаточно.
+Фактический статус и ссылки на текущие результаты — в [llm-status.md](llm-status.md).
+Старые `evals/results/*baseline*`, `agent-forward.json` и `codex-live.json` остаются
+историческими снимками; новые результаты сохраняются в отдельных файлах.
+
+Формат упаковки и запуск локального MCP описаны в официальных страницах
+[Package your plugin](https://developers.openai.com/plugins/build/plugins) и
+[MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
+Публичная публикация плагина в эту работу не входит.

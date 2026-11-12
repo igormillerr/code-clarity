@@ -1,0 +1,890 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "MCP_PROTOCOL",
+  "jar": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\plugin\\server\\codeclarity-mcp.jar",
+  "jarSha256": "3c4bc878473fe264accf50224a4066060bad8832a318901a4bee79882841da69",
+  "codexEndToEnd": "NOT_RUN",
+  "results": [
+    {
+      "scenarioId": "java-complexity",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP.",
+      "metricComparisons": [
+        {
+          "path": "Eligibility.java",
+          "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 7.0,
+            "reason": null
+          },
+          "delta": 6.0
+        },
+        {
+          "path": "Eligibility.java",
+          "entity": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 21.0,
+            "reason": null
+          },
+          "delta": 21.0
+        }
+      ],
+      "entityMatches": [
+        {
+          "path": "Eligibility.java",
+          "oldPath": "Eligibility.java",
+          "newPath": "Eligibility.java",
+          "key": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+          "status": "MATCHED",
+          "before": [
+            {
+              "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+              "lines": {
+                "startLine": 2,
+                "endLine": 5
+              },
+              "matchingKey": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+              "matchingAmbiguous": false
+            }
+          ],
+          "after": [
+            {
+              "signature": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+              "lines": {
+                "startLine": 2,
+                "endLine": 18
+              },
+              "matchingKey": "Eligibility#shouldNotify(boolean, boolean, boolean, boolean, boolean, boolean)",
+              "matchingAmbiguous": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenarioId": "python-naming",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP.",
+      "metricComparisons": [
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "invoice_totals.py",
+          "entity": "subtotal(a)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "entityMatches": [
+        {
+          "path": "invoice_totals.py",
+          "oldPath": "invoice_totals.py",
+          "newPath": "invoice_totals.py",
+          "key": "subtotal",
+          "status": "MATCHED",
+          "before": [
+            {
+              "signature": "subtotal(line_items)",
+              "lines": {
+                "startLine": 1,
+                "endLine": 2
+              },
+              "matchingKey": "subtotal",
+              "matchingAmbiguous": false
+            }
+          ],
+          "after": [
+            {
+              "signature": "subtotal(a)",
+              "lines": {
+                "startLine": 1,
+                "endLine": 3
+              },
+              "matchingKey": "subtotal",
+              "matchingAmbiguous": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenarioId": "good-code",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP.",
+      "metricComparisons": [
+        {
+          "path": "Totals.java",
+          "entity": "Totals#lineTotal(long, long)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/CYCLO/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "Totals.java",
+          "entity": "Totals#lineTotal(long, long)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "java",
+              "analyzer": "pmd/7.29.0",
+              "algorithm": "pmd-java/COGNITIVE_COMPLEXITY/default-options"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "totals.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "entityMatches": [
+        {
+          "path": "Totals.java",
+          "oldPath": "Totals.java",
+          "newPath": "Totals.java",
+          "key": "Totals#lineTotal(long, long)",
+          "status": "MATCHED",
+          "before": [
+            {
+              "signature": "Totals#lineTotal(long, long)",
+              "lines": {
+                "startLine": 2,
+                "endLine": 4
+              },
+              "matchingKey": "Totals#lineTotal(long, long)",
+              "matchingAmbiguous": false
+            }
+          ],
+          "after": [
+            {
+              "signature": "Totals#lineTotal(long, long)",
+              "lines": {
+                "startLine": 2,
+                "endLine": 4
+              },
+              "matchingKey": "Totals#lineTotal(long, long)",
+              "matchingAmbiguous": false
+            }
+          ]
+        },
+        {
+          "path": "totals.py",
+          "oldPath": "totals.py",
+          "newPath": "totals.py",
+          "key": "line_total",
+          "status": "MATCHED",
+          "before": [
+            {
+              "signature": "line_total(quantity, unit_price_cents)",
+              "lines": {
+                "startLine": 1,
+                "endLine": 2
+              },
+              "matchingKey": "line_total",
+              "matchingAmbiguous": false
+            }
+          ],
+          "after": [
+            {
+              "signature": "line_total(quantity, unit_price_cents)",
+              "lines": {
+                "startLine": 1,
+                "endLine": 2
+              },
+              "matchingKey": "line_total",
+              "matchingAmbiguous": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenarioId": "partial-analysis",
+      "executionLevel": "MCP_PROTOCOL",
+      "status": "PASS",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "discoveredTools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "note": "Real MCP transport/static analysis only. No claim of Codex, independent review or complete MVP.",
+      "metricComparisons": [
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 0.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "path": "valid.py",
+          "entity": "line_total(quantity, unit_price_cents)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "entityMatches": [
+        {
+          "path": "valid.py",
+          "oldPath": "valid.py",
+          "newPath": "valid.py",
+          "key": "line_total",
+          "status": "MATCHED",
+          "before": [
+            {
+              "signature": "line_total(quantity, unit_price_cents)",
+              "lines": {
+                "startLine": 1,
+                "endLine": 2
+              },
+              "matchingKey": "line_total",
+              "matchingAmbiguous": false
+            }
+          ],
+          "after": [
+            {
+              "signature": "line_total(quantity, unit_price_cents)",
+              "lines": {
+                "startLine": 1,
+                "endLine": 2
+              },
+              "matchingKey": "line_total",
+              "matchingAmbiguous": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenarioId": "history-sufficient",
+      "status": "NOT_RUN",
+      "reason": "History decision requires Skill evaluation; persistence tools are a Core dependency."
+    },
+    {
+      "scenarioId": "history-insufficient",
+      "status": "NOT_RUN",
+      "reason": "History decision requires Skill evaluation; persistence tools are a Core dependency."
+    }
+  ]
+}

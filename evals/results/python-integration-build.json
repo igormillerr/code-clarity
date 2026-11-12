@@ -1,0 +1,89 @@
+{
+  "started_utc": "2026-11-12T14:14:28.874817+00:00",
+  "build_backend": "bundled",
+  "success": true,
+  "stages": [
+    {
+      "name": "preflight",
+      "status": "PASSED",
+      "log": "preflight.log",
+      "seconds": 0.454
+    },
+    {
+      "name": "build",
+      "status": "PASSED",
+      "log": "build.log",
+      "seconds": 4.285
+    },
+    {
+      "name": "python_unit",
+      "status": "PASSED",
+      "log": "python_unit.log",
+      "seconds": 0.444
+    },
+    {
+      "name": "metric_fixtures",
+      "status": "PASSED",
+      "log": "metric_fixtures.log",
+      "seconds": 0.24
+    },
+    {
+      "name": "core",
+      "status": "PASSED",
+      "log": "core.log",
+      "seconds": 3.961
+    },
+    {
+      "name": "java_metrics",
+      "status": "PASSED",
+      "log": "java_metrics.log",
+      "seconds": 2.333
+    },
+    {
+      "name": "python_mcp",
+      "status": "PASSED",
+      "log": "python_mcp.log",
+      "seconds": 34.363
+    },
+    {
+      "name": "python_matching",
+      "status": "PASSED",
+      "log": "python_matching.log",
+      "seconds": 9.671
+    },
+    {
+      "name": "java_mcp",
+      "status": "PASSED",
+      "log": "java_mcp.log",
+      "seconds": 20.643
+    },
+    {
+      "name": "python_experiments",
+      "status": "PASSED",
+      "log": "python_experiments.log",
+      "seconds": 7.452
+    }
+  ],
+  "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+  "python_executable": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.venv\\Scripts\\python.exe",
+  "complexipy": "8.3.0",
+  "java": {
+    "executable": "C:\\Program Files\\Java\\jdk-21\\bin\\java.EXE",
+    "version": "openjdk version \"21\" 2023-09-19\nOpenJDK Runtime Environment (build 21+35-2513)\nOpenJDK 64-Bit Server VM (build 21+35-2513, mixed mode, sharing)"
+  },
+  "javac": {
+    "executable": "C:\\Program Files\\Java\\jdk-21\\bin\\javac.EXE",
+    "version": "javac 21"
+  },
+  "git": {
+    "executable": "C:\\Program Files\\Git\\cmd\\git.EXE",
+    "version": "git version 2.47.1.windows.1"
+  },
+  "git_head": "a922e403b6862dcf072bbe892eabed4addd4f0bb",
+  "worktree_dirty": true,
+  "source_sha256": "29f8da8475094c0a0c1f08e549686a432ec83b312b99fe42ab59672d0449b9de",
+  "dependency_jar": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\plugin\\server\\codeclarity-mcp.jar",
+  "dependency_jar_sha256": "3c4bc878473fe264accf50224a4066060bad8832a318901a4bee79882841da69",
+  "jar_sha256": "510508109d64bda8b0b3fa0bdd2f87aa1b71f52f8780d7c9ebf85f0b0688d107",
+  "finished_utc": "2026-11-12T14:15:52.750830+00:00"
+}

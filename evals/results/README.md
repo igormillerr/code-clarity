@@ -1,13 +1,25 @@
-# Evaluation evidence
+# Фактические результаты проверок
 
-`scenarios.json` defines six scenarios. Protocol results, model results and manual
-observations are different evidence levels. A successful protocol run does not
-prove Codex discovery, Skill use or Rule Discovery persistence.
+## Интеграция Python, 12.11.2026
 
-Run the reproducible commands in `evals/README.md`. Every fresh result starts as
-`NOT_RUN`. Record a failed/unavailable run as such; never replace it with the
-expected answer. `protocol.json` is generated only from the real Java JAR.
+| Файл | Уровень и смысл |
+|---|---|
+| python-integration-build.json | Свежий bundled build и 8 наборов проверок, PASSED |
+| protocol-python-integration.json | 4 реальных MCP protocol-сценария; точные измерения и matches |
+| agent-python-integration-summary.json | Naming WARN и 2 synthetic history assessment, fresh agent + source-built real JAR |
+| agent-python-integration.json | Семантическая проверка Naming-артефакта; сама по себе не доказывает его автора |
+| codex-python-integration.json | Установленный 0.3.2 → Codex → 6 MCP calls → Python-only PASS |
+| codex-python-degraded.json | Более ранний Codex INCOMPLETE / CogC ERROR, пять значений сохранены |
+| python-launcher.json | 4 реальные проверки конфигурации Python, STDIO и lifecycle launcher |
 
-Synthetic history fixtures are labelled test data. They are not real developer
-feedback. The current JAR has no history tools, so history integration remains
-unavailable until the Java Core owner supplies them.
+Синтетические history outcomes — решение Skill без persistence; реальных history Tools нет.
+PASS теста/верификатора следует отличать от вердикта кода. В production history остаётся
+UNAVAILABLE. Полный текущий статус и команды: [llm-status.md](../../docs/llm-status.md).
+
+## Исторический baseline 0.2.0
+
+agent-forward.json, codex-live.json и protocol-baseline.json отражают прежний JAR ec6a3ed.
+Они сохранены неизменными и не доказывают готовность нового пакета. У старого JAR
+не хватало Python-метрик, поэтому соответствующие code-review verdicts INCOMPLETE корректны
+для того исторического состояния. Абсолютные локальные пути и хеши в файлах — receipts
+выполненных запусков; новые проверки пишите в новые каталоги и файлы.

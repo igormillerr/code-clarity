@@ -38,6 +38,14 @@ when supplied by Core, takes precedence; retain its identity in the report.
   `value`, and `reason`. Attach the correct repository path when flattening rows.
   `definition.analyzer` includes the analyzer version; `definition.algorithm`
   identifies semantics. A future schema must be read from discovery/contracts.
+- Preserve `files[].matches` as report `entityMatches` when present. Add the
+  owning file's `path` (newPath, or oldPath for a deletion), `oldPath` and `newPath`;
+  retain each match's `key`, `status`, `before[]` and `after[]` unchanged. Source
+  ranges/signatures in before belong to oldPath/baseSha; after belongs to
+  newPath/headSha. Use these groups for final `coverage.entityUnit: MATCH_GROUP`.
+  Do not count two signatures in one `MATCHED` group as two changed entities.
+  Frozen Independent Review uses `SNAPSHOT_ENTITY` source occurrences and may
+  have a different count; preserve its original count and findings.
 - `COMPARED` permits a delta only when both sides are `AVAILABLE` and their full
   definitions match. `INCOMPATIBLE` and `UNAVAILABLE` have no usable delta.
   Preserve `UNSUPPORTED`, `MISSING`, `ERROR`, and `ENTITY_ABSENT`; display no
@@ -53,10 +61,17 @@ when supplied by Core, takes precedence; retain its identity in the report.
 
 ## Correlate without replacing the source review
 
-1. Match rows to the correct file, entity, version and finding location. Check added,
-   deleted and unmatched signatures explicitly; a rename/signature change need not
-   have a reliable before/after pair. Preserve independent findings unchanged in
-   their frozen artifact; produce a separate final findings array.
+1. Locate rows using Core's supplied matches and the correct file/version/range.
+   A Python parameter change may retain a qualified-name match and a real delta;
+   do not split it merely because before/after signatures differ. Conversely,
+   function/owner renames, moves and ambiguous declarations need not have a pair.
+   Do not infer a mapping or calculate a replacement delta. For a legacy response
+   without matches, label that metadata unavailable and rely on the comparisons
+   actually returned. Distinct reported path/entity keys use coverage unit
+   `LEGACY_METRIC_ENTITY`, not `MATCH_GROUP`; leave unestablished total coverage
+   unknown instead of inventing source pairs. Preserve
+   independent findings unchanged in their frozen artifact; produce a separate
+   final findings array.
 2. Assign each final finding one relation:
    - `SUPPORTED`: a relevant measured value/change and verified source context
      support this same observation; reference the actual rows.
@@ -87,3 +102,9 @@ skips to the orchestrator. If required processing failed, return the available
 results and the exact missing work. Optional LSP failure alone does not invalidate
 valid AST/metrics. No history writes, human feedback, source edits, or rule activation
 belong to this stage.
+
+Determine metric completeness from the measured response. The integrated Python
+adapter supplies six metrics when its pinned cognitive dependency is available;
+CogC failure must not erase five successful measurements. Neither a historical
+`UNSUPPORTED` result nor missing metrics for unselected Java files justifies
+forcing a complete Python-only review to `INCOMPLETE`.

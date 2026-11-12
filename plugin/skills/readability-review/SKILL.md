@@ -47,6 +47,9 @@ claiming a successful review of those files.
    instead. Store its status, coverage, findings, and omissions as an independent
    artifact; freeze that artifact before requesting the first metric. Preserve the
    artifact's path/content hash and the `independent_review_frozen` trace event.
+   Its entity coverage unit is `SNAPSHOT_ENTITY`: count an affected source entity
+   separately at base and head, so reviewing both versions of one function counts
+   two occurrences. Do not call analysis to obtain matching groups before freeze.
    Subsequent correlation may extend final findings, but must not rewrite the
    frozen independent result. Separate Skills provide logical ordering in the same
    conversation; they do not guarantee isolated model contexts.
@@ -54,6 +57,11 @@ claiming a successful review of those files.
    the resolved SHAs and the selected files. For the current tools, batch at most
    50 paths per call and retain every result/warning. Preserve raw tool results or
    trace references; retry only the failed batch, without replacing prior results.
+   When `files[].matches` is returned, preserve every Core match under report
+   `entityMatches`, adding only `path`, `oldPath`, and `newPath` from the owning
+   file. Keep `key`, `status`, `before`, and `after` exactly as returned. Final
+   entity coverage uses these logical groups (`entityUnit: MATCH_GROUP`), not a
+   union of old/new signature strings. It can differ from frozen source coverage.
 3. **Correlation.** Apply `metrics-correlation` to the frozen independent artifact
    and measured results. Deduplicate observations about the same issue/location,
    retaining their evidence. A static `Finding` is a rule diagnostic, not an AI
@@ -90,10 +98,22 @@ claiming a successful review of those files.
 - `WARN` means the required review is complete and has justified findings/signals.
   `PASS` means the required review is complete with no such findings under this
   policy; it does not establish ideal code. `FAIL` is not an MVP verdict.
-- Check all six metrics independently of the server's `ok` status. The current JAR
-  supplies Java CC/CogC and Python CC only; absent metrics are `MISSING`, Python
-  CogC is `UNSUPPORTED`, and a nonempty review is therefore `INCOMPLETE` for the
-  six-metric MVP. Do not hide the useful partial results.
+- Check all six metrics independently of the server's `ok` status and separately
+  for each language/entity in scope. Derive completeness from actual returned
+  measurements and coverage, never from a hardcoded historical JAR limitation.
+  The integrated Python adapter supports all six with `complexipy==8.3.0` in the
+  selected Python; an unavailable/wrong cognitive engine returns `ERROR` while
+  preserving the other five. A complete Python-only review may therefore be
+  `PASS` or `WARN`. Java's currently missing structural metrics affect selected
+  Java entities; they do not make an otherwise complete Python-only scope partial.
+- Matching belongs to Core. Python parameter renames may now be `MATCHED` and
+  have real deltas; do not apply the earlier signature-only pairing assumption.
+  Preserve `AMBIGUOUS`/`UNVERIFIED` groups and their unavailable values. For a
+  legacy response without matches, disclose the absent metadata and use only
+  explicitly returned entity/comparison facts. Label final coverage
+  `entityUnit: LEGACY_METRIC_ENTITY` for distinct reported path/entity keys, not
+  asserted Core match groups. Unknown grouping or coverage is a limitation, not
+  permission to invent matches or rewrite the frozen stage.
 - LSP is optional: unavailable definition/references must be stated but do not
   invalidate otherwise complete AST/metric review. History failure alone likewise
   does not change an otherwise complete main-review verdict.

@@ -22,15 +22,42 @@ The baseline JAR lacks four required metrics and Python Cognitive Complexity;
 the complete review verdict for these fixtures must therefore be `INCOMPLETE`.
 MCP protocol PASS does not change that verdict.
 
+## Current integration and historical evidence
+
+The initial table and `protocol-baseline.json` above describe the preserved
+`feature/python ec6a3ed` baseline, not the integrated JAR. Do not rewrite those
+receipts. After Python integration, a configured Python interpreter with
+`complexipy==8.3.0` returns all six Python metrics. A Python-only review can now
+be `PASS` or `WARN` when source review/correlation and coverage are complete.
+Missing cognitive dependency produces `ERROR` for that metric while preserving
+the other five. Java still supplies two metrics, so a mixed Java/Python review
+remains `INCOMPLETE` until the Java Core owner supplies its remaining metrics.
+Verdicts always follow actual receipts and processing coverage.
+
+New Core responses include `files[].matches`. Copy each unchanged pairing record
+to report `entityMatches`, adding only `path`, `oldPath`, and `newPath`. A change
+from `subtotal(line_items)` to `subtotal(a)` is now one matched logical group;
+keep its real before/after values and delta. Never recreate pairing in the LLM.
+Final coverage uses `entityUnit: MATCH_GROUP` and the supplied group count.
+Independent coverage uses `SNAPSHOT_ENTITY`, counting reviewed source entities
+in each snapshot separately; these counts can differ without rewriting the frozen
+review. If old receipts contain no matches, use `LEGACY_METRIC_ENTITY` and do not
+invent pairing records. Optional absent units preserve old v1 artifact validation.
+
+New integrated results must have new filenames. Existing JSON under `results/`
+is historical evidence with its original JAR hash and limitations.
+
 ## Reproduce the protocol results
 
-Requires Java 21+, Git and Python 3.10+ in PATH; no PyPI dependencies. Use a new
+Requires Java 21+, Git and the Python environment from `requirements-python.txt`.
+Run the tests with that environment's interpreter: the MCP test client forwards
+`sys.executable` as `CODECLARITY_PYTHON`. Use a new
 output directory on each run; the fixture generator refuses to overwrite data.
 
 ```powershell
-python scripts/llm_evals.py self-test
-python scripts/llm_artifact_test.py
-python scripts/llm_evals.py protocol --jar plugin/server/codeclarity-mcp.jar --output .codeclarity/evals/run-01
+& '.venv/Scripts/python.exe' scripts/llm_evals.py self-test
+& '.venv/Scripts/python.exe' scripts/llm_artifact_test.py
+& '.venv/Scripts/python.exe' scripts/llm_evals.py protocol --jar plugin/server/codeclarity-mcp.jar --output .codeclarity/evals/run-01
 ```
 
 The protocol runner initializes the real JAR, discovers tools and calls the
@@ -73,7 +100,8 @@ python scripts/llm_evals.py check --scenario python-naming --report .codeclarity
 ```
 
 The checker verifies ordering, frozen findings/hash, snapshots, source ranges,
-preserved measurements, missing-data verdicts and scenario expectations. It
+exact supplied match records, match-group coverage, preserved measurements,
+missing-data verdicts and scenario expectations. It
 does not prove who produced an artifact; retain the raw Codex transcript for
 that purpose. Its numerical comparisons validate tool provenance, not metric
 algorithms. The Java Core/Python owners test those algorithms separately.

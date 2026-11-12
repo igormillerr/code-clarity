@@ -53,7 +53,7 @@ def normalized_scope(scope):
         raise ValueError("languages must be a nonempty array of java/python identifiers.")
     result["languages"] = sorted(set(languages))
     if not isinstance(result["paths"], list):
-        raise ValueError("paths must be an array; an empty array means the entire selected language scope.")
+        raise ValueError("paths must list selected changed files; an empty array means no selected changes after discovery.")
     result["paths"] = sorted(set(relative_path(path) for path in result["paths"]))
     return result
 

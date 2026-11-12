@@ -6,6 +6,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
+from llm_evals import check_report, git
+
 PROJECT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("review_artifacts", PROJECT / "plugin/scripts/review_artifacts.py")
 ARTIFACTS = importlib.util.module_from_spec(SPEC)
@@ -39,6 +41,40 @@ def finding(report, finding_id="synthetic-finding"):
             "evidence": ["Synthetic unit fixture: def sample(a): return a"],
             "description": "Synthetic unit-test observation.", "recommendation": "Use a domain-specific name.",
             "metricRelation": "INSUFFICIENT_DATA", "reviewStatus": "PENDING_FEEDBACK"}
+
+
+def matched_fixture():
+    """Synthetic Core receipts: two logical groups and four snapshot entities."""
+    report, independent = fixture()
+    report["scope"]["paths"] = ["sample.py", "other.py"]
+    independent["scope"] = copy.deepcopy(report["scope"])
+    independent["coverage"] = {"filesExpected": 2, "filesReviewed": 2, "entitiesExpected": 4,
+                               "entitiesReviewed": 4, "entityUnit": "SNAPSHOT_ENTITY"}
+    report["independentReview"]["coverage"] = copy.deepcopy(independent["coverage"])
+    report["coverage"] = {"filesExpected": 2, "filesAnalyzed": 2, "entitiesExpected": 2,
+                          "entitiesAnalyzed": 2, "entityUnit": "MATCH_GROUP"}
+    original_metrics = report["metrics"]
+    report["metrics"], report["entityMatches"], files = [], [], []
+    for name in ("sample", "other"):
+        path = name + ".py"
+        def entity(parameter):
+            return {"signature": f"{name}({parameter})", "lines": {"startLine": 1, "endLine": 3},
+                    "matchingKey": name, "matchingAmbiguous": False}
+        match = {"key": name, "status": "MATCHED", "before": [entity("value")], "after": [entity("renamed")]}
+        report["entityMatches"].append({"path": path, "oldPath": path, "newPath": path, **copy.deepcopy(match)})
+        rows = []
+        for original in original_metrics:
+            metric = copy.deepcopy(original)
+            metric.update(path=path, entity=f"{name}(renamed)")
+            report["metrics"].append(metric)
+            rows.append({key: copy.deepcopy(value) for key, value in metric.items() if key != "path"})
+        files.append({"oldPath": path, "newPath": path, "changedMethods": [f"{name}(renamed)"],
+                      "metrics": rows, "matches": [match]})
+    receipt = {"baseSha": report["scope"]["baseSha"], "headSha": report["scope"]["headSha"],
+               "status": "ok", "warnings": [], "files": files}
+    trace = [{"event": "independent_review_frozen", "findings": []},
+             {"event": "tool_call", "tool": "analyze_python_changes", "result": receipt}]
+    return report, independent, trace
 
 
 class ArtifactTests(unittest.TestCase):
@@ -188,6 +224,121 @@ class ArtifactTests(unittest.TestCase):
             self.assertEqual(main_markdown, (root / "report.main.md").read_bytes())
             self.assertEqual(final_json, (root / "report.final.json").read_bytes())
             self.assertEqual(final_markdown, (root / "report.final.md").read_bytes())
+
+
+class MatchCoverageTests(unittest.TestCase):
+    def setUp(self):
+        self.report, self.independent, self.trace = matched_fixture()
+
+    def test_two_core_groups_allow_four_independent_snapshot_entities(self):
+        ARTIFACTS.validate(self.report, self.independent)
+        self.assertEqual([], check_report(self.report, self.trace))
+        markdown = ARTIFACTS.render(self.report)
+        self.assertIn("sample(value)", markdown)
+        self.assertIn("sample(renamed)", markdown)
+        self.assertIn("SNAPSHOT_ENTITY", markdown)
+        self.assertIn("MATCH_GROUP", markdown)
+
+    def test_complete_python_can_pass_and_naming_can_warn(self):
+        ARTIFACTS.validate(self.report, self.independent)
+        self.assertEqual("PASS", self.report["verdict"])
+        self.report["findings"] = [finding(self.report)]
+        self.report["findings"][0]["metricRelation"] = "UNRELATED"
+        self.report["verdict"] = "WARN"
+        ARTIFACTS.validate(self.report, self.independent)
+        self.assertEqual([], check_report(self.report, self.trace))
+
+    def test_final_group_denominator_cannot_use_union_of_signatures(self):
+        self.report["coverage"].update(entitiesExpected=4, entitiesAnalyzed=4)
+        self.report["verdict"] = "INCOMPLETE"
+        with self.assertRaisesRegex(ValueError, "match groups"):
+            ARTIFACTS.validate(self.report, self.independent)
+        self.assertTrue(any("Core match groups" in error for error in check_report(self.report, self.trace)))
+
+    def test_modified_or_omitted_core_pair_is_rejected(self):
+        self.report["entityMatches"][0]["before"][0]["lines"]["endLine"] = 2
+        self.assertTrue(any("exact Core receipts" in error for error in check_report(self.report, self.trace)))
+        self.report.pop("entityMatches")
+        self.assertTrue(any("omitted" in error for error in check_report(self.report, self.trace)))
+
+    def test_invalid_matched_candidates_or_source_ranges_are_rejected(self):
+        self.report["entityMatches"][0]["after"][0]["lines"]["startLine"] = 0
+        with self.assertRaisesRegex(ValueError, "line range"):
+            ARTIFACTS.validate(self.report, self.independent)
+        self.report["entityMatches"][0]["after"][0]["lines"]["startLine"] = 1
+        self.report["entityMatches"][0]["before"].append(copy.deepcopy(self.report["entityMatches"][0]["before"][0]))
+        with self.assertRaisesRegex(ValueError, "one entity"):
+            ARTIFACTS.validate(self.report, self.independent)
+
+    def test_metrics_cannot_relabel_a_matched_group_to_old_signature(self):
+        self.report["metrics"][0]["entity"] = "sample(value)"
+        with self.assertRaisesRegex(ValueError, "no supplied Core match"):
+            ARTIFACTS.validate(self.report, self.independent)
+
+    def test_cognitive_error_preserves_five_other_values(self):
+        for row in self.report["metrics"]:
+            if row["metric"] == "cognitive_complexity":
+                row["before"].update(status="ERROR", value=None, reason="Synthetic missing dependency")
+                row["after"].update(status="ERROR", value=None, reason="Synthetic missing dependency")
+                row.update(status="UNAVAILABLE", delta=None)
+        self.report["verdict"] = "INCOMPLETE"
+        ARTIFACTS.validate(self.report, self.independent)
+        self.assertEqual(10, sum(row["after"]["status"] == "AVAILABLE" for row in self.report["metrics"]))
+        self.report["verdict"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "Complete verdict"):
+            ARTIFACTS.validate(self.report, self.independent)
+
+    def test_frozen_snapshot_entity_denominator_remains_separate_and_verifiable(self):
+        self.report["independentReview"]["coverage"].update(entitiesExpected=2, entitiesReviewed=2)
+        self.independent["coverage"].update(entitiesExpected=2, entitiesReviewed=2)
+        self.assertTrue(any("snapshot occurrences" in error for error in check_report(self.report, self.trace)))
+
+    def test_mixed_scope_with_missing_java_metrics_is_incomplete(self):
+        # The shape is a supplied synthetic receipt; no Java metric is calculated here.
+        self.report["scope"]["languages"] = ["java", "python"]
+        self.report["scope"]["paths"][1] = "Other.java"
+        self.independent["scope"] = copy.deepcopy(self.report["scope"])
+        match = self.report["entityMatches"][1]
+        match.update(path="Other.java", oldPath="Other.java", newPath="Other.java", key="Other#other()")
+        for side in ("before", "after"):
+            match[side][0].update(signature="Other#other()", matchingKey="Other#other()")
+        self.report["metrics"] = [row for row in self.report["metrics"] if row["path"] != "other.py"
+                                  or row["metric"] in ("cyclomatic_complexity", "cognitive_complexity")]
+        for row in self.report["metrics"]:
+            if row["path"] == "other.py":
+                row.update(path="Other.java", entity="Other#other()")
+                for side in ("before", "after"):
+                    row[side]["definition"].update(language="java", analyzer="synthetic-java-unit-fixture/1", algorithm="synthetic-java/1")
+        self.report["skips"] = [{"stage": "metrics", "path": "Other.java", "reason": "Synthetic Java adapter has two metrics only"}]
+        self.report["verdict"] = "INCOMPLETE"
+        ARTIFACTS.validate(self.report, self.independent)
+        self.report["verdict"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "Complete verdict"):
+            ARTIFACTS.validate(self.report, self.independent)
+
+    def test_committed_source_range_preserves_leading_blank_lines(self):
+        with TemporaryDirectory(prefix="codeclarity-range-check-") as directory:
+            root = Path(directory)
+            git(root, "init", "-b", "main")
+            hooks = root / "empty-hooks"
+            hooks.mkdir()
+            for key, value in (("user.name", "Synthetic range test"), ("user.email", "range@example.invalid"),
+                               ("commit.gpgsign", "false"), ("core.hooksPath", str(hooks)), ("core.autocrlf", "false")):
+                git(root, "config", key, value)
+            for name in ("sample", "other"):
+                (root / (name + ".py")).write_text(f"\n\n\ndef {name}(value):\n    return value\n\n", encoding="utf-8")
+            git(root, "add", ".")
+            git(root, "commit", "-m", "Synthetic line range fixture")
+            sha = git(root, "rev-parse", "HEAD")
+            self.report["scope"].update(baseSha=sha, headSha=sha, snapshotId=sha)
+            self.independent["scope"] = copy.deepcopy(self.report["scope"])
+            receipt = self.trace[1]["result"]
+            receipt.update(baseSha=sha, headSha=sha)
+            for normalized, file in zip(self.report["entityMatches"], receipt["files"]):
+                for side in ("before", "after"):
+                    normalized[side][0]["lines"].update(startLine=4, endLine=5)
+                    file["matches"][0][side][0]["lines"].update(startLine=4, endLine=5)
+            self.assertEqual([], check_report(self.report, self.trace, root))
 
 
 if __name__ == "__main__":

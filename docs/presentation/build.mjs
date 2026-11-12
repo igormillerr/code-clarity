@@ -45,18 +45,19 @@ function notes(s, value) { s.speakerNotes.text = value; }
   text(s, 'brand', 'CodeClarity', 72, 126, 1120, 112, 84, C.white, true);
   text(s, 'purpose', 'Читаемость изменений\nJava и Python', 77, 272, 1090, 140, 45, C.mint);
   text(s, 'benefit', 'Разработчик получает объяснение проблем\nдо ревью человеком', 79, 462, 1060, 100, 29, '#DCE5F1');
-  text(s, 'provenance', 'Рабочий срез MVP   /   11 ноября 2026', 79, 631, 1080, 30, 18, '#A9B7CC');
-  notes(s, 'Открытие, около 25 секунд. AI помогает создавать код, но команда всё ещё должна понять его назначение и стоимость сопровождения. CodeClarity проверяет читаемость Git-изменений перед человеческим ревью. В этой презентации целевой сценарий отделён от фактической готовности. Источники: CodeClarity_Agent_Concept_MVP.md, разделы 1–3; README ветки feature/python, ec6a3ed.');
+  text(s, 'provenance', 'Интеграция Python   /   12 ноября 2026', 79, 631, 1080, 30, 18, '#A9B7CC');
+  notes(s, 'Открытие, около 25 секунд. AI помогает создавать код, но команда всё ещё должна понять его назначение и стоимость сопровождения. CodeClarity проверяет читаемость Git-изменений перед человеческим ревью. Текущая интеграция: Python dc9d957 влит merge-коммитом a922e40, пакет CodeClarity 0.3.2. Python возвращает все шесть метрик, включая Cognitive Complexity через complexipy 8.3.0. Java пока возвращает CC и CogC. История и LSP недоступны, совместная репетиция не проведена. Источники: CodeClarity_Agent_Concept_MVP.md; plugin/plugin.json; target/checks/report.json.');
 }
 
-// 2. An explicitly illustrative issue that complexity alone cannot resolve.
+// 2. The controlled naming example preserves all measured metric values.
 {
-  const s = slide('Короткий код тоже требует ревью', 'Иллюстрация: читаемость кода, созданного с AI');
-  text(s, 'code', 'def f(items):\n    return [item for item in items\n            if item.is_active]', 78, 248, 690, 184, 30, C.teal);
-  text(s, 'observation-title', 'Неясное назначение', 818, 247, 374, 55, 29, C.ink, true);
-  text(s, 'observation', 'Имя f не объясняет,\nкакой результат\nполучит вызывающий код', 818, 315, 374, 156, 28, C.muted);
-  text(s, 'recommendation', 'Минимальная рекомендация: назвать функцию select_active_items', 79, 531, 1116, 82, 29, C.ink, true);
-  notes(s, 'Около 35 секунд. Это иллюстрация, а не результат замера или проведённого Eval. Функция выполняет простую фильтрацию, но имя f не передаёт её назначение. Сначала независимое ревью формулирует наблюдение и указывает строки. Затем корреляция получает реальные числа из MCP. Низкая сложность не отменяет замечание Naming. Не приводить выдуманные значения CC/CogC. Источники: CodeClarity_Agent_Concept_MVP.md, разделы 4–5; Task03, LLM-03 и LLM-04.');
+  const s = slide('Имена меняются при одинаковых метриках', 'remaining: остаток вместимости после бронирования');
+  text(s, 'before-label', 'До', 79, 213, 500, 48, 29, C.teal, true);
+  text(s, 'after-label', 'После', 686, 213, 508, 48, 29, C.teal, true);
+  text(s, 'before-code', 'def remaining(a, b):\n    c = a - b\n    if c < 0:\n        return 0\n    return c', 79, 279, 510, 210, 27, C.ink);
+  text(s, 'after-code', 'def remaining(capacity, reserved):\n    available = capacity - reserved\n    if available < 0:\n        return 0\n    return available', 686, 279, 520, 210, 27, C.ink);
+  text(s, 'naming-measurements', 'Все 6 метрик совпадают: CC 2, CogC 1, SLOC 5, глубина 1, параметры 2, возвраты 2', 79, 531, 1121, 88, 26, C.teal, true);
+  notes(s, 'Около 45 секунд. Это контролируемый пример experiments/python_readability/naming, а не вымышленная иллюстрация измерений. Назначение remaining задано манифестом: max(capacity − reserved, 0) для неотрицательных целых. В обоих снимках все шесть значений равны: CC 2, CogC 1, SLOC 5, nesting 1, parameters 2, returns 2; дельты нулевые. Новые matchingKey сохраняют соответствие функции при переименовании параметров. В этом заданном контексте capacity/reserved и available раскрывают роли лучше a/b/c. Числа не оценивают качество имён. 20 подготовленных входных наборов дали ожидаемые результаты обеих версий, что не доказывает эквивалентность на всех возможных Python-значениях. Запуск python_experiments проверяет измерения и поведение контролируемых фикстур, но сам по себе не является независимым AI-ревью. Источники: experiments/python_readability/README.md, naming/before.py, naming/after.py; свежие target/experiments/run.json и summary.md.');
 }
 
 // 3. The process is an editable ordered text layout, not a bitmap diagram.
@@ -65,7 +66,7 @@ function notes(s, value) { s.speakerNotes.text = value; }
   const steps = [
     ['01', 'Git snapshots', 'Scope, SHA и изменённый код'],
     ['02', 'Independent Review', 'Находки до получения текущих метрик'],
-    ['03', 'MCP metrics', 'Шесть измерений и статусы доступности'],
+    ['03', 'MCP metrics', 'Измерения Core и статусы доступности'],
     ['04', 'Metrics Correlation', 'Проверка связи чисел и замечаний'],
     ['05', 'Report', 'JSON, Markdown, доказательства и вердикт'],
     ['06', 'Rule Discovery', 'История и предложение нового правила'],
@@ -78,27 +79,27 @@ function notes(s, value) { s.speakerNotes.text = value; }
     text(s, `body-${n}`, body, x + 83, y + 49, 443, 60, 22, C.muted);
   });
   text(s, 'architecture-boundary', 'Локальный Java 21 Core и MCP STDIO. Отдельный backend не требуется.', 79, 636, 1110, 37, 21, C.teal);
-  notes(s, 'Около 45 секунд. Порядок обязателен: метрики текущего запуска не попадают на независимый этап. После фиксации исходных Findings выполняется анализ чисел. Четыре Skills обеспечивают логическое разделение этапов в одном контексте Codex, а не четыре изолированных LLM. AST доступен сейчас, LSP опционален и не блокирует этот процесс. Источник: CodeClarity_Agent_Concept_MVP.md, разделы 3 и 5, ADR-01, ADR-06, ADR-09.');
+  notes(s, 'Около 45 секунд. Порядок обязателен: метрики текущего запуска не попадают на независимый этап. После фиксации исходных Findings выполняется анализ чисел. Четыре Skills обеспечивают логическое разделение этапов в одном контексте Codex, а не четыре изолированных LLM. В текущей интеграции Python измеряет все шесть метрик через общий Core, Java выдаёт CC и CogC. AST доступен, LSP недоступен и не блокирует этот процесс. Ошибка истории не уничтожает основной отчёт. Источник: CodeClarity_Agent_Concept_MVP.md, разделы 3 и 5, ADR-01, ADR-06, ADR-09; интеграция a922e40.');
 }
 
-// 4. Six required metrics with the precise source-base readiness.
+// 4. Python integration readiness and actual structural experiment values.
 {
-  const s = slide('Шесть метрик MVP', 'Фактическое состояние базовой ветки feature/python, ec6a3ed');
+  const s = slide('Шесть метрик Python', 'shipping_fee: структурный пример после интеграции a922e40');
   const values = [
-    ['Метрика', 'Java', 'Python'],
-    ['Cyclomatic complexity', 'PMD', 'Собственный AST-алгоритм'],
-    ['Cognitive complexity', 'PMD', 'UNSUPPORTED'],
-    ['Function SLOC', 'Ожидает Core', 'Ожидает Python'],
-    ['Max nesting depth', 'Ожидает Core', 'Ожидает Python'],
-    ['Parameter count', 'Ожидает Core', 'Ожидает Python'],
-    ['Return count', 'Ожидает Core', 'Ожидает Python'],
+    ['Метрика', 'Java', 'Python до / после'],
+    ['Cyclomatic complexity', 'PMD', '5 / 5'],
+    ['Cognitive complexity', 'PMD', '12 / 4'],
+    ['Function SLOC', 'Ожидает Core', '12 / 10'],
+    ['Max nesting depth', 'Ожидает Core', '4 / 1'],
+    ['Parameter count', 'Ожидает Core', '1 / 1'],
+    ['Return count', 'Ожидает Core', '1 / 5'],
   ];
   const t = s.tables.add({ rows: 7, columns: 3, left: 78, top: 214, width: 1124, height: 341, columnWidths: [450, 250, 424], values });
   t.borders.assign({ fill: C.line, width: 0.8, style: 'solid' });
   t.cells.block({ row: 0, column: 0, rowCount: 7, columnCount: 3 }).assign({ textStyle: { fontFamily: FONT, fontSize: 23, color: C.ink }, margins: { left: 16, right: 14, top: 5, bottom: 5 }, fill: C.white });
   t.cells.block({ row: 0, column: 0, rowCount: 1, columnCount: 3 }).assign({ fill: C.navy, textStyle: { fontFamily: FONT, fontSize: 23, bold: true, color: C.white } });
-  text(s, 'metrics-rule', 'Числа поступают только из MCP/Core.\nНедоступность сохраняет явный статус, delta требует совместимых алгоритмов.', 79, 584, 1120, 85, 24, C.teal);
-  notes(s, 'Около 40 секунд. Таблица фиксирует именно исходную основу ec6a3ed, а не обещает завершённую интеграцию. В ней Java выдаёт CC и CogC через PMD 7.29.0, Python выдаёт CC через собственный алгоритм, Python CogC возвращает UNSUPPORTED. Остальные четыре метрики реализуют коллеги. Анализатор, его версия и алгоритм входят в определение измерения. Delta допустима только при двух доступных совместимых значениях. Return count остаётся информационной метрикой. Источники: README feature/python ec6a3ed, раздел Численные метрики; Task01 PY-02; Task02 JV-02.');
+  text(s, 'metrics-rule', 'Рост Return Count с 1 до 5 сам по себе не доказывает дефект.\nПоведение совпало на 32 подготовленных входных наборах.', 79, 584, 1120, 85, 24, C.teal);
+  notes(s, 'Около 50 секунд. После интеграции Python dc9d957 через merge a922e40 Python Core возвращает все шесть метрик. Cognitive Complexity считает complexipy 8.3.0, структурные метрики используют ast и исходный текст. В shipping_fee CC осталась 5, CogC снизилась с 12 до 4, SLOC с 12 до 10, глубина с 4 до 1, параметры остались 1, return вырос с 1 до 5. Это реальные ответы MCP свежего target/experiments, не числа, рассчитанные моделью. Ранние выходы изменили структуру управления, поэтому рост return_count сам по себе не является дефектом. Подготовленные 32 набора входов дали одинаковые ожидаемые результаты, но не доказывают общую семантическую эквивалентность или более быстрое понимание человеком. Восемь наборов проверок интегрированного Core прошли на JDK21 и Python3.13.2, включая fixture метрик и MCP. Java пока имеет только CC/CogC, четыре структурных метрики остаются зависимостью от Core-разработчика. Источники: experiments/python_readability/README.md; свежие target/experiments/run.json, summary.md и target/checks/report.json. Packaged JAR SHA256 3c4bc878473fe264accf50224a4066060bad8832a318901a4bee79882841da69.');
 }
 
 // 5. The candidate rule uses synthetic evidence and requires a human decision.
@@ -111,19 +112,19 @@ function notes(s, value) { s.speakerNotes.text = value; }
   text(s, 'candidate', 'PROPOSED', 765, 259, 430, 74, 47, C.gold, true);
   text(s, 'candidate-rule', 'Кандидат с примерами\nи исключениями.\nАктивацию решает человек.', 766, 352, 429, 148, 28, '#DCE5F1');
   text(s, 'history-caveat', 'Дополнительно: нет эквивалентного кандидата. Без оснований Skill не выводит предложение.', 79, 572, 1110, 89, 23, '#A9B7CC');
-  notes(s, 'Около 45 секунд. Числа 3 и 2 обозначают стартовую эвристику, а не статистику реальных пользователей. Демонстрационная история синтетическая и должна иметь соответствующую метку. Два forward Eval сценария history-sufficient и history-insufficient проверили решение Skill и прошли, но не проверяли запись через Core. События внешнего подтверждения служат доказательством FIXED. Сам агент не может объявить свою находку исправленной человеком. Исчезновение нарушения или статический статус RESOLVED не заменяет подтверждение. Skill предлагает кандидат с примерами и исключениями. Атомарную идемпотентную запись JSON должен реализовать Core. В фактическом запуске history MCP Tools отсутствуют и Rule Discovery имеет статус UNAVAILABLE. Источники: Task03 LLM-05; концепция, разделы 5.4 и 8; evals/results/agent-forward.json и evals/results/codex-live.json.');
+  notes(s, 'Около 45 секунд. Числа 3 и 2 обозначают стартовую эвристику, а не статистику реальных пользователей. Демонстрационная история синтетическая и должна иметь соответствующую метку. Новый forward Eval проверил обе ветви решения: history-sufficient дал RULE_SUGGESTED с кандидатом PROPOSED, history-insufficient дал NO_SUGGESTION с пустым пользовательским сообщением. Эти проверки прошли, но не проверяют запись через Core. События внешнего подтверждения служат доказательством FIXED. Сам агент не может объявить свою находку исправленной человеком. Исчезновение нарушения или статический статус RESOLVED не заменяет подтверждение. Skill предлагает кандидат с примерами и исключениями. Атомарную идемпотентную запись JSON должен реализовать Core. В пакете 0.3.2 history MCP Tools отсутствуют, поэтому реальный путь хранения недоступен. Источники: Task03 LLM-05; концепция, разделы 5.4 и 8; evals/results/agent-python-integration-summary.json.');
 }
 
-// 6. Observed installed-plugin run, with remaining MVP dependencies visible.
+// 6. Installed-plugin Python run and separate real-JAR Naming evaluation.
 {
-  const s = slide('Фактический запуск Codex', 'Установленный CodeClarity 0.2.0, смешанный Java/Python пример');
-  text(s, 'observed-title', 'Проверено', 79, 218, 495, 47, 31, C.teal, true);
-  text(s, 'observed', '4 Skills доступны в плагине\n8 реальных MCP-вызовов\n2 обоснованные AI-находки', 79, 279, 520, 150, 28, C.ink);
-  text(s, 'verdict-title', 'INCOMPLETE', 708, 217, 494, 58, 39, C.teal, true);
-  text(s, 'remaining', 'Часть метрик отсутствует\nИстория UNAVAILABLE\nРепетиция ещё не проведена', 709, 294, 496, 139, 26, C.ink);
-  text(s, 'eval-result', '6 Evals PASS: 4 с реальным JAR, 2 с синтетической историей', 79, 480, 1123, 68, 29, C.ink, true);
-  text(s, 'measurement-result', 'Java до / после: CC 1 / 7, CogC 0 / 21. Независимые находки зафиксированы до анализа.', 79, 566, 1123, 83, 23, C.muted);
-  notes(s, 'Около 50 секунд. Это фактический запуск установленного плагина codeclarity@codeclarity-local, а не shell-эмуляция MCP. Codex CLI сделал 8 реальных вызовов: list_java_changes и list_python_changes, по два inspect каждого языка и analyze обоих языков. Независимый артефакт зафиксирован в JSONL eventIndex 37, анализы начались на 38 и 39. Финальный отчёт содержит две AI-находки: вложенные Java guards с metricRelation SUPPORTED и непрозрачные Python имена с UNRELATED. PMD вернул Java CC до 1, после 7, delta 6 и CogC до 0, после 21, delta 21. Шесть записей сравнения в отчёте не означают шесть реализованных видов метрик: две записи Java и четыре записи Python для старой и новой сигнатур. Python subtotal(line_items) и subtotal(a) не сопоставлены, поэтому численной delta нет. Итог INCOMPLETE отражает отсутствующие обязательные метрики, история UNAVAILABLE. Шесть forward Evals прошли: четыре на коде с реальным JAR и два исключительно на синтетической истории для проверки решения Skill, без persistence E2E. Один живой запуск не доказывает детерминированность модели. Совместная репетиция остаётся NOT_RUN. Источники: evals/results/codex-live.json, evals/results/agent-forward.json, plugin/plugin.json; общий runbook docs/llm-demo.md.');
+  const s = slide('Python: два проверенных сценария', 'CodeClarity 0.3.2: установленный плагин и отдельный forward Eval');
+  text(s, 'installed-title', 'Codex CLI: PASS', 79, 218, 520, 54, 34, C.teal, true);
+  text(s, 'installed-result', '2 файла, 6 MCP-вызовов\n12 сравнений метрик\nОбоснованных находок нет', 79, 291, 520, 148, 27, C.ink);
+  text(s, 'forward-title', 'Naming Eval: WARN', 708, 218, 494, 54, 32, C.teal, true);
+  text(s, 'forward-result', '1 находка opaque_names\nСвязь с метриками UNRELATED\nРеальный JAR, отдельный Eval', 709, 291, 496, 148, 25, C.ink);
+  text(s, 'pass-boundary', 'PASS относится к выбранному Python scope и не доказывает идеальное качество кода.', 79, 489, 1123, 87, 27, C.ink, true);
+  text(s, 'remaining', 'История UNAVAILABLE. Java: ещё 4 метрики. Совместная репетиция NOT_RUN.', 79, 609, 1123, 63, 22, C.muted);
+  notes(s, 'Около 60 секунд. Левая колонка показывает завершённый реальный Codex CLI прогон установленного пакета 0.3.2 на двух Python-файлах с улучшенным head. Это шесть реальных MCP-вызовов: list_python_changes, четыре inspect_python_function и analyze_python_changes. Независимый этап рассмотрел 4/4 SNAPSHOT_ENTITY до текущих метрик; окончательный анализ охватил 2/2 MATCH_GROUP. Отчёт сохраняет 12 точных сравнений Core: все шесть видов метрик для каждой из двух сопоставленных функций, обе стороны AVAILABLE. Новых обоснованных находок нет и вердикт выбранного scope PASS. Main report и frozen independent artifact сохранены неизменными. История UNAVAILABLE, записи feedback/history нет. Справа отдельный forward Eval на source-built target JAR, а не установленный plugin E2E: регрессия имён invoice_totals.py получила WARN с одной opaque_names находкой и metricRelation UNRELATED, хотя CC и CogC низкие. В нём все шесть пар COMPARED, две snapshot сущности сопоставлены в одну match group. Эти результаты относятся к разным fixtures и не противоречат друг другу. Проверки артефактов, evaluator и launcher прошли, как и восемь Core-наборов, валидация четырёх Skills и полная JSON Schema. Один Codex-прогон не доказывает детерминированность модели. За рамками готового Python-сценария остаются четыре Java-метрики, history persistence, LSP и совместная репетиция. Источники: evals/results/codex-python-integration.json; evals/results/agent-python-integration-summary.json; .codeclarity/codex-python-integration-final/report.final.json и validation.json; plugin/plugin.json.');
 }
 
 await (await PresentationFile.exportPptx(p)).save(path.join(stage, 'candidate.pptx'));
@@ -133,7 +134,7 @@ for (const [i, s] of p.slides.items.entries()) {
 }
 await fs.writeFile(path.join(stage, 'inspect.ndjson'), (await p.inspect({ kind: 'slide,textbox,table,notes', maxChars: 100000 })).ndjson);
 
-const finalPath = path.join(output, process.env.CODECLARITY_DECK_FILENAME || 'CodeClarity_MVP_final.pptx');
+const finalPath = path.join(output, process.env.CODECLARITY_DECK_FILENAME || 'CodeClarity_Python_Integration.pptx');
 const validation = await finalizePresentation({
   workspaceDir,
   candidatePath: path.join(stage, 'candidate.pptx'),

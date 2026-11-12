@@ -119,6 +119,14 @@
                 "null"
               ],
               "minimum": 0
+            },
+            "entityUnit": {
+              "enum": [
+                "SNAPSHOT_ENTITY",
+                "MATCH_GROUP",
+                "LEGACY_METRIC_ENTITY"
+              ],
+              "description": "Optional explicit count basis; absent preserves historical v1 artifacts."
             }
           }
         },
@@ -172,6 +180,14 @@
             "null"
           ],
           "minimum": 0
+        },
+        "entityUnit": {
+          "enum": [
+            "SNAPSHOT_ENTITY",
+            "MATCH_GROUP",
+            "LEGACY_METRIC_ENTITY"
+          ],
+          "description": "Optional explicit count basis; absent preserves historical v1 artifacts."
         }
       }
     },
@@ -227,6 +243,13 @@
           "type": "string"
         }
       }
+    },
+    "entityMatches": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entityMatch"
+      },
+      "description": "Exact Core match records with owning path/oldPath/newPath added. No LLM-inferred pairing."
     }
   },
   "$defs": {
@@ -459,6 +482,100 @@
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        }
+      }
+    },
+    "sourceEntity": {
+      "type": "object",
+      "required": [
+        "signature",
+        "lines",
+        "matchingKey",
+        "matchingAmbiguous"
+      ],
+      "properties": {
+        "signature": {
+          "type": "string",
+          "minLength": 1
+        },
+        "matchingKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "matchingAmbiguous": {
+          "type": "boolean"
+        },
+        "lines": {
+          "type": "object",
+          "required": [
+            "startLine",
+            "endLine"
+          ],
+          "properties": {
+            "startLine": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "endLine": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "entityMatch": {
+      "type": "object",
+      "required": [
+        "path",
+        "oldPath",
+        "newPath",
+        "key",
+        "status",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "oldPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "newPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "MATCHED",
+            "ADDED",
+            "REMOVED",
+            "AMBIGUOUS",
+            "UNVERIFIED"
+          ]
+        },
+        "before": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceEntity"
+          }
+        },
+        "after": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceEntity"
           }
         }
       }

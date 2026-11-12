@@ -5,7 +5,7 @@ Owner: Java / LLM Engineer for plugin/Skills/review format; Java Core engineer f
 MCP schemas, snapshots, measurements, persistence and feedback authorization;
 Python engineer for Python analysis. Discover the actual tool schemas before use.
 
-## Existing JAR from feature/python ec6a3ed
+## Integrated JAR from feature/python-metrics-integration dc9d957
 
 | Operation | Actual tool and required arguments |
 |---|---|
@@ -23,7 +23,7 @@ changed paths. Rename selection uses newPath; deletion selection uses oldPath.
 Current scope is committed code, not staged/worktree/untracked.
 
 Analyze returns `{baseSha,headSha,status,files,warnings}`. Each file contains
-`changedMethods`, diagnostic `findings`, and numerical `metrics`. Keep diagnostic
+`changedMethods`, diagnostic `findings`, numerical `metrics` and Core `matches`. Keep diagnostic
 Finding `{rule,line,column,message}` separate from an AI Finding in
 [review.schema.json](review.schema.json). `RESOLVED` is a static rule status,
 not a confirmed human `FIXED` event. `ok` does not imply all six metrics exist.
@@ -33,10 +33,58 @@ the owning file's path when normalizing into a review; preserve the two MetricVa
 objects and delta from MCP. Definitions use `{id,language,analyzer,algorithm}`:
 analyzer includes its version, algorithm includes algorithm/settings version.
 Do not rename these to a guessed future shape. Before/after SHA live in scope.
-Java has numeric CC and CogC. Python has numeric CC and explicit UNSUPPORTED
-CogC. SLOC, nesting, parameters, returns are currently missing. A review of
-affected functions on this JAR must therefore report INCOMPLETE, even if empty
-AI findings or a server `ok` would otherwise suggest PASS.
+
+The integrated Python adapter supports all six metric IDs. CogC uses strictly
+`complexipy==8.3.0` in the interpreter selected by `CODECLARITY_PYTHON`; missing or
+wrong-version cognitive support returns `ERROR` with a reason while preserving
+the other five measurements. The worker's `complete` describes AST/entity/finding
+coverage, not universal metric availability. Warnings can make the Core report
+`partial` while successful individual measurements remain usable.
+
+Java currently supplies CC and CogC, with the four structural metrics still absent.
+This describes the integrated artifact, not a fixed rule for future releases:
+derive completeness from actual responses for the selected scope. A Python-only
+review with complete source review and six available metrics may be PASS or WARN.
+Unselected Java files do not make it incomplete. Missing mandatory metrics for
+selected entities require INCOMPLETE, regardless of a server `ok`.
+
+Archived ec6a3ed results used Python CC plus UNSUPPORTED CogC and lacked four
+structural metrics. Preserve those reports as historical evidence; do not apply
+their availability or signature-pairing assumptions to this new JAR.
+
+## Entity matches and coverage
+
+Each `files[].matches[]` is `{key,status,before,after}`. The two arrays retain all
+SourceEntity candidates with their `signature`, `lines`, `matchingKey`, and
+`matchingAmbiguous`. Normalize into report `entityMatches` by adding only owning
+`path`, `oldPath` and `newPath`, leaving the match payload unchanged. `path` follows
+the normal selection rule: newPath for an existing/renamed/added file, oldPath for
+a deletion. Before ranges belong to oldPath/baseSha; after ranges to newPath/headSha.
+
+The Core statuses are MATCHED, ADDED, REMOVED, AMBIGUOUS and UNVERIFIED. Matching is
+within the Git file pair. Python qualified-name keys exclude parameters, so
+`subtotal(line_items)` to `subtotal(a)` can be one MATCHED group with actual
+before/after/delta. Java continues exact syntactic-signature matching. Function or
+owner renames and cross-file moves are not automatically paired. Do not recreate
+matching in a Skill, parse keys to manufacture a pair, or substitute metric zeros.
+Use returned comparisons and their side definitions/statuses; ambiguous or
+unverified matching may leave some values unavailable without erasing valid ones.
+
+Independent Review coverage uses `entityUnit: SNAPSHOT_ENTITY`, counting source
+occurrences separately on base and head. It is frozen before current analysis.
+Final coverage uses `entityUnit: MATCH_GROUP`, counting the returned logical Core
+groups once, including explicit unresolved groups when reporting omissions. These
+denominators can differ: two reviewed snapshot declarations can become one group.
+Never rewrite the frozen counts to make them equal. Reviewed/analyzed counts mean
+actually completed work; preserve omissions and unknown counts explicitly.
+
+If an older server does not expose matches, state that the matching metadata is
+unavailable and retain the comparisons it actually returned. Do not label guessed
+groups MATCH_GROUP. Distinct reported path/entity keys can be counted as
+`entityUnit: LEGACY_METRIC_ENTITY`, explicitly identifying comparison coverage
+rather than asserting source pairing. If the total affected-entity coverage cannot
+be established, use null counts and INCOMPLETE. Input Tool names and earlier
+result fields remain available.
 
 Inspection provides signatures, lines, calls and enclosing if branches, not full
 source or semantic definitions. Read full code and diff using read-only Git

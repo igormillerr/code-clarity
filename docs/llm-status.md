@@ -1,71 +1,81 @@
-# Task 03 — фактический результат
+# Task 03 — интеграция Python, фактический результат
 
-Дата: 11.11.2026. Ветка `codex/llm-workflow`, основа `feature/python ec6a3ed`.
-Реализована только зона Java / LLM Engineer. Core, Java/Python-анализаторы,
-MCP Java API, существующий JAR и Maven-конфигурация не изменены.
+Дата: 12.11.2026. Ветка `codex/llm-workflow`. Python-ветка
+`feature/python-metrics-integration` (`dc9d957`) слита merge-коммитом `a922e40`.
+Плагин **0.3.2** установлен локально; serverInfo JAR остаётся **0.1.1**.
+Исходники Core, анализаторы и JAR приняты без дополнительных изменений нашей стороны.
+Их SHA/алгоритмы не следует определять по одной версии serverInfo.
 
-Установленная копия плагина совпадает с файлами `plugin/`. Домашний
-`~/.codeclarity/repo-root.txt` настроен на текущий проект (создан при отсутствии
-прежней настройки). Запуск установленного JAR без `--repo-root` проверен:
-initialize и discovery всех шести Tools прошли с этой постоянной конфигурацией.
+## Результат
 
-| Задача | Сделано | Что остаётся |
-|---|---|---|
-| LLM-01 | Плагин 0.2.0 локально установлен и включён; Codex CLI обнаружил четыре Skills и реальные MCP Tools | GUI desktop отдельно не проверялся |
-| LLM-02 | Оркестратор, immutable independent/main artifacts, coverage, NO_CHANGES/INCOMPLETE, JSON/Markdown; реальный смешанный запуск | Полное шестиметрическое ревью после поставки Core/Python |
-| LLM-03 | Независимое чтение Git snapshots до метрик, evidence, стабильные IDs, source ranges; реальные замечания Java/Python и пустой результат на хорошем коде | Более широкая статистическая оценка качества после демо |
-| LLM-04 | Сохранение реальных before/after/delta, SUPPORTED/UNRELATED/INSUFFICIENT_DATA, честные пропуски и dedup/origin IDs | Недостающие измерения поставляют Task 01/02 |
-| LLM-05 | Skill, предложенный контракт истории/feedback, оба offline synthetic исхода | Реальные history Tools, persistence/replay/provenance подтверждает Task 02; не имитировались |
-| LLM-06 | 6 forward Evals, 4 реальных MCP protocol cases, реальный Codex mixed review, 25 invariant/evaluator tests и ID self-test | Live history E2E и повтор после нового JAR |
-| LLM-07 | 6 редактируемых слайдов, notes, PNG, mixed demo и backup runbook | Совместная репетиция и согласование финального интегрированного состояния с командой |
+| Часть | Фактическое состояние |
+|---|---|
+| Python | Все шесть метрик через выбранный Python с complexipy 8.3.0 |
+| Matching | Точные Core-группы и диапазоны сохранены в entityMatches; переименование параметров не разрывает пару |
+| Independent Review | До метрик; покрытие в SNAPSHOT_ENTITY, обе версии читаются отдельно |
+| Итоговое покрытие | MATCH_GROUP из Core; frozen independent не переписывается при другом количестве групп |
+| Python-only Codex demo | PASS: 2 файла, 4/4 source occurrences, 2/2 группы, 12 сравнений, 0 обоснованных замечаний |
+| Naming forward Eval | WARN: 1 opaque_names / UNRELATED, 6 доступных сравнений; малые числа не отменяют замечание |
+| History | UNAVAILABLE в production; два синтетических исхода Skill проверены без persistence |
+| Java / LSP | Java по-прежнему CC/CogC, четыре метрики и LSP ожидают Core-участника |
+| Презентация | Обновлена на фактический Python PASS и отдельный Naming WARN; совместная репетиция не проведена |
+
+PASS здесь относится к выбранному Python scope и политике ревью, не означает идеальный
+код или готовность всех частей MVP. Смешанный scope с отсутствующими Java-метриками
+остаётся INCOMPLETE. Пустой Finding[] на улучшенном коде допустим.
 
 ## Доказательства
 
-- [Real JAR protocol baseline](../evals/results/protocol-baseline.json): четыре
-  случая PASS, реальные discovery/измерения; это не проверка поведения модели.
-- [Forward agent evaluation](../evals/results/agent-forward.json): шесть случаев
-  PASS, исходные/итоговые Findings, точные численные объекты и синтетические
-  кандидаты. Ограничения ослепления оценки указаны в самом файле; историю нельзя
-  считать полностью blinded тестом или реальной persistence-проверкой.
-- [Installed-plugin Codex run](../evals/results/codex-live.json): PASS проверки
-  исполнения, 8 реальных mcp_tool_call; frozen artifact находится до начала
-  analyze-вызовов. JSONL hash и ссылки на исходные локальные артефакты сохранены.
+- [Сборка и 8 наборов Core/Python/Java/MCP-проверок](../evals/results/python-integration-build.json):
+  свежий bundled build, JDK 21, Python 3.13.2; 30 unit-тестов и 20 эталонов × 6 значений,
+  matching, границы партий, отказы зависимостей и два эксперимента — PASSED.
+- [Четыре LLM protocol-сценария](../evals/results/protocol-python-integration.json):
+  реальный поставленный JAR, точные новые пары/измерения; это не доказательство работы модели.
+- [Naming + synthetic history forward test](../evals/results/agent-python-integration-summary.json):
+  свежий агент, реальный source-built target-JAR, WARN и два offline исхода. Уровень
+  проверки явно отличается от установленного плагина, исходные артефакты и хеши сохранены.
+- [Установленный плагин → реальный Codex](../evals/results/codex-python-integration.json):
+  completed exit 0, **6 настоящих MCP-вызовов**, freeze до начала analyze, полный JSON Schema
+  и операционная проверка PASS. Итог самого ревью — PASS; история — UNAVAILABLE.
+- [Четыре проверки launcher](../evals/results/python-launcher.json): реальная файловая
+  настройка без внешнего env, приоритет явного env, корректная деградация без зависимости,
+  ошибка отсутствующего JAR; STDIO и завершение дочерних процессов проверены.
+- [Контролируемая деградация Codex](../evals/results/codex-python-degraded.json): более ранний
+  запуск без переданного Python дал INCOMPLETE с CogC ERROR, сохранив остальные пять
+  метрик. Это отдельный результат, не финальный успешный Python-прогон.
 
-Последний запуск использовал установленный `codeclarity@codeclarity-local`
-0.2.0 и Codex CLI `0.167.0-alpha.3.2`. База:
-`bae43736e7b26f9f89be0296343e4a58a45d1c4a`, head:
-`39e04aad95efdc92fc0cf9f42c634fe56953adc4`. Найдены две проблемы: вложенные
-проверки Java (`SUPPORTED`) и неясные имена Python (`UNRELATED`). Реальные
-Java CC: 1 → 7, CogC: 0 → 21. Python-сигнатуры Core не сопоставил, поэтому
-дельта не подставлялась. Все 6 возвращённых сравнений сохранены без изменения.
+Поставленный JAR: `3c4bc878473fe264accf50224a4066060bad8832a318901a4bee79882841da69`.
+В live-демо база `a9b7fb2f15e1f72f2ca15852920c7c59337abbcc`, head
+`4dcbe93bd635a27d51f6eab19d1870955f4050e6`. Наблюдались настоящие значения
+shipping_fee CogC 12 → 4, nesting 4 → 1; remaining сохранил все шесть значений.
+Это измерения конкретных версионированных алгоритмов, не универсальная оценка качества.
 
-**PASS проверки сценария не равен PASS читаемости.** Итог самого ревью —
-INCOMPLETE: структурные метрики отсутствуют, Python CogC UNSUPPORTED.
-History — UNAVAILABLE. Синтетические RULE_SUGGESTED / NO_SUGGESTION проверяют
-решение Skill без записи/активации. Не заявляется готовность всего MVP.
+## Runtime и воспроизведение
 
-## Команды повторной проверки
+Проверенный Codex CLI 0.167.0-alpha.3.2 не принимает env_vars в plugin mcp.json
+и фильтрует часть унаследованного окружения. Пакет использует небольшой Java source-file
+launcher, которому нужен JDK 21+. Он передаёт selector Python дочернему Core явно:
+CODECLARITY_PYTHON, когда переменная доступна, иначе ~/.codeclarity/python-path.txt.
+Настройка файла подготовлена для локального .venv; repo-root.txt восстановлен на текущий проект.
+Нового вычислителя метрик, API или отдельного backend не добавлялось.
 
-```powershell
-python scripts/llm_evals.py self-test
-python scripts/llm_artifact_test.py
-python plugin/skills/readability-review/scripts/review_ids.py --self-test
-python scripts/llm_evals.py protocol --output .codeclarity/protocol-new
-python scripts/llm_demo.py --output .codeclarity/demo-new
-python scripts/llm_codex_probe.py --repo .codeclarity/demo-new/repo --output .codeclarity/live-new --mode review --temporary-repo-config
-python scripts/llm_codex_evidence.py --run .codeclarity/live-new --output evals/results/codex-live-new.json
-```
+Повторная установка/конфигурация: [llm-setup.md](llm-setup.md).
+Демо: [llm-demo.md](llm-demo.md). Границы задач: [llm-handoff.md](llm-handoff.md).
+Презентация: [CodeClarity_Python_Integration.pptx](presentation/output/CodeClarity_Python_Integration.pptx).
 
-Протокольные/CLI проверки требуют одного пользователя ОС для Git fixture и MCP;
-некоторые Windows sandbox-профили не дают Java читать Git root. Инструкция и
-диагностика — [llm-setup.md](llm-setup.md). Probe восстанавливает домашний
-repo-root.txt после завершения; параллельное изменение не затирается.
+Выполнены **24 artifact + 11 evaluator + 4 launcher = 39 автоматических проверок**,
+ID self-test, штатная валидация четырёх Skills и полная Draft 2020-12 валидация
+актуальных отчётов. Закреплённые dev-инструменты находятся в requirements-llm-dev.txt.
+Maven backend отдельно не запускался; проверен документированный bundled backend.
+Один live-прогон не доказывает детерминированность модели.
 
-Официальный skill quick_validate.py был запущен, но PyYAML в доступных Python
-runtime отсутствует. Фактическая загрузка четырёх Skills Codex проверена.
-Опциональный пакет jsonschema также отсутствует: работают документированные
-операционные проверки артефактов, а не полная реализация JSON Schema validator.
-`mvn clean package` не запускался: сборка/поставка Core остаётся в Task 02;
-интеграция проверялась на существующем JAR с зафиксированным SHA256.
+## Оставшиеся зависимости
 
-Локальная ветка создана; коммиты, push и PR этой работой не выполнялись.
+Java-метрики, универсальные/history Tools, атомарность/idempotence хранения,
+авторизация настоящего feedback и LSP остаются в Task 02. Новые AI-предложения
+не активируются автоматически. Подготовленная история не является подтверждениями
+реальных пользователей. Совместная репетиция и согласование с людьми не имитировались.
+
+Результаты 0.2.0 в agent-forward.json, codex-live.json и protocol-baseline.json
+сохранены неизменными как исторический baseline. Текущая интеграция записана в новые файлы.
+Публикация ветки/PR в эту работу не включалась: изменения остаются локальными.

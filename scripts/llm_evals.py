@@ -38,12 +38,12 @@ def scenarios():
     return {case["id"]: case for case in read_json(EVALS / "scenarios.json")["scenarios"]}
 
 
-def git(repo, *arguments):
+def git(repo, *arguments, strip=True):
     environment = dict(os.environ, GIT_AUTHOR_DATE="2026-11-11T12:00:00+00:00",
                        GIT_COMMITTER_DATE="2026-11-11T12:00:00+00:00", GIT_TERMINAL_PROMPT="0")
     completed = subprocess.run(["git", "-C", str(repo), *arguments], check=True,
                                capture_output=True, text=True, encoding="utf-8", env=environment)
-    return completed.stdout.strip()
+    return completed.stdout.strip() if strip else completed.stdout
 
 
 def prepare(case, output):
@@ -241,6 +241,9 @@ def check_report(report, trace, repo=None):
             errors.append(f"Frozen independent artifact could not be verified: {error}")
     scope = report.get("scope", {})
     observed = {}
+    observed_matches = {}
+    match_receipts_available = False
+    observed_paths = set()
     mandatory_missing = False
     for _, event in analysis:
         result = event.get("result", {})
@@ -250,8 +253,20 @@ def check_report(report, trace, repo=None):
             mandatory_missing = True
         for file in result.get("files", []):
             path = file.get("newPath") or file.get("oldPath")
+            observed_paths.add(path)
+            if "matches" in file:
+                match_receipts_available = True
+                for match in file["matches"]:
+                    normalized = {"path": path, "oldPath": file.get("oldPath"), "newPath": file.get("newPath"), **match}
+                    key = (path, match["key"])
+                    if key in observed_matches and observed_matches[key] != normalized:
+                        errors.append(f"Repeated Core match receipt changed: {key}.")
+                    observed_matches[key] = normalized
             for measurement in file.get("metrics", []):
-                observed[(path, measurement["entity"], measurement["metric"])] = measurement
+                key = (path, measurement["entity"], measurement["metric"])
+                if key in observed and observed[key] != measurement:
+                    errors.append(f"Repeated metric receipt changed: {key}.")
+                observed[key] = measurement
             for entity in file.get("changedMethods", []):
                 available_ids = {m["metric"] for m in file.get("metrics", []) if m["entity"] == entity}
                 if not METRICS <= available_ids:
@@ -287,6 +302,55 @@ def check_report(report, trace, repo=None):
                 errors.append(f"Missing metrics need an explicit metrics-stage skip for {path}/{entity}.")
             mandatory_missing = True
     coverage = report.get("coverage", {})
+    if "paths" in scope:
+        if coverage.get("filesExpected") != len(scope["paths"]):
+            errors.append("File coverage denominator differs from selected scope.")
+        if not set(scope["paths"]) <= observed_paths:
+            mandatory_missing = True
+    if match_receipts_available:
+        if "entityMatches" not in report:
+            errors.append("Core entity matches omitted from report.")
+        reported_matches = {}
+        for match in report.get("entityMatches", []):
+            key = (match.get("path"), match.get("key"))
+            if key in reported_matches:
+                errors.append(f"Duplicate entity match group: {key}.")
+            reported_matches[key] = match
+        if reported_matches != observed_matches:
+            errors.append("Reported entity matches differ from exact Core receipts.")
+        if coverage.get("entityUnit") not in (None, "MATCH_GROUP"):
+            errors.append("Final coverage with Core matches must use MATCH_GROUP units.")
+        count = len(observed_matches)
+        if coverage.get("entitiesExpected") is not None and coverage["entitiesExpected"] != count:
+            errors.append("Entity coverage denominator differs from Core match groups.")
+        if coverage.get("entitiesAnalyzed") is not None and coverage["entitiesAnalyzed"] > count:
+            errors.append("Analyzed count exceeds Core match groups.")
+        independent_counts = report.get("independentReview", {}).get("coverage", {})
+        if independent_counts.get("entityUnit") == "SNAPSHOT_ENTITY" and not mandatory_missing:
+            source_count = sum(len(match[side]) for match in observed_matches.values() for side in ("before", "after"))
+            if independent_counts.get("entitiesExpected") is not None and independent_counts["entitiesExpected"] != source_count:
+                errors.append("Independent source-entity denominator differs from reviewed snapshot occurrences.")
+        if repo:
+            for match in observed_matches.values():
+                for side, path_key, sha_key in (("before", "oldPath", "baseSha"), ("after", "newPath", "headSha")):
+                    if not match[side]:
+                        continue
+                    try:
+                        path = match[path_key]
+                        if path is None:
+                            raise ValueError("Source entities have no owning file")
+                        source = git(repo, "show", f"{scope[sha_key]}:{path}", strip=False)
+                        length = len(source.splitlines())
+                        for entity in match[side]:
+                            start, end = entity["lines"]["startLine"], entity["lines"]["endLine"]
+                            if type(start) is not int or type(end) is not int or not 0 < start <= end <= length:
+                                raise ValueError("Core source-entity range exceeds committed source")
+                    except (KeyError, ValueError, subprocess.SubprocessError) as error:
+                        errors.append(f"Entity match {match['key']} source could not be verified: {error}")
+    elif report.get("entityMatches"):
+        errors.append("Report contains entity matches not supplied by Core.")
+    elif coverage.get("entityUnit") == "MATCH_GROUP":
+        errors.append("MATCH_GROUP coverage has no supporting Core match receipts.")
     for expected, actual in (("filesExpected", "filesAnalyzed"), ("entitiesExpected", "entitiesAnalyzed")):
         if coverage.get(actual) is None or coverage.get(expected) is None or coverage[actual] < coverage[expected]:
             mandatory_missing = True
@@ -319,7 +383,7 @@ def check_report(report, trace, repo=None):
                 snapshot = finding["snapshotId"]
                 if snapshot not in {scope.get("baseSha"), scope.get("headSha")}:
                     raise ValueError("Cannot verify a non-commit snapshot with this Git fixture checker")
-                source = git(repo, "show", f"{snapshot}:{location['path']}")
+                source = git(repo, "show", f"{snapshot}:{location['path']}", strip=False)
                 if end > len(source.splitlines()):
                     raise ValueError("Range exceeds committed source")
             except (KeyError, ValueError, subprocess.SubprocessError) as error:

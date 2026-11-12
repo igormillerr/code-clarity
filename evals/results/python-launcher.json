@@ -1,0 +1,664 @@
+{
+  "schemaVersion": 1,
+  "executionLevel": "LAUNCHER_REAL_MCP",
+  "codexEndToEnd": false,
+  "success": true,
+  "jarSha256": "3c4bc878473fe264accf50224a4066060bad8832a318901a4bee79882841da69",
+  "launcherSha256": "332e00a587e859e5b193a54815078d8ccdd7fd08b8c69498da71f1c04d9bf7d2",
+  "repo": "C:\\Users\\Igor Miller\\Documents\\projects\\code-clarity\\.codeclarity\\python-integration-naming\\repo",
+  "results": [
+    {
+      "case": "file-selector",
+      "status": "PASS",
+      "codexEndToEnd": false,
+      "pythonSelection": "file",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "tools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "scope": {
+        "baseSha": "fa446b021c44b41658796b349fabb360bf0f8051",
+        "headSha": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7"
+      },
+      "metrics": [
+        {
+          "entity": "subtotal(a)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "pythonReportStatus": "ok",
+      "childPids": [
+        8664,
+        1524
+      ],
+      "childProcesses": [
+        {
+          "ProcessId": 8664,
+          "Name": "conhost.exe"
+        },
+        {
+          "ProcessId": 1524,
+          "Name": "java.exe"
+        }
+      ],
+      "exitCode": 0,
+      "orphanedChildPids": [],
+      "stderr": [
+        "SLF4J(W): No SLF4J providers were found.",
+        "SLF4J(W): Defaulting to no-operation (NOP) logger implementation",
+        "SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details."
+      ]
+    },
+    {
+      "case": "environment-precedence",
+      "status": "PASS",
+      "codexEndToEnd": false,
+      "pythonSelection": "environment",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "tools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "scope": {
+        "baseSha": "fa446b021c44b41658796b349fabb360bf0f8051",
+        "headSha": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7"
+      },
+      "metrics": [
+        {
+          "entity": "subtotal(a)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "cognitive_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "pythonReportStatus": "ok",
+      "childPids": [
+        13172,
+        12968
+      ],
+      "childProcesses": [
+        {
+          "ProcessId": 13172,
+          "Name": "conhost.exe"
+        },
+        {
+          "ProcessId": 12968,
+          "Name": "java.exe"
+        }
+      ],
+      "exitCode": 0,
+      "orphanedChildPids": [],
+      "stderr": [
+        "SLF4J(W): No SLF4J providers were found.",
+        "SLF4J(W): Defaulting to no-operation (NOP) logger implementation",
+        "SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details."
+      ]
+    },
+    {
+      "case": "server-default",
+      "status": "PASS",
+      "codexEndToEnd": false,
+      "pythonSelection": "server-default",
+      "javaCheck": "Real Java list/analyze succeeded for the empty Java scope in this Python fixture",
+      "serverInfo": {
+        "name": "codeclarity",
+        "version": "0.1.1"
+      },
+      "tools": [
+        "analyze_java_changes",
+        "analyze_python_changes",
+        "inspect_java_method",
+        "inspect_python_function",
+        "list_java_changes",
+        "list_python_changes"
+      ],
+      "scope": {
+        "baseSha": "fa446b021c44b41658796b349fabb360bf0f8051",
+        "headSha": "f06e64181f0ab0bd0505dcefd477bcd9eccf66f7"
+      },
+      "metrics": [
+        {
+          "entity": "subtotal(a)",
+          "metric": "cyclomatic_complexity",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "cyclomatic_complexity",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-cyclo/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "cognitive_complexity",
+          "status": "UNAVAILABLE",
+          "before": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "ERROR",
+            "value": null,
+            "reason": "Cognitive Complexity unavailable: PackageNotFoundError: No package metadata was found for complexipy Install complexipy==8.3.0 in the selected Python interpreter."
+          },
+          "after": {
+            "definition": {
+              "id": "cognitive_complexity",
+              "language": "python",
+              "analyzer": "complexipy/8.3.0",
+              "algorithm": "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
+            },
+            "status": "ERROR",
+            "value": null,
+            "reason": "Cognitive Complexity unavailable: PackageNotFoundError: No package metadata was found for complexipy Install complexipy==8.3.0 in the selected Python interpreter."
+          },
+          "delta": null
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "function_sloc",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 2.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "function_sloc",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-physical-sloc/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 3.0,
+            "reason": null
+          },
+          "delta": 1.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "max_nesting_depth",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "max_nesting_depth",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-nesting/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "parameter_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "parameter_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-parameters/include-receiver/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        },
+        {
+          "entity": "subtotal(a)",
+          "metric": "return_count",
+          "status": "COMPARED",
+          "before": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "after": {
+            "definition": {
+              "id": "return_count",
+              "language": "python",
+              "analyzer": "codeclarity-python-ast/1",
+              "algorithm": "codeclarity/python-explicit-returns/v1"
+            },
+            "status": "AVAILABLE",
+            "value": 1.0,
+            "reason": null
+          },
+          "delta": 0.0
+        }
+      ],
+      "pythonReportStatus": "partial",
+      "childPids": [
+        13056,
+        17548
+      ],
+      "childProcesses": [
+        {
+          "ProcessId": 13056,
+          "Name": "conhost.exe"
+        },
+        {
+          "ProcessId": 17548,
+          "Name": "java.exe"
+        }
+      ],
+      "exitCode": 0,
+      "orphanedChildPids": [],
+      "stderr": [
+        "SLF4J(W): No SLF4J providers were found.",
+        "SLF4J(W): Defaulting to no-operation (NOP) logger implementation",
+        "SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details."
+      ]
+    },
+    {
+      "case": "missing-jar",
+      "status": "PASS",
+      "codexEndToEnd": false,
+      "pythonSelection": "server-default",
+      "exitCode": 2,
+      "stdout": "",
+      "stderr": "CodeClarity launcher: supply an existing MCP JAR path.\n",
+      "orphanedChildPids": []
+    }
+  ]
+}

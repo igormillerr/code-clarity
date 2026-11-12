@@ -4,7 +4,7 @@
     "codeclarity": {
       "type": "stdio",
       "command": "java",
-      "args": ["-jar", "${PLUGIN_ROOT}/server/codeclarity-mcp.jar"],
+      "args": ["${PLUGIN_ROOT}/scripts/LaunchMcp.java", "${PLUGIN_ROOT}/server/codeclarity-mcp.jar"],
       "cwd": "${PLUGIN_ROOT}"
     }
   }

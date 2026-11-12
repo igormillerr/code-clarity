@@ -6,47 +6,97 @@
       "id": "java-complexity",
       "kind": "code-review",
       "fixture": "fixtures/java-complexity",
-      "languages": ["java"],
+      "languages": [
+        "java"
+      ],
       "request": "Проверь читаемость изменений main..HEAD с помощью CodeClarity. Сохрани независимые замечания до получения метрик. Верни JSON и Markdown отчёт.",
-      "expected": {"findingCategories": ["readability", "responsibility"], "minimumFindings": 1, "rationale": "Six nested guards obscure a simple eligibility decision; evidence must identify the nested source range.", "baselineJarVerdict": "INCOMPLETE"}
+      "expected": {
+        "findingCategories": [
+          "readability",
+          "responsibility"
+        ],
+        "minimumFindings": 1,
+        "rationale": "Six nested guards obscure a simple eligibility decision; evidence must identify the nested source range.",
+        "completeDataVerdict": "WARN",
+        "verdictPolicy": "Use INCOMPLETE only for actual missing mandatory data/stages; historical baseline verdicts are not current expectations."
+      }
     },
     {
       "id": "python-naming",
       "kind": "code-review",
       "fixture": "fixtures/python-naming",
-      "languages": ["python"],
+      "languages": [
+        "python"
+      ],
       "request": "Проверь читаемость изменений main..HEAD с помощью CodeClarity. Сохрани независимые замечания до получения метрик. Верни JSON и Markdown отчёт.",
-      "expected": {"findingCategories": ["opaque_names", "naming"], "minimumFindings": 1, "rationale": "The invoice subtotal calculation uses a/b/x/y rather than domain names despite a short, unbranched body. The function is functionally valid.", "baselineJarVerdict": "INCOMPLETE"}
+      "expected": {
+        "findingCategories": [
+          "opaque_names",
+          "naming"
+        ],
+        "minimumFindings": 1,
+        "rationale": "The invoice subtotal calculation uses a/b/x/y rather than domain names despite a short, unbranched body. The function is functionally valid.",
+        "completeDataVerdict": "WARN",
+        "verdictPolicy": "Use INCOMPLETE only for actual missing mandatory data/stages; historical baseline verdicts are not current expectations."
+      }
     },
     {
       "id": "good-code",
       "kind": "code-review",
       "fixture": "fixtures/good-code",
-      "languages": ["java", "python"],
+      "languages": [
+        "java",
+        "python"
+      ],
       "request": "Проверь читаемость изменений main..HEAD с помощью CodeClarity. Сохрани независимые замечания до получения метрик. Верни JSON и Markdown отчёт.",
-      "expected": {"maximumAiFindings": 0, "rationale": "Small, explicitly named total calculations. Empty independent findings are valid; do not invent defects to fill the report.", "baselineJarVerdict": "INCOMPLETE"}
+      "expected": {
+        "maximumAiFindings": 0,
+        "rationale": "Small, explicitly named total calculations. Empty independent findings are valid; do not invent defects to fill the report.",
+        "completeDataVerdict": "PASS",
+        "verdictPolicy": "Use INCOMPLETE only for actual missing mandatory data/stages; historical baseline verdicts are not current expectations."
+      }
     },
     {
       "id": "partial-analysis",
       "kind": "code-review",
       "fixture": "fixtures/partial-analysis",
-      "languages": ["python"],
+      "languages": [
+        "python"
+      ],
       "request": "Проверь читаемость изменений main..HEAD с помощью CodeClarity. Обработай доступные файлы и явно укажи пропуски. Верни JSON и Markdown отчёт.",
-      "expected": {"requiredVerdict": "INCOMPLETE", "requiredSkipPaths": ["broken.py"], "rationale": "One committed Python file is syntactically invalid; valid.py must remain in the static results."}
+      "expected": {
+        "requiredVerdict": "INCOMPLETE",
+        "requiredSkipPaths": [
+          "broken.py"
+        ],
+        "rationale": "One committed Python file is syntactically invalid; valid.py must remain in the static results."
+      }
     },
     {
       "id": "history-sufficient",
       "kind": "rule-discovery",
       "history": "fixtures/history/sufficient.json",
       "request": "Примени rule-discovery к переданной явно синтетической тестовой истории. Верни машинный результат, не записывай историю и не активируй правила.",
-      "expected": {"decision": "RULE_SUGGESTED", "executionLevel": "SYNTHETIC_SKILL_EVAL", "categoryId": "opaque_names", "candidateStatus": "PROPOSED", "minimumDistinctOccurrences": 3, "minimumConfirmedFixes": 2}
+      "expected": {
+        "decision": "RULE_SUGGESTED",
+        "executionLevel": "SYNTHETIC_SKILL_EVAL",
+        "categoryId": "opaque_names",
+        "candidateStatus": "PROPOSED",
+        "minimumDistinctOccurrences": 3,
+        "minimumConfirmedFixes": 2
+      }
     },
     {
       "id": "history-insufficient",
       "kind": "rule-discovery",
       "history": "fixtures/history/insufficient.json",
       "request": "Примени rule-discovery к переданной явно синтетической тестовой истории. Верни машинный результат, не записывай историю и не активируй правила.",
-      "expected": {"decision": "NO_SUGGESTION", "executionLevel": "SYNTHETIC_SKILL_EVAL", "userFacingMessage": "", "rationale": "One pending occurrence, no confirmed fixes. Re-running a review is not an extra occurrence."}
+      "expected": {
+        "decision": "NO_SUGGESTION",
+        "executionLevel": "SYNTHETIC_SKILL_EVAL",
+        "userFacingMessage": "",
+        "rationale": "One pending occurrence, no confirmed fixes. Re-running a review is not an extra occurrence."
+      }
     }
   ]
 }
