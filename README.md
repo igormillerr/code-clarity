@@ -1,5 +1,9 @@
 # CodeClarity
 
+[Вики](https://cs-uni.ru/index.php?title=CodeClarity)
+
+[Презентация](https://docs.google.com/presentation/d/13YYXzz257Jhe6Nnalj6CcwmOXL8Y58ODuKg4mw_QbnI/edit?usp=sharing)
+
 CodeClarity — локальный плагин Codex для ревью читаемости **Java- и Python-изменений между Git-коммитами**. Он объединяет AI-анализ исходников с измеримыми характеристиками кода и сохраняет отчёт с замечаниями, ссылками на строки и рекомендациями.
 
 Готовая версия **0.4.0** находится в [plugin/](plugin/). [Документация плагина](plugin/README.md) · [Установка и обновление](plugin/INSTALL.md).
