@@ -30,10 +30,14 @@ def module(extra=False):
         source += "def new_name(x):\n    return x\n"
         source += "def remove_only(x):\n    return 0\n"
         source += "class Rebound:\n    pass\nclass Rebound:\n    def run(self, x, y=None):\n        return x\n"
+        source += "def comment_only(x):\n    return x  # clarification\n"
+        source += "@other_decorator\ndef decorated(x):\n    return x\n"
     else:
         source += "def old_name(x):\n    return x\n"
         source += "def remove_only(x):\n    if x:\n        return 1\n    return 0\n"
         source += "class Rebound:\n    def run(self, x):\n        return x\nclass Rebound:\n    pass\n"
+        source += "def comment_only(x):\n    return x\n"
+        source += "@decorate\ndef decorated(x):\n    return x\n"
     return source
 
 
@@ -41,6 +45,7 @@ def run_checks(client):
     changes = client.tool("list_python_changes", {"baseRef": "main", "headRef": "HEAD"})
     shas = {key: changes[key] for key in ("baseSha", "headSha")}
     report = client.tool("analyze_python_changes", shas)
+    assert client.tool("analyze_python_changes", shas) == report, "same SHAs/config must give the same Python result"
     assert report["status"] == "partial", report
     files = {f.get("newPath") or f["oldPath"]: f for f in report["files"]}
     main = files["matching.py"]
@@ -76,6 +81,18 @@ def run_checks(client):
         value = metrics[(key, "parameter_count")]
         assert value[side]["status"] == "ENTITY_ABSENT" and value.get("delta") is None, value
     assert metrics[("remove_only(x)", "return_count")]["delta"] == -1
+    for key in ("comment_only", "decorated"):
+        assert matches[key]["status"] == "MATCHED", matches[key]
+        values = [m for m in main["metrics"] if m["entity"] == key + "(x)"]
+        assert len(values) == 6 and all(m["status"] == "COMPARED" and m["delta"] == 0 for m in values), values
+
+    for path, status, absent in (("deleted.py", "REMOVED", "after"), ("added.py", "ADDED", "before")):
+        file = files[path]
+        assert file["matches"][0]["status"] == status, file
+        assert len(file["metrics"]) == 6, file
+        for value in file["metrics"]:
+            assert value[absent]["status"] == "ENTITY_ABSENT" and value.get("delta") is None, value
+            assert value["before" if absent == "after" else "after"]["status"] == "AVAILABLE", value
 
     renamed = files["renamed.py"]
     assert renamed["oldPath"] == "rename.py", renamed
@@ -104,6 +121,7 @@ def main():
         write("rename.py", "def moving(x):\n" + moving)
         write("from.py", "def keep_from():\n    pass\ndef moved(x):\n    return x\n")
         write("to.py", "def keep_to():\n    pass\n")
+        write("deleted.py", "def deleted(x):\n    return x\n")
         git(root, "add", ".")
         git(root, "commit", "-m", "base")
         git(root, "switch", "-c", "feature")
@@ -112,6 +130,8 @@ def main():
         write("renamed.py", "def moving(x, extra=None):\n" + moving)
         write("from.py", "def keep_from():\n    pass\n")
         write("to.py", "def keep_to():\n    pass\ndef moved(x):\n    return x\n")
+        (root / "deleted.py").unlink()
+        write("added.py", "def added():\n    pass\n")
         git(root, "add", ".")
         git(root, "commit", "-m", "head")
         process, client = connect(jar, root)
@@ -120,7 +140,8 @@ def main():
         finally:
             close(process)
     print("Passed: parameter deltas, class/nested owners, duplicate/property/conditional ambiguity, "
-          "diagnostic comparison, deletion-only edits, file rename and cross-file move boundaries.")
+          "diagnostic comparison, deletion-only edits, comment/decorator edits, added/deleted files, "
+          "repeatability, file rename and cross-file move boundaries.")
 
 
 if __name__ == "__main__":

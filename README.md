@@ -22,6 +22,24 @@ codex mcp list
 Python-проверки запускай интерпретатором с зависимостями из `requirements-python.txt`;
 пример создания отдельного окружения приведён в разделе «Поддержка Python».
 
+Полная техническая проверка одной командой (JDK 21+ и Git в PATH):
+
+```bash
+python scripts/check.py
+```
+
+Если JDK не в PATH, передай `--java-home <путь-к-JDK>`. Скрипт собирает текущие исходники
+и запускает все семь наборов проверок. По умолчанию используется Maven, если он доступен;
+иначе — javac с зависимостями из комплектного JAR, версии которых сверяются с pom.xml.
+Режим можно задать через `--build-backend maven` или `--build-backend bundled`.
+Отчёт: `target/checks/report.json`, отдельные логи рядом. Код 0 означает полный успех;
+при ошибке последующие наборы не запускаются. Полный запуск требует реальную complexipy 8.3.0
+и не подменяет её отсутствие пропуском метрики.
+
+[Результат технической приёмки и матрица покрытия](docs/PYTHON_ACCEPTANCE.md).
+
+Отдельные проверки по-прежнему доступны:
+
 ```bash
 mvn clean package
 python3 scripts/smoke_test.py target/codeclarity-mcp.jar
@@ -30,6 +48,7 @@ python3 scripts/python_metrics_spec_check.py --require-cognitive
 python3 scripts/python_smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/python_matching_test.py target/codeclarity-mcp.jar
 python3 scripts/java_metrics_test.py target/codeclarity-mcp.jar
+python3 scripts/core_test.py
 ```
 
 На Windows для проверки можно использовать `py -3 scripts/smoke_test.py target/codeclarity-mcp.jar`. Smoke-тест создаёт временный Git-репозиторий и обращается к JAR через тот же MCP-интерфейс, что и клиент. Он проверяет инициализацию, discovery, три вызова, сравнение PMD, переименование файла, частичный анализ и чтение зафиксированного коммита при изменённом рабочем файле.

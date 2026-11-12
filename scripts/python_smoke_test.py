@@ -102,6 +102,30 @@ def close(process):
             process.wait()
 
 
+def check_python_batches(client, root, previous_head):
+    extra = root / "batch"
+    extra.mkdir()
+    paths = []
+    for index in range(51):
+        path = f"batch/extra{index:02d}.py"
+        paths.append(path)
+        (root / path).write_text("VALUE = 1\n", encoding="utf-8")
+    # Stage only batch files: example.py deliberately contains uncommitted invalid text.
+    git(root, "add", "batch")
+    git(root, "commit", "-m", "Python batch boundary")
+    changes = client.tool("list_python_changes", {"baseRef": previous_head, "headRef": "HEAD"})
+    assert [f["newPath"] for f in changes["files"]] == paths, changes
+    shas = {key: changes[key] for key in ("baseSha", "headSha")}
+    result = client.tool("analyze_python_changes", shas, error=True)
+    assert "51" in result["content"][0]["text"] and "50" in result["content"][0]["text"], result
+    analyzed = []
+    for batch in (paths[:50], paths[50:]):
+        report = client.tool("analyze_python_changes", {**shas, "paths": batch})
+        assert report["status"] == "ok", report
+        analyzed.extend(f["newPath"] for f in report["files"])
+    assert analyzed == paths, analyzed
+
+
 def main():
     try:
         version = importlib.metadata.version("complexipy")
@@ -138,6 +162,7 @@ def main():
         process, client = connect(jar, root)
         try:
             shas = check(client, root)
+            check_python_batches(client, root, shas["headSha"])
         finally:
             close(process)
         without_cognitive = root / ".without-cognitive"
@@ -174,7 +199,8 @@ def main():
         finally:
             close(process)
     print("Passed: Python MCP tools, language isolation, four diagnostic statuses, rename, syntax errors, "
-          "all six metrics and deltas, inspection, committed source, missing dependency and interpreter handling.")
+          "all six metrics and deltas, 51-file batch boundary, inspection, committed source, "
+          "missing dependency and interpreter handling.")
 
 
 if __name__ == "__main__":

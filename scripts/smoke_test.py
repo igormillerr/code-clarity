@@ -143,6 +143,7 @@ def main():
                            for r in files["Example file.java"]["headLines"]), files["Example file.java"]
                 shas = {key: changes[key] for key in ("baseSha", "headSha")}
                 report = client.tool("analyze_java_changes", {**shas, "paths": ["Example file.java"]})
+                assert client.tool("analyze_java_changes", {**shas, "paths": ["Example file.java"]}) == report, "Java result must be repeatable"
                 assert report["status"] == "ok", report
                 found = {(f["method"], f["rule"]): f["status"] for f in report["files"][0]["findings"]}
                 assert found["Example#changed()", "CognitiveComplexity"] == "INTRODUCED", found
