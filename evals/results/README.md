@@ -3,9 +3,15 @@
 ## Объединённая версия 0.4.0
 
 Новые результаты Java6/Python6 + history сохраняются отдельно от приведённых ниже
-исторических запусков. Текущая сводка: [llm-status.md](../../docs/llm-status.md).
+исторических запусков. Установка текущего пакета: [INSTALL.md](../../plugin/INSTALL.md).
 Source/JAR hashes и уровень выполнения в каждом receipt относятся к его запуску.
 
+- [plugin-release-0.4.0.json](plugin-release-0.4.0.json): переносимый ZIP, свежая
+  сборка, установка в чистый профиль, 15 инструментов и Java/Python-метрики из
+  установленного кэша. Пользовательская копия обновлена до 0.4.0; отдельный
+  native Codex smoke использует установленный плагин без ручного MCP override.
+  Общий source runner: 18/20 в текущем дереве; две проверки прошли отдельно с
+  неизменёнными скриптами и каноническим fixture из HEAD, удалённым из docs.
 - unified-integration-build.json: свежий объединённый JAR, 20/20 checks, CP1251.
 - codex-unified-approval-denied.json: реальный Codex WARN/24 comparisons;
   history write отклонён политикой never, основной отчёт сохранён.
@@ -27,7 +33,7 @@ Source/JAR hashes и уровень выполнения в каждом receipt
 
 В исторических Python receipts синтетические history outcomes — решение Skill без persistence; в том JAR history Tools отсутствуют.
 PASS теста/верификатора следует отличать от вердикта кода. В этих запусках история
-была UNAVAILABLE. Полный текущий статус и команды: [llm-status.md](../../docs/llm-status.md).
+была UNAVAILABLE.
 
 ## Исторический baseline 0.2.0
 

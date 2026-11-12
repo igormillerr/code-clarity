@@ -1,6 +1,6 @@
 # MCP compatibility and team handoff
 
-Status: **proposed exchange v1**, not an agreement or implementation by other developers.
+Status: **implemented unified MCP API**, plugin 0.4.0 / server 0.1.7.
 Owner: Java / LLM Engineer for plugin/Skills/review format; Java Core engineer for
 MCP schemas, snapshots, measurements, persistence and feedback authorization;
 Python engineer for Python analysis. Discover the actual tool schemas before use.
@@ -8,8 +8,9 @@ Python engineer for Python analysis. Discover the actual tool schemas before use
 ## Current server 0.1.7
 
 The server includes the six Java metrics and both language adapters behind the
-same LanguageSupport / AnalysisService boundary. The checked-in historical eval
-receipts refer to the older 0.1.1 JAR from feature/python ec6a3ed.
+same LanguageSupport / AnalysisService boundary. Current unified integration
+receipts cover this 0.1.7 JAR; older historical eval receipts retain their original
+0.1.1 Python-only runtime and must not be treated as current package results.
 
 | Operation | Actual tool and required arguments |
 |---|---|
@@ -177,7 +178,7 @@ operator trust boundary, not authentication of an agent-supplied confirmedBy.
 Both stored/input JSON are validated; derived state is checked against its source
 reviews/feedback. Updates use a cross-process lock, forced temporary file and
 atomic replacement without a non-atomic fallback. Invalid existing JSON is never
-silently reset. See the main README for CLI syntax, limits and verification.
+silently reset.
 
 History operation mapping:
 

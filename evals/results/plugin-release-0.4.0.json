@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "status": "PASS_WITH_QUALIFIED_SOURCE_FIXTURE_CHECKS",
+  "pluginVersion": "0.4.0",
+  "serverVersion": "0.1.7",
+  "sourceHead": "aad0c766b79a4879188a55ec2dcae040991d396b",
+  "archive": {
+    "path": "dist/codeclarity-0.4.0.zip",
+    "pluginVersion": "0.4.0",
+    "serverVersion": "0.1.7",
+    "pluginFiles": 20,
+    "jarSha256": "a954ba0b9c043c55e69d40d744c1001d2790a5999b4ce9f877803399d8a4471f",
+    "archiveFiles": 25,
+    "archiveSha256": "0292d5ba61fb0abe9ece213702bdad80f7d77c0c679392182225ad352b604bc2"
+  },
+  "build": {
+    "status": "PASS",
+    "method": "Fresh Maven package from isolated copy of current pom.xml/src/plugin contracts; locked old target files left untouched.",
+    "platform": "Windows",
+    "jdkMajor": 21,
+    "pythonVersion": "3.13.2"
+  },
+  "sourceChecks": {
+    "workingTreePassed": 18,
+    "workingTreeTotal": 20,
+    "checks": [
+      {
+        "name": "mcp_smoke_test",
+        "exitCode": 0
+      },
+      {
+        "name": "smoke_test",
+        "exitCode": 0
+      },
+      {
+        "name": "python_smoke_test",
+        "exitCode": 0
+      },
+      {
+        "name": "java_metrics_test",
+        "exitCode": 0
+      },
+      {
+        "name": "language_integration_test",
+        "exitCode": 0
+      },
+      {
+        "name": "history_test",
+        "exitCode": 0
+      },
+      {
+        "name": "history_storage_test",
+        "exitCode": 0
+      },
+      {
+        "name": "lsp_client_test",
+        "exitCode": 0
+      },
+      {
+        "name": "java_regression_test",
+        "exitCode": 0
+      },
+      {
+        "name": "python_matching_test",
+        "exitCode": 0
+      },
+      {
+        "name": "python_worker_test",
+        "exitCode": 1
+      },
+      {
+        "name": "core_test",
+        "exitCode": 0
+      },
+      {
+        "name": "llm_artifact_test",
+        "exitCode": 0
+      },
+      {
+        "name": "llm_launcher_test",
+        "exitCode": 0
+      },
+      {
+        "name": "python_metrics_spec_check",
+        "exitCode": 1
+      },
+      {
+        "name": "python_experiments",
+        "exitCode": 0
+      },
+      {
+        "name": "lsp_smoke_test",
+        "exitCode": 0
+      },
+      {
+        "name": "eval-self-test",
+        "exitCode": 0
+      },
+      {
+        "name": "ids-self-test",
+        "exitCode": 0
+      },
+      {
+        "name": "protocol",
+        "exitCode": 0
+      }
+    ],
+    "qualification": "18 current-tree suites passed; the other 2 passed with unchanged scripts/worker and canonical HEAD fixture copied only to a private isolated tree. Current working-tree verify remains 18/20 until its deleted test data is restored or test fixture paths are separately migrated.",
+    "isolatedFixture": {
+      "fixtureGitRef": "HEAD:docs/fixtures/python_metrics_v1.json",
+      "fixtureSha256": "9967c34fea7831a272bf4af1d34d8e8c97008aa5b343eb4d9dbaa9eddd55c25f",
+      "scriptsUnchanged": true,
+      "workerUnchanged": true,
+      "userDocsRestored": false,
+      "checks": [
+        {
+          "name": "python_worker_test",
+          "exitCode": 0
+        },
+        {
+          "name": "python_metrics_spec_check",
+          "exitCode": 0
+        }
+      ]
+    },
+    "effectiveSuitesVerified": 20
+  },
+  "packageTests": {
+    "passed": 10,
+    "skipped": 1,
+    "skipReason": "Windows symlink creation requires additional privileges."
+  },
+  "setupTests": {
+    "passed": 9,
+    "realPrerequisiteCheck": "PASS"
+  },
+  "cleanInstall": {
+    "status": "PASS",
+    "executionLevel": "CLEAN_CODEX_CLI_INSTALL_AND_CACHED_PACKAGE_STDIO",
+    "codexVersion": "codex-cli 0.167.0-alpha.3.2",
+    "cachedFilesIdentical": true,
+    "selectorConfiguration": "PASS",
+    "toolsDiscovered": 15,
+    "languages": [
+      "java",
+      "python"
+    ],
+    "metricComparisons": 12,
+    "sourceContext": "PASS",
+    "historyRead": "PASS",
+    "pathsWithSpaces": true,
+    "modelInvocation": false
+  },
+  "installedHostSmoke": {
+    "status": "PASS",
+    "executionLevel": "INSTALLED_PLUGIN_NATIVE_CODEX_MCP",
+    "manualMcpOverride": false,
+    "nativeCalls": [
+      {
+        "eventIndex": 6,
+        "id": "item_2",
+        "type": "mcp_tool_call",
+        "server": "codeclarity",
+        "tool": "get_changes",
+        "arguments": {
+          "baseRef": "HEAD",
+          "headRef": "HEAD"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"baseSha\":\"aad0c766b79a4879188a55ec2dcae040991d396b\",\"headSha\":\"aad0c766b79a4879188a55ec2dcae040991d396b\",\"status\":\"ok\",\"files\":[],\"warnings\":[]}"
+            }
+          ],
+          "structured_content": {
+            "baseSha": "aad0c766b79a4879188a55ec2dcae040991d396b",
+            "headSha": "aad0c766b79a4879188a55ec2dcae040991d396b",
+            "status": "ok",
+            "files": [],
+            "warnings": []
+          }
+        },
+        "error": null,
+        "status": "completed"
+      }
+    ],
+    "result": {
+      "baseSha": "aad0c766b79a4879188a55ec2dcae040991d396b",
+      "headSha": "aad0c766b79a4879188a55ec2dcae040991d396b",
+      "status": "ok",
+      "files": [],
+      "warnings": []
+    },
+    "installedSkillReadCount": 1,
+    "rawEventsSha256": "cf0a8eacf11fedd778c6c1ba6bb37b640f0e5f0af568f306211b84d59caa3524"
+  },
+  "installedPlugin": {
+    "version": "0.4.0",
+    "enabled": true,
+    "cacheFilesEqualRelease": true,
+    "updatedFrom": "0.3.2"
+  },
+  "platforms": {
+    "Windows": "EXECUTED_PASS",
+    "Linux": "INSTRUCTIONS_SYNTAX_CHECKED_NOT_EXECUTED",
+    "macOS": "INSTRUCTIONS_SYNTAX_CHECKED_NOT_EXECUTED"
+  },
+  "limitations": [
+    "Installed native Codex probe compared HEAD..HEAD only; mixed metrics were checked separately using the clean installed cache.",
+    "Full agent mixed-review receipt remains codex-unified-integration.json and uses the previous byte-identical-source build, repository Skills and explicit MCP.",
+    "Real Windows JDT LS navigation not run for this release; it remains optional.",
+    "Requires plugin-capable local Codex, JDK21+, Git and Python3.10+/complexipy8.3.0; system runtimes are not included."
+  ],
+  "commitPerformed": false,
+  "pushPerformed": false
+}
