@@ -15,6 +15,7 @@ public interface LanguageSupport {
     EntityContext inspect(String path, String source, int line);
     default List<MetricDefinition> metricDefinitions() { return List.of(); }
 
+    /** complete is entity/finding coverage; a failed metric uses its own status and warnings. */
     record AnalysisResult(List<SourceEntity> entities, List<Finding> findings,
                           boolean complete, List<String> warnings, List<MetricMeasurement> metrics) {
         public AnalysisResult(List<SourceEntity> entities, List<Finding> findings,

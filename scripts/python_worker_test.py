@@ -4,9 +4,15 @@ from pathlib import Path
 import json
 import runpy
 import sys
+from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 WORKER = runpy.run_path(str(Path(__file__).resolve().parents[1] / "src/main/resources/python_analyzer.py"))
+try:
+    COGNITIVE_ENGINE = WORKER["load_cognitive_engine"]()
+except Exception:
+    COGNITIVE_ENGINE = None
 
 
 class WorkerTest(unittest.TestCase):
@@ -153,14 +159,103 @@ class WorkerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.inspect("x = 1\n", 1)
 
-    def test_numeric_metrics_below_threshold_and_unsupported(self):
+    def test_numeric_metrics_below_threshold(self):
         result = self.analyze("def f():\n    if flag: pass\n")
         self.assertEqual(result["findings"], [])
         values = {m["metric"]["definition"]["id"]: m["metric"] for m in result["metrics"]}
         self.assertEqual(values["cyclomatic_complexity"]["value"], 2)
         self.assertEqual(values["cyclomatic_complexity"]["status"], "AVAILABLE")
-        self.assertEqual(values["cognitive_complexity"]["status"], "UNSUPPORTED")
-        self.assertIsNone(values["cognitive_complexity"]["value"])
+        if COGNITIVE_ENGINE is not None:
+            self.assertEqual(values["cognitive_complexity"]["status"], "AVAILABLE")
+            self.assertEqual(values["cognitive_complexity"]["value"], 1)
+        else:
+            self.assertEqual(values["cognitive_complexity"]["status"], "ERROR")
+            self.assertIsNone(values["cognitive_complexity"]["value"])
+
+    def test_missing_engine_retains_other_metrics_and_inspection(self):
+        loader = mock.Mock(side_effect=ModuleNotFoundError("complexipy unavailable"))
+        with mock.patch.dict(WORKER["handle"].__globals__, load_cognitive_engine=loader):
+            result = self.analyze("def f():\n    pass\n")
+            self.assertTrue(result["complete"])
+            self.assertEqual(loader.call_count, 1)
+            self.assertEqual(len(result["warnings"]), 1)
+            for value in result["metrics"]:
+                metric = value["metric"]
+                self.assertEqual(metric["status"], "ERROR" if metric["definition"]["id"] == "cognitive_complexity" else "AVAILABLE")
+            self.inspect("def f():\n    send()\n", 1)
+            self.assertEqual(loader.call_count, 1, "inspection must not load the cognitive engine")
+
+    def test_wrong_engine_version_is_explicit_error(self):
+        with mock.patch("importlib.metadata.version", return_value="999.0"):
+            result = self.analyze("def f():\n    pass\n")
+        self.assertIn("Expected complexipy 8.3.0", result["warnings"][0])
+        self.assertEqual(result["metrics"][1]["metric"]["status"], "ERROR")
+
+    def test_one_function_engine_error_does_not_affect_another(self):
+        def engine(source, **options):
+            self.assertEqual(options, dict(check_script=False, no_ignore=True, with_plans=False))
+            if source.startswith("def bad("):
+                raise ValueError("unsupported example")
+            return SimpleNamespace(functions=[SimpleNamespace(name="good", complexity=0)])
+
+        with mock.patch.dict(WORKER["handle"].__globals__, load_cognitive_engine=lambda: engine):
+            result = self.analyze("def bad():\n    pass\ndef good():\n    pass\n")
+        values = {m["entity"]: m["metric"] for m in result["metrics"]
+                  if m["metric"]["definition"]["id"] == "cognitive_complexity"}
+        self.assertEqual(values["bad()"]["status"], "ERROR")
+        self.assertEqual(values["good()"]["value"], 0)
+        self.assertTrue(result["complete"])
+        self.assertEqual(len(result["warnings"]), 1)
+        self.assertTrue(all(m["metric"]["status"] == "AVAILABLE" for m in result["metrics"]
+                            if m["metric"]["definition"]["id"] != "cognitive_complexity"))
+
+    def test_engine_missing_ambiguous_or_invalid_result(self):
+        for functions, expected_status in [
+                ([], "MISSING"),
+                ([SimpleNamespace(name="other", complexity=0)], "ERROR"),
+                ([SimpleNamespace(name="f", complexity=-1)], "ERROR"),
+                ([SimpleNamespace(name="f", complexity=1.5)], "ERROR"),
+                ([SimpleNamespace(name="f", complexity=0)] * 2, "ERROR")]:
+            with self.subTest(status=expected_status, functions=functions):
+                with mock.patch.dict(WORKER["handle"].__globals__,
+                                     load_cognitive_engine=lambda: lambda *a, **kw: SimpleNamespace(functions=functions)):
+                    result = self.analyze("def f():\n    pass\n")
+                self.assertEqual(result["metrics"][1]["metric"]["status"], expected_status)
+                self.assertTrue(result["warnings"])
+
+    @unittest.skipUnless(COGNITIVE_ENGINE is not None, "Install requirements-python.txt for real cognitive checks")
+    def test_cognitive_specification_twenty_cases(self):
+        fixture = Path(__file__).resolve().parents[1] / "docs/fixtures/python_metrics_v1.json"
+        for case in json.loads(fixture.read_text(encoding="utf-8"))["cases"]:
+            with self.subTest(case=case["id"]):
+                value = self.metrics(case["source"], case["target"])["cognitive_complexity"]
+                self.assertEqual(value["status"], "AVAILABLE", value)
+                self.assertEqual(value["value"], case["expected"]["cognitive_complexity"])
+                self.assertEqual(value["definition"]["analyzer"], "complexipy/8.3.0")
+
+    @unittest.skipUnless(COGNITIVE_ENGINE is not None, "Install requirements-python.txt for real cognitive checks")
+    def test_cognitive_defaults_annotations_and_decorators_excluded(self):
+        source = ('@decorate(1 if flag else 0)\n'
+                  'def f(x: (A if flag else B) = (1 if flag else 0)) -> (A if flag else B):\n'
+                  '    return x\n')
+        self.assertEqual(self.metrics(source)["cognitive_complexity"]["value"], 0)
+
+    @unittest.skipUnless(COGNITIVE_ENGINE is not None, "Install requirements-python.txt for real cognitive checks")
+    def test_cognitive_nested_decorators_unicode_and_class_scopes(self):
+        source = ('def outer(value):\n    "описание"\n    @(\n        decorate\n    )\n'
+                  '    def inner(x):\n        if x:\n            return x\n        return 0\n'
+                  '    class Local:\n        def method(self):\n            if value: return 1\n'
+                  '    marker = "λ"; callback = lambda x: 1 if x else 0\n    return inner(value)\n')
+        self.assertEqual(self.metrics(source, "outer")["cognitive_complexity"]["value"], 0)
+        self.assertEqual(self.metrics(source, "outer.inner")["cognitive_complexity"]["value"], 1)
+        self.assertEqual(self.metrics(source, "outer.Local.method")["cognitive_complexity"]["value"], 1)
+
+    @unittest.skipUnless(COGNITIVE_ENGINE is not None, "Install requirements-python.txt for real cognitive checks")
+    def test_cognitive_recursion_and_async_method(self):
+        recursive = 'def f(x):\n    if x:\n        return f(x-1)\n    return 0\n'
+        self.assertEqual(self.metrics(recursive)["cognitive_complexity"]["value"], 2)
+        method = 'class Service:\n    async def f(self, x):\n        if x:\n            return await self.f(x-1)\n        return 0\n'
+        self.assertEqual(self.metrics(method, "Service.f")["cognitive_complexity"]["value"], 1)
 
 
 if __name__ == "__main__":

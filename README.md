@@ -19,11 +19,14 @@ codex mcp list
 
 ## Сборка и проверка
 
+Python-проверки запускай интерпретатором с зависимостями из `requirements-python.txt`;
+пример создания отдельного окружения приведён в разделе «Поддержка Python».
+
 ```bash
 mvn clean package
 python3 scripts/smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/python_worker_test.py
-python3 scripts/python_metrics_spec_check.py
+python3 scripts/python_metrics_spec_check.py --require-cognitive
 python3 scripts/python_smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/java_metrics_test.py target/codeclarity-mcp.jar
 ```
@@ -90,8 +93,10 @@ python3 scripts/java_metrics_test.py target/codeclarity-mcp.jar
 модель управления потоком. Для будущих языков контракт контекста может потребовать расширения.
 
 `Finding` — срабатывание правила, а не численная метрика. Численные метрики передаются
-отдельно в `AnalysisResult.metrics` и сравниваются независимо от диагностик. `AnalysisResult.complete` явно отмечает
-неполный анализ: отчёт будет частичным даже без текстовых предупреждений адаптера.
+отдельно в `AnalysisResult.metrics` и сравниваются независимо от диагностик.
+`AnalysisResult.complete` описывает полноту выделения сущностей и диагностик.
+Ошибка отдельной метрики передаётся её статусом и предупреждением, сохраняя остальные значения.
+Предупреждения делают отчёт частичным; неполное покрытие также даёт частичный отчёт даже без предупреждения адаптера.
 
 Проверка границы ядра без JavaParser и PMD:
 
@@ -106,16 +111,23 @@ python scripts/core_test.py
 
 ## Поддержка Python
 
-Для Python-анализа дополнительно нужен Python 3.10+ в PATH под именем `python`.
-Зависимости из PyPI не требуются. Если интерпретатор называется `python3` или находится
-в другом каталоге, задай переменную окружения `CODECLARITY_PYTHON` перед запуском сервера:
+Для Python-анализа нужен Python 3.10+; для всех шести метрик установи закреплённую
+`complexipy==8.3.0` из `requirements-python.txt` в выбранный интерпретатор.
+Без неё остальные пять метрик и инспекция продолжают работать, а когнитивная метрика
+возвращает `ERROR` с причиной и отчёт `partial`. Несовпадающая версия библиотеки также
+считается ошибкой, чтобы не смешивать разные определения метрики.
+
+По умолчанию запускается `python` из PATH. Рекомендуемый запуск с отдельным окружением:
 
 ```powershell
-$env:CODECLARITY_PYTHON = 'C:\Python313\python.exe'
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-python.txt
+$env:CODECLARITY_PYTHON = (Resolve-Path '.\.venv\Scripts\python.exe').Path
 java -jar target/codeclarity-mcp.jar --repo-root 'C:\work\my-project'
 ```
 
-На Linux/macOS можно использовать `CODECLARITY_PYTHON=python3 java -jar ...`.
+На Linux/macOS создай venv, установи зависимости через `.venv/bin/python -m pip install -r requirements-python.txt`
+и укажи этот интерпретатор в `CODECLARITY_PYTHON`. Проверки также запускай выбранным интерпретатором.
 Значение переменной — путь или имя одного исполняемого файла, без аргументов.
 Для сервера из плагина переменная должна быть доступна процессу, запускающему плагин.
 Отсутствующий Python не мешает Java-анализу: Python-отчёт вернётся со статусом `partial`
@@ -130,6 +142,10 @@ java -jar target/codeclarity-mcp.jar --repo-root 'C:\work\my-project'
 Исходник разбирается через стандартный [Python ast](https://docs.python.org/3/library/ast.html),
 без импорта или выполнения проверяемого кода. Процесс запускается в изолированном режиме.
 У одного процесса есть лимит 15 секунд и 4 МиБ вывода.
+Обработанная ошибка complexipy затрагивает только её метрику; авария нативного модуля,
+таймаут или превышение лимита всего процесса по-прежнему делают недоступным результат файла.
+Проверено на Windows x64 / Python 3.13.1. Метаданные complexipy 8.3.0 требуют Python <3.16;
+для всех шести метрик пересечение требований — Python 3.10–3.15. Другие версии отдельно не проверялись.
 
 Извлекаются обычные и `async`-функции, методы классов и вложенные функции.
 Ключ сопоставления включает цепочку владельцев, имя и имена/виды параметров;
@@ -151,7 +167,9 @@ java -jar target/codeclarity-mcp.jar --repo-root 'C:\work\my-project'
 
 Вложенные функции, классы и лямбды исключены из подсчёта родительской функции.
 Это собственное определение правила; оно не заявляет эквивалентность PMD или Radon.
-Когнитивная сложность Python пока не вычисляется и явно имеет статус `UNSUPPORTED`.
+Когнитивная сложность вычисляется через complexipy 8.3.0 по изолированному исходному
+сегменту каждой функции. Вложенные области маскируются без переформатирования ветвей;
+именованные вложенные функции анализируются отдельно. Значения библиотеки не корректируются вручную.
 Цикломатическая сложность возвращается для каждой извлечённой функции, включая значения ниже порога.
 
 ## Численные метрики
@@ -165,13 +183,13 @@ java -jar target/codeclarity-mcp.jar --repo-root 'C:\work\my-project'
 | Java | `cyclomatic_complexity` | PMD `JavaMetrics.CYCLO`, настройки по умолчанию |
 | Java | `cognitive_complexity` | PMD `JavaMetrics.COGNITIVE_COMPLEXITY`, настройки по умолчанию |
 | Python | `cyclomatic_complexity` | Собственный алгоритм `codeclarity/python-cyclo/v1`, описанный выше |
-| Python | `cognitive_complexity` | `UNSUPPORTED` |
+| Python | `cognitive_complexity` | complexipy 8.3.0 с изоляцией области текущей функции |
 | Python | `function_sloc` | Физические строки с кодом, без комментариев и docstring |
 | Python | `max_nesting_depth` | Синтаксическая вложенность управляющих конструкций |
 | Python | `parameter_count` | Все явные параметры, включая self/cls, varargs и kwargs |
 | Python | `return_count` | Явные return в собственной области функции |
 
-Python возвращает пять численных метрик и явный `UNSUPPORTED` для когнитивной сложности.
+Python возвращает шесть численных метрик при установленной закреплённой зависимости.
 Правила и 20 эталонных примеров описаны в [спецификации](docs/PYTHON_METRICS_SPEC.md).
 SLOC включает заголовок, декораторы и код вложенных объявлений, но исключает docstring;
 метрики вложенности и возвратов исключают вложенные области. Для вложенности `elif`
@@ -192,7 +210,8 @@ Java-значения вычисляются через API PMD в том же �
 
 Каждая сторона содержит `definition` с полями `id`, `language`, `analyzer`, `algorithm`.
 `analyzer` включает версию анализатора; для PMD она берётся из установленной библиотеки,
-для Python используется версия собственного анализатора `codeclarity-python-ast/1`.
+для пяти собственных Python-метрик используется `codeclarity-python-ast/1`,
+а для когнитивной — `complexipy/8.3.0`.
 `algorithm` фиксирует определение и настройки вычисления. При изменении собственного
 алгоритма нужно обновить его идентификатор версии.
 

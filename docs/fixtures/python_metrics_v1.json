@@ -268,11 +268,11 @@
     "normalization": "codeclarity/python-function-scope/v1",
     "python": "3.13.1",
     "platform": "Windows x64",
-    "status": "source-preserving scope-isolation prototype; not integrated into application"
+    "status": "integrated worker; all 20 cognitive values verified with source-preserving scope isolation in stage 4"
   },
   "verification": {
     "cyclomatic_complexity": "checked against existing worker on all 20 cases",
-    "cognitive_complexity": "checked against complexipy 8.3.0 with source-preserving scope isolation",
+    "cognitive_complexity": "checked against integrated worker with complexipy 8.3.0 on all 20 cases in stage 4",
     "structural_metrics": "manually specified acceptance targets; verified against worker on all 20 cases in stage 3"
   }
 }

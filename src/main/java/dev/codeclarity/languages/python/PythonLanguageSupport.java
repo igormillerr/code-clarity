@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/** Uses the Python standard library; repository code is parsed, never executed. */
+/** Uses Python AST and complexipy; repository code is parsed, never executed. */
 public final class PythonLanguageSupport implements LanguageSupport {
     private static final int MAX_OUTPUT = 4 * 1024 * 1024;
     private final String executable;
@@ -38,7 +38,8 @@ public final class PythonLanguageSupport implements LanguageSupport {
     public List<MetricDefinition> metricDefinitions() {
         return List.of(new MetricDefinition("cyclomatic_complexity", "python", "codeclarity-python-ast/1",
                         "codeclarity/python-cyclo/v1"),
-                new MetricDefinition("cognitive_complexity", "python", "codeclarity-python-ast/1", "unsupported"),
+                new MetricDefinition("cognitive_complexity", "python", "complexipy/8.3.0",
+                        "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"),
                 new MetricDefinition("function_sloc", "python", "codeclarity-python-ast/1", "codeclarity/python-physical-sloc/v1"),
                 new MetricDefinition("max_nesting_depth", "python", "codeclarity-python-ast/1", "codeclarity/python-nesting/v1"),
                 new MetricDefinition("parameter_count", "python", "codeclarity-python-ast/1", "codeclarity/python-parameters/include-receiver/v1"),

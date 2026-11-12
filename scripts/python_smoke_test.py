@@ -1,6 +1,7 @@
 """Exercise Python support through the executable MCP JAR."""
 
 import os
+import importlib.metadata
 from pathlib import Path
 import subprocess
 import sys
@@ -34,6 +35,11 @@ def check(client, root):
         value = metrics[(entity + "(value)", "cyclomatic_complexity")]
         assert value["status"] == "COMPARED" and value["before"]["value"] == before and value["after"]["value"] == after, value
         assert value["delta"] == after - before, value
+        cognitive = metrics[(entity + "(value)", "cognitive_complexity")]
+        assert cognitive["status"] == "COMPARED", cognitive
+        assert cognitive["before"]["value"] == before - 1 and cognitive["after"]["value"] == after - 1, cognitive
+        assert cognitive["delta"] == after - before, cognitive
+        assert cognitive["after"]["definition"]["analyzer"] == "complexipy/8.3.0", cognitive
         sloc = metrics[(entity + "(value)", "function_sloc")]
         assert sloc["status"] == "COMPARED" and sloc["before"]["value"] == before + 1, sloc
         assert sloc["after"]["value"] == after + 1 and sloc["delta"] == after - before, sloc
@@ -52,9 +58,8 @@ def check(client, root):
     assert old_parameters["before"]["value"] == 1 and old_parameters["after"]["status"] == "ENTITY_ABSENT", old_parameters
     assert new_parameters["before"]["status"] == "ENTITY_ABSENT" and new_parameters["after"]["value"] == 2, new_parameters
     assert old_parameters.get("delta") is None and new_parameters.get("delta") is None
-    cognitive = metrics[("below(value)", "cognitive_complexity")]
-    assert cognitive["status"] == "UNAVAILABLE" and cognitive.get("delta") is None, cognitive
-    assert cognitive["after"]["status"] == "UNSUPPORTED", cognitive
+    cognitive = metrics[("structure(value, *, flag)", "cognitive_complexity")]
+    assert cognitive["before"]["value"] == 0 and cognitive["after"]["value"] == 3 and cognitive["delta"] == 3, cognitive
     partial = client.tool("analyze_python_changes", shas)
     assert partial["status"] == "partial" and any("invalid.py" in w for w in partial["warnings"]), partial
     added_file = next(file for file in partial["files"] if file["newPath"] == "invalid.py")
@@ -63,8 +68,7 @@ def check(client, root):
     assert len(broken["metrics"]) == 6, broken
     for metric in broken["metrics"]:
         assert metric["after"]["status"] == "ERROR" and metric.get("delta") is None, metric
-        if metric["metric"] != "cognitive_complexity":
-            assert metric["before"]["status"] == "AVAILABLE", metric
+        assert metric["before"]["status"] == "AVAILABLE", metric
     context = client.tool("inspect_python_function", {"commitSha": changes["headSha"],
                                                       "path": "example.py", "line": 2})
     assert context["signature"] == "introduced(value)", context
@@ -75,8 +79,8 @@ def check(client, root):
     return shas
 
 
-def connect(jar, root, missing=False):
-    env = dict(os.environ, CODECLARITY_PYTHON="codeclarity-missing-python" if missing else sys.executable)
+def connect(jar, root, missing=False, interpreter=None):
+    env = dict(os.environ, CODECLARITY_PYTHON="codeclarity-missing-python" if missing else str(interpreter or sys.executable))
     process = subprocess.Popen(["java", "-jar", str(jar), "--repo-root", str(root)],
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8", env=env)
     client = Client(process)
@@ -97,6 +101,11 @@ def close(process):
 
 
 def main():
+    try:
+        version = importlib.metadata.version("complexipy")
+    except importlib.metadata.PackageNotFoundError:
+        raise SystemExit("Install requirements-python.txt into this interpreter before running the Python MCP smoke test.")
+    assert version == "8.3.0", version
     jar = Path(sys.argv[1] if len(sys.argv) > 1 else "target/codeclarity-mcp.jar").resolve()
     with TemporaryDirectory(prefix="codeclarity-python-") as folder:
         root = Path(folder)
@@ -129,6 +138,30 @@ def main():
             shas = check(client, root)
         finally:
             close(process)
+        without_cognitive = root / ".without-cognitive"
+        subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(without_cognitive)], check=True)
+        clean_python = without_cognitive / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        process, client = connect(jar, root, interpreter=clean_python)
+        try:
+            report = client.tool("analyze_python_changes", {**shas, "paths": ["example.py"]})
+            assert report["status"] == "partial" and any("complexipy" in w for w in report["warnings"]), report
+            values = report["files"][0]["metrics"]
+            assert values, report
+            for value in values:
+                if value["metric"] == "cognitive_complexity":
+                    assert value["status"] == "UNAVAILABLE" and value.get("delta") is None, value
+                    assert "ERROR" in (value["before"]["status"], value["after"]["status"]), value
+                else:
+                    assert all(value[side]["status"] in ("AVAILABLE", "ENTITY_ABSENT") for side in ("before", "after")), value
+                    if all(value[side]["status"] == "AVAILABLE" for side in ("before", "after")):
+                        assert value["status"] == "COMPARED", value
+            # A failed metric does not make the independent CC diagnostics unverified.
+            assert {f["status"] for f in report["files"][0]["findings"]} == {"INTRODUCED", "EXISTING", "CHANGED", "RESOLVED"}
+            context = client.tool("inspect_python_function", {"commitSha": shas["headSha"], "path": "example.py", "line": 2})
+            assert context["signature"] == "introduced(value)", context
+            assert client.tool("analyze_java_changes", shas)["status"] == "ok"
+        finally:
+            close(process)
         process, client = connect(jar, root, missing=True)
         try:
             report = client.tool("analyze_python_changes", {**shas, "paths": ["example.py"]})
@@ -139,7 +172,7 @@ def main():
         finally:
             close(process)
     print("Passed: Python MCP tools, language isolation, four diagnostic statuses, rename, syntax errors, "
-          "structural metrics and deltas, inspection, committed source and missing interpreter handling.")
+          "all six metrics and deltas, inspection, committed source, missing dependency and interpreter handling.")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 import ast
 import bisect
 import io
+import importlib.metadata
 import json
 import sys
 import tokenize
@@ -11,6 +12,8 @@ FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
 SCOPES = (*FUNCTIONS, ast.ClassDef, ast.Lambda)
 THRESHOLD = 10
 TRY_NODES = (ast.Try,) + ((ast.TryStar,) if hasattr(ast, "TryStar") else ())
+COGNITIVE_VERSION = "8.3.0"
+COGNITIVE_ALGORITHM = "codeclarity/python-function-scope/v1;no_ignore=true;with_plans=false;check_script=false"
 
 
 class SourceFacts:
@@ -21,6 +24,7 @@ class SourceFacts:
         offsets = [0]
         for line in self.lines:
             offsets.append(offsets[-1] + len(line))
+        self.offsets = offsets
 
         def offset(line, byte_column):
             return offsets[line - 1] + self.character_column(line, byte_column)
@@ -82,6 +86,9 @@ class SourceFacts:
     def character_column(self, line, byte_column):
         return len(self.lines[line - 1].encode("utf-8")[:byte_column].decode("utf-8"))
 
+    def offset(self, line, byte_column):
+        return self.offsets[line - 1] + self.character_column(line, byte_column)
+
     def sloc(self, function):
         first = source_range(function, self)["startLine"]
         return self.code_prefix[function.end_lineno] - self.code_prefix[first - 1]
@@ -113,6 +120,59 @@ def parameter_count(function):
 def return_count(function):
     return sum(isinstance(node, ast.Return) for statement in function.body if not isinstance(statement, SCOPES)
                for node in (statement, *body_nodes(statement)))
+
+
+def isolated_function(source, function, facts):
+    """Preserve control-flow spelling; mask nested scopes without executing code."""
+    edits = []
+
+    def walk(node):
+        if isinstance(node, SCOPES):
+            if isinstance(node, ast.Lambda):
+                start = facts.offset(node.lineno, node.col_offset)
+                replacement = "None"
+            else:
+                line = facts.decorator_lines.get(node, node.lineno)
+                start = facts.offset(line, node.col_offset)
+                replacement = "pass"
+            end = facts.offset(node.end_lineno, node.end_col_offset)
+            edits.append((start, end, replacement))
+            return
+        for child in ast.iter_child_nodes(node):
+            walk(child)
+
+    for statement in function.body:
+        walk(statement)
+    start = facts.offset(function.lineno, function.col_offset)
+    end = facts.offset(function.end_lineno, function.end_col_offset)
+    # Edits preserve character offsets and newlines, including after Unicode text.
+    # Never unparse the AST: that can silently rewrite else + if into elif.
+    for left, right, replacement in sorted(edits, reverse=True):
+        remainder = "".join("\n" if char == "\n" else " "
+                            for char in source[left + len(replacement):right])
+        source = source[:left] + replacement + remainder + source[right:]
+    return source[start:end]
+
+
+def load_cognitive_engine():
+    version = importlib.metadata.version("complexipy")
+    if version != COGNITIVE_VERSION:
+        raise ValueError(f"Expected complexipy {COGNITIVE_VERSION}, found {version}.")
+    from complexipy import code_complexity
+    return code_complexity
+
+
+def cognitive_value(engine, source, function, facts):
+    result = engine(isolated_function(source, function, facts),
+                    check_script=False, no_ignore=True, with_plans=False)
+    if not result.functions:
+        return "MISSING", None, "complexipy returned no function measurement."
+    if len(result.functions) != 1 or result.functions[0].name != function.name:
+        return "ERROR", None, "complexipy returned an ambiguous or mismatched function."
+    value = result.functions[0].complexity
+    if type(value) is not int or value < 0:
+        return "ERROR", None, "complexipy returned an invalid complexity value."
+    return "AVAILABLE", value, None
 
 
 def signature(node, owners):
@@ -226,25 +286,44 @@ def handle(request):
         return {"context": context(*candidates[0], source, facts)}
     if request["operation"] != "analyze":
         raise ValueError("Unknown operation.")
-    entities, findings, metrics = [], [], []
+    entities, findings, metrics, warnings = [], [], [], []
+    engine, engine_error = None, None
+    if functions:
+        try:
+            engine = load_cognitive_engine()
+        except Exception as error:
+            engine_error = (f"Cognitive Complexity unavailable: {type(error).__name__}: {error} "
+                            f"Install complexipy=={COGNITIVE_VERSION} in the selected Python interpreter.")
+            warnings.append(engine_error)
     for node, key in functions:
         entities.append({"signature": key, "lines": source_range(node, facts)})
         score = complexity(node)
+        cognitive = ("ERROR", None, engine_error)
+        if engine is not None:
+            try:
+                cognitive = cognitive_value(engine, source, node, facts)
+            except Exception as error:
+                cognitive = ("ERROR", None, f"complexipy failed: {type(error).__name__}: {error}")
+            if cognitive[0] != "AVAILABLE":
+                warnings.append(f"{key}: {cognitive[2]}")
         for metric_id, algorithm, status, value, reason in (
                 ("cyclomatic_complexity", "codeclarity/python-cyclo/v1", "AVAILABLE", score, None),
-                ("cognitive_complexity", "unsupported", "UNSUPPORTED", None, "Not implemented for Python."),
+                ("cognitive_complexity", COGNITIVE_ALGORITHM, *cognitive),
                 ("function_sloc", "codeclarity/python-physical-sloc/v1", "AVAILABLE", facts.sloc(node), None),
                 ("max_nesting_depth", "codeclarity/python-nesting/v1", "AVAILABLE", nesting_depth(node, facts), None),
                 ("parameter_count", "codeclarity/python-parameters/include-receiver/v1", "AVAILABLE", parameter_count(node), None),
                 ("return_count", "codeclarity/python-explicit-returns/v1", "AVAILABLE", return_count(node), None)):
             metrics.append({"entity": key, "metric": {
-                "definition": {"id": metric_id, "language": "python", "analyzer": "codeclarity-python-ast/1",
+                "definition": {"id": metric_id, "language": "python",
+                               "analyzer": f"complexipy/{COGNITIVE_VERSION}" if metric_id == "cognitive_complexity" else "codeclarity-python-ast/1",
                                "algorithm": algorithm}, "status": status, "value": value, "reason": reason}})
         if score >= THRESHOLD:
             findings.append({"rule": "PythonCyclomaticComplexity", "line": node.lineno,
                              "column": node.col_offset + 1,
                              "message": f"Function {key} has cyclomatic complexity {score} (threshold {THRESHOLD})."})
-    return {"analysis": {"entities": entities, "findings": findings, "complete": True, "warnings": [], "metrics": metrics}}
+    # complete describes entity/finding coverage, not availability of every metric.
+    # Metric-specific failures use ERROR/MISSING plus warnings, retaining other values.
+    return {"analysis": {"entities": entities, "findings": findings, "complete": True, "warnings": warnings, "metrics": metrics}}
 
 
 if __name__ == "__main__":
