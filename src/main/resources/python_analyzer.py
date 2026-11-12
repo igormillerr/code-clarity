@@ -7,6 +7,7 @@ import importlib.metadata
 import json
 import sys
 import tokenize
+from collections import Counter
 
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
 SCOPES = (*FUNCTIONS, ast.ClassDef, ast.Lambda)
@@ -202,6 +203,22 @@ def declarations(tree, owners=()):
             yield from declarations(child, owners)
 
 
+def ambiguous_owners(tree):
+    counts = Counter()
+
+    def walk(node, owners):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.ClassDef, *FUNCTIONS)):
+                path = (*owners, child.name)
+                counts[".".join(path)] += 1
+                walk(child, path)
+            else:
+                walk(child, owners)
+
+    walk(tree, ())
+    return {name for name, count in counts.items() if count > 1}
+
+
 def source_range(node, facts=None):
     first = min([node.lineno, *(d.lineno for d in node.decorator_list)])
     if facts is not None:
@@ -287,6 +304,7 @@ def handle(request):
     if request["operation"] != "analyze":
         raise ValueError("Unknown operation.")
     entities, findings, metrics, warnings = [], [], [], []
+    ambiguous = ambiguous_owners(tree)
     engine, engine_error = None, None
     if functions:
         try:
@@ -296,7 +314,12 @@ def handle(request):
                             f"Install complexipy=={COGNITIVE_VERSION} in the selected Python interpreter.")
             warnings.append(engine_error)
     for node, key in functions:
-        entities.append({"signature": key, "lines": source_range(node, facts)})
+        # Python identifiers cannot contain '('; the qualified name excludes parameters.
+        qualified = key.partition("(")[0]
+        parts = qualified.split(".")
+        uncertain = any(".".join(parts[:length]) in ambiguous for length in range(1, len(parts) + 1))
+        entities.append({"signature": key, "lines": source_range(node, facts), "matchingKey": qualified,
+                         "matchingAmbiguous": uncertain})
         score = complexity(node)
         cognitive = ("ERROR", None, engine_error)
         if engine is not None:

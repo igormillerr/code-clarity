@@ -1,7 +1,6 @@
 package dev.codeclarity.core;
 
 import dev.codeclarity.git.GitRepository;
-import dev.codeclarity.core.model.SourceRange;
 import dev.codeclarity.core.model.SourceEntity;
 import dev.codeclarity.core.model.Finding;
 import dev.codeclarity.core.model.EntityContext;
@@ -33,23 +32,13 @@ public final class AnalysisService {
     public record Diagnostic(String method, String rule, String status, Finding before, Finding after) {}
 
     public record FileAnalysis(String oldPath, String newPath, List<String> changedMethods, List<Diagnostic> findings,
-                               List<MetricComparison> metrics) {}
+                               List<MetricComparison> metrics, List<EntityMatcher.Match> matches) {}
 
     public record Review(String baseSha, String headSha, String status, List<FileAnalysis> files, List<String> warnings) {}
 
     private record Version(List<SourceEntity> entities, List<Finding> findings, boolean complete, List<MetricMeasurement> metrics) {
         static Version empty(boolean complete) {
             return new Version(List.of(), List.of(), complete, List.of());
-        }
-
-        Set<String> touched(List<SourceRange> ranges) {
-            Set<String> signatures = new LinkedHashSet<>();
-            for (var method : entities) {
-                if (ranges.stream().anyMatch(method.lines()::overlaps)) {
-                    signatures.add(method.signature());
-                }
-            }
-            return signatures;
         }
 
         Map<String, Finding> rules(String signature) {
@@ -72,17 +61,18 @@ public final class AnalysisService {
             return rules;
         }
 
-        MetricValue metric(String entity, MetricDefinition definition) {
+        MetricValue metric(List<SourceEntity> candidates, MetricDefinition definition) {
             if (!complete) {
                 return MetricValue.unavailable(definition, ERROR, "Incomplete source analysis.");
             }
-            long count = entityCount(entity);
+            int count = candidates.size();
             if (count == 0) {
                 return MetricValue.unavailable(definition, ENTITY_ABSENT, "No matching entity in this version.");
             }
-            if (count > 1) {
-                return MetricValue.unavailable(definition, ERROR, "Ambiguous entity signature.");
+            if (count > 1 || candidates.stream().anyMatch(SourceEntity::matchingAmbiguous)) {
+                return MetricValue.unavailable(definition, ERROR, "Ambiguous entity matching key.");
             }
+            String entity = candidates.getFirst().signature();
             var values = metrics.stream().filter(value -> value.entity().equals(entity)
                     && value.metric().definition().id().equals(definition.id())).toList();
             if (values.size() != 1) {
@@ -90,10 +80,6 @@ public final class AnalysisService {
                         values.isEmpty() ? "Analyzer returned no measurement." : "Duplicate metric measurements.");
             }
             return values.getFirst().metric();
-        }
-
-        long entityCount(String signature) {
-            return entities.stream().filter(method -> method.signature().equals(signature)).count();
         }
     }
 
@@ -145,27 +131,33 @@ public final class AnalysisService {
         var change = git.ranges(snapshot, file);
         Version before = load(snapshot.baseSha(), change.oldPath(), "base", warnings);
         Version after = load(snapshot.headSha(), change.newPath(), "head", warnings);
-        Set<String> touched = before.touched(change.baseLines());
-        touched.addAll(after.touched(change.headLines()));
+        var matches = EntityMatcher.match(before.entities, after.entities, change.baseLines(), change.headLines(),
+                before.complete, after.complete);
 
         List<Diagnostic> findings = new ArrayList<>();
         List<MetricComparison> metrics = new ArrayList<>();
-        for (String signature : touched) {
+        for (var match : matches) {
+            String signature = match.displaySignature();
+            var oldSignature = match.before().size() == 1 ? match.before().getFirst().signature() : null;
+            var newSignature = match.after().size() == 1 ? match.after().getFirst().signature() : null;
+            Set<String> signatures = new LinkedHashSet<>();
+            match.before().forEach(entity -> signatures.add(entity.signature()));
+            match.after().forEach(entity -> signatures.add(entity.signature()));
             Map<String, MetricDefinition> definitions = new LinkedHashMap<>();
             language.metricDefinitions().forEach(definition -> definitions.put(definition.id(), definition));
             java.util.stream.Stream.concat(before.metrics.stream(), after.metrics.stream())
-                    .filter(value -> value.entity().equals(signature))
+                    .filter(value -> signatures.contains(value.entity()))
                     .forEach(value -> definitions.putIfAbsent(value.metric().definition().id(), value.metric().definition()));
             for (var definition : definitions.values()) {
                 metrics.add(MetricComparison.compare(signature, definition.id(),
-                        before.metric(signature, definition), after.metric(signature, definition)));
+                        before.metric(match.before(), definition), after.metric(match.after(), definition)));
             }
-            if (before.entityCount(signature) > 1 || after.entityCount(signature) > 1) {
-                warnings.add(file.path() + ": ambiguous entity signature " + signature);
+            if (match.status() == EntityMatcher.Status.AMBIGUOUS) {
+                warnings.add(file.path() + ": ambiguous entity matching key " + match.key());
                 continue;
             }
-            var oldRules = before.rules(signature);
-            var newRules = after.rules(signature);
+            var oldRules = oldSignature == null ? Map.<String, Finding>of() : before.rules(oldSignature);
+            var newRules = newSignature == null ? Map.<String, Finding>of() : after.rules(newSignature);
             Set<String> rules = new LinkedHashSet<>(oldRules.keySet());
             rules.addAll(newRules.keySet());
             for (String rule : rules) {
@@ -175,17 +167,18 @@ public final class AnalysisService {
                 if (!before.complete || !after.complete) {
                     status = "UNVERIFIED";
                 } else if (oldFinding == null) {
-                    status = change.oldPath() == null || before.entityCount(signature) == 1
+                    status = change.oldPath() == null || !match.before().isEmpty()
                             ? "INTRODUCED" : "NO_BASE_MATCH";
                 } else if (newFinding == null) {
-                    status = after.entityCount(signature) == 1 ? "RESOLVED" : "NO_HEAD_MATCH";
+                    status = !match.after().isEmpty() ? "RESOLVED" : "NO_HEAD_MATCH";
                 } else {
                     status = oldFinding.message().equals(newFinding.message()) ? "EXISTING" : "CHANGED";
                 }
                 findings.add(new Diagnostic(signature, rule, status, oldFinding, newFinding));
             }
         }
-        return new FileAnalysis(change.oldPath(), change.newPath(), List.copyOf(touched), findings, metrics);
+        return new FileAnalysis(change.oldPath(), change.newPath(),
+                matches.stream().map(EntityMatcher.Match::displaySignature).toList(), findings, metrics, matches);
     }
 
     private Version load(String sha, String path, String side, List<String> warnings) {

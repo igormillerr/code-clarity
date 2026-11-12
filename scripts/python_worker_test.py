@@ -121,6 +121,19 @@ class WorkerTest(unittest.TestCase):
         self.assertEqual([c["expression"] for c in self.inspect(source, 1)["calls"]], ["outside()"])
         self.assertEqual(self.inspect(source, 4)["signature"], "outer.inner()")
 
+    def test_matching_keys_ignore_parameters_and_keep_owner(self):
+        source = ('def f(x):\n    pass\nclass C:\n    def f(self, x, y):\n        pass\n'
+                  'def outer():\n    def f(*args):\n        pass\n')
+        self.assertEqual([e["matchingKey"] for e in self.analyze(source)["entities"]],
+                         ["f", "C.f", "outer", "outer.f"])
+
+    def test_duplicate_classes_and_functions_mark_descendants_ambiguous(self):
+        source = ('class C:\n    def f(self):\n        pass\nclass C:\n    pass\n'
+                  'def owner():\n    def inner():\n        pass\n'
+                  'def owner(x):\n    pass\n')
+        entities = self.analyze(source)["entities"]
+        self.assertTrue(all(e["matchingAmbiguous"] for e in entities))
+
     def test_then_else_and_condition_calls(self):
         source = "def f():\n    if check():\n        if ready:\n            send()\n    else:\n        stop()\n"
         calls = {c["expression"]: c for c in self.inspect(source, 1)["calls"]}

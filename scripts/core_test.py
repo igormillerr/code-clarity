@@ -13,7 +13,8 @@ def main():
     project = Path(__file__).resolve().parents[1]
     base = project / "src/main/java/dev/codeclarity"
     sources = [*base.joinpath("core").rglob("*.java"), *base.joinpath("git").rglob("*.java"),
-               project / "src/test/java/dev/codeclarity/CoreBoundaryTest.java"]
+               project / "src/test/java/dev/codeclarity/CoreBoundaryTest.java",
+               project / "src/test/java/dev/codeclarity/EntityMatchingTest.java"]
 
     def executable(name):
         return str(args.java_home / "bin" / name) if args.java_home else name
@@ -24,6 +25,7 @@ def main():
         classes.mkdir()
         subprocess.run([executable("javac"), "--release", "21", "-encoding", "UTF-8",
                         "-d", str(classes), *map(str, sources)], check=True)
+        subprocess.run([executable("java"), "-cp", str(classes), "dev.codeclarity.EntityMatchingTest"], check=True)
         repo = root / "repo"
         repo.mkdir()
 

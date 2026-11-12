@@ -7,7 +7,7 @@ import dev.codeclarity.core.model.MetricDefinition;
 import dev.codeclarity.core.model.MetricMeasurement;
 import java.util.List;
 
-/** Language tools and AST objects must stay behind this boundary. */
+/** Language tools, AST objects and the meaning of entity matching keys stay behind this boundary. */
 public interface LanguageSupport {
     String languageId();
     boolean supports(String path);

@@ -52,12 +52,13 @@ def check(client, root):
         assert value["status"] == "COMPARED" and value["before"]["value"] == before, value
         assert value["after"]["value"] == after and value["delta"] == after - before, value
         assert value["after"]["definition"]["algorithm"] == algorithm, value
-    # Parameter changes still change the matching key until the planned Core matching stage.
-    old_parameters = metrics[("parameters(value)", "parameter_count")]
-    new_parameters = metrics[("parameters(value, extra)", "parameter_count")]
-    assert old_parameters["before"]["value"] == 1 and old_parameters["after"]["status"] == "ENTITY_ABSENT", old_parameters
-    assert new_parameters["before"]["status"] == "ENTITY_ABSENT" and new_parameters["after"]["value"] == 2, new_parameters
-    assert old_parameters.get("delta") is None and new_parameters.get("delta") is None
+    parameters = metrics[("parameters(value, extra)", "parameter_count")]
+    assert parameters["status"] == "COMPARED" and parameters["before"]["value"] == 1, parameters
+    assert parameters["after"]["value"] == 2 and parameters["delta"] == 1, parameters
+    assert ("parameters(value)", "parameter_count") not in metrics
+    match = next(m for m in report["files"][0]["matches"] if m["key"] == "parameters")
+    assert match["status"] == "MATCHED" and match["before"][0]["signature"] == "parameters(value)", match
+    assert match["after"][0]["signature"] == "parameters(value, extra)", match
     cognitive = metrics[("structure(value, *, flag)", "cognitive_complexity")]
     assert cognitive["before"]["value"] == 0 and cognitive["after"]["value"] == 3 and cognitive["delta"] == 3, cognitive
     partial = client.tool("analyze_python_changes", shas)
@@ -65,6 +66,7 @@ def check(client, root):
     added_file = next(file for file in partial["files"] if file["newPath"] == "invalid.py")
     assert not added_file["metrics"], added_file
     broken = next(file for file in partial["files"] if file["newPath"] == "broken_existing.py")
+    assert broken["matches"][0]["status"] == "UNVERIFIED", broken
     assert len(broken["metrics"]) == 6, broken
     for metric in broken["metrics"]:
         assert metric["after"]["status"] == "ERROR" and metric.get("delta") is None, metric
