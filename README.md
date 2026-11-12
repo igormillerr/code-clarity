@@ -29,7 +29,7 @@ python scripts/check.py
 ```
 
 Если JDK не в PATH, передай `--java-home <путь-к-JDK>`. Скрипт собирает текущие исходники
-и запускает все семь наборов проверок. По умолчанию используется Maven, если он доступен;
+и запускает все восемь наборов проверок, включая два контролируемых эксперимента. По умолчанию используется Maven, если он доступен;
 иначе — javac с зависимостями из комплектного JAR, версии которых сверяются с pom.xml.
 Режим можно задать через `--build-backend maven` или `--build-backend bundled`.
 Отчёт: `target/checks/report.json`, отдельные логи рядом. Код 0 означает полный успех;
@@ -37,6 +37,11 @@ python scripts/check.py
 и не подменяет её отсутствие пропуском метрики.
 
 [Результат технической приёмки и матрица покрытия](docs/PYTHON_ACCEPTANCE.md).
+
+[Эксперименты с кодом до/после и фактические результаты](experiments/python_readability/README.md):
+структурное изменение с ранними выходами и изменение имён при неизменных метриках.
+Отдельный запуск — `python scripts/python_experiments.py`; результаты сохраняются в target/experiments.
+В репозитории также сохранён снимок реального прогона для отчёта.
 
 Отдельные проверки по-прежнему доступны:
 
@@ -49,6 +54,7 @@ python3 scripts/python_smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/python_matching_test.py target/codeclarity-mcp.jar
 python3 scripts/java_metrics_test.py target/codeclarity-mcp.jar
 python3 scripts/core_test.py
+python3 scripts/python_experiments.py
 ```
 
 На Windows для проверки можно использовать `py -3 scripts/smoke_test.py target/codeclarity-mcp.jar`. Smoke-тест создаёт временный Git-репозиторий и обращается к JAR через тот же MCP-интерфейс, что и клиент. Он проверяет инициализацию, discovery, три вызова, сравнение PMD, переименование файла, частичный анализ и чтение зафиксированного коммита при изменённом рабочем файле.

@@ -168,6 +168,7 @@ def main():
         ("python_mcp", ["scripts/python_smoke_test.py", "target/codeclarity-mcp.jar"]),
         ("python_matching", ["scripts/python_matching_test.py", "target/codeclarity-mcp.jar"]),
         ("java_mcp", ["scripts/smoke_test.py", "target/codeclarity-mcp.jar"]),
+        ("python_experiments", ["scripts/python_experiments.py"]),
     ]
     # Keep logs outside target while Maven clean may remove target itself.
     with TemporaryDirectory(prefix="codeclarity-check-") as folder:
