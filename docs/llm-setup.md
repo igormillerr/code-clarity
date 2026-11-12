@@ -1,6 +1,6 @@
 # CodeClarity: локальная установка и запуск LLM-части
 
-Пакет плагина — `0.2.0`, текущий сервер — `0.1.6`. Он включает единый MCP API,
+Пакет плагина — `0.2.0`, текущий сервер — `0.1.7`. Он включает единый MCP API,
 шесть Java-метрик и JSON-память через get_review_history/update_review_history.
 Для необязательных LSP definition/references настрой CODECLARITY_JDTLS_HOME и
 при необходимости CODECLARITY_JDTLS_JAVA. Это WORKTREE-контекст; запуск JDT LS
@@ -62,7 +62,7 @@ Java должна быть в PATH. Плагин сам подключает о�
 | Skills есть, MCP нет | PATH Java; наличие JAR; абсолютный repo-root.txt; запуск JAR вручную с `--repo-root`; stderr MCP |
 | Инструменты отображаются дважды | Сравнить plugin connection и ручную регистрацию `codex mcp list` |
 | Python partial | PATH/`CODECLARITY_PYTHON`, синтаксис и предупреждения; не терять Java-результат |
-| История UNAVAILABLE | Проверить наличие get_review_history/update_review_history и версию подключённого JAR. Операция сохранения кандидатов правил пока отсутствует; JSON напрямую не подменять |
+| История UNAVAILABLE | Проверить наличие get_review_history/update_review_history и версию подключённого JAR. Для кандидатов правил сервер 0.1.7 предоставляет propose_rule_candidate; JSON напрямую не подменять |
 | Сервер ok, отчёт INCOMPLETE | В прототипе не хватает обязательных метрик; полнота MVP проверяется отдельно |
 
 Успешный запуск JAR без протокольного клиента может просто ожидать stdin.

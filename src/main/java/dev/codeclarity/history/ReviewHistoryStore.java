@@ -29,6 +29,34 @@ public final class ReviewHistoryStore {
     }
 
     public static Map<String, Object> updateInputSchema() { return HistoryValidator.updateInputSchema(); }
+    public static Map<String, Object> candidateInputSchema() { return HistoryValidator.candidateInputSchema(); }
+
+    public Map<String, Object> proposeRuleCandidate(Map<String, Object> request) {
+        HistoryValidator.validateCandidateRequest(request);
+        var candidate = copy(object(request.get("candidate")));
+        var requestedId = text(candidate, "candidateId");
+        var storedId = new String[] { requestedId };
+        var receipt = storage.mutate(history -> {
+            var candidates = index(array(history.get("ruleCandidates")), "candidateId");
+            var existing = candidates.get(requestedId);
+            if (existing != null) {
+                require(existing.equals(candidate), "Conflicting payload for candidateId " + requestedId);
+                return;
+            }
+            validator.validateCandidate(candidate, history, true);
+            for (var stored : candidates.values()) {
+                if (HistoryValidator.equivalentCandidate(stored, candidate)) {
+                    storedId[0] = text(stored, "candidateId");
+                    return;
+                }
+            }
+            array(history.get("ruleCandidates")).add(candidate);
+        });
+        var result = new LinkedHashMap<>(receipt);
+        result.put("candidateId", storedId[0]);
+        result.put("candidateStatus", "PROPOSED");
+        return result;
+    }
 
     public Map<String, Object> update(Map<String, Object> request) {
         HistoryValidator.validateUpdate(request);

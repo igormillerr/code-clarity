@@ -5,7 +5,7 @@ Owner: Java / LLM Engineer for plugin/Skills/review format; Java Core engineer f
 MCP schemas, snapshots, measurements, persistence and feedback authorization;
 Python engineer for Python analysis. Discover the actual tool schemas before use.
 
-## Current server 0.1.6
+## Current server 0.1.7
 
 The server includes the six Java metrics and both language adapters behind the
 same LanguageSupport / AnalysisService boundary. The checked-in historical eval
@@ -18,6 +18,7 @@ receipts refer to the older 0.1.1 JAR from feature/python ec6a3ed.
 | Committed source and AST context | `get_symbol_context(commitSha, path, line)` |
 | Read persistent review memory | `get_review_history()` |
 | Append review / merge category metadata | `update_review_history(review?, categories?)` |
+| Store a proposed rule with existing evidence | `propose_rule_candidate(candidate)` |
 | Optional WORKTREE definition | `get_symbol_definition(path,line,column)` |
 | Optional WORKTREE references | `find_symbol_references(path,line,column,includeDeclaration?)` |
 | Legacy compact AST context | `inspect_symbol_ast(commitSha, path, line)` |
@@ -62,8 +63,11 @@ Coverage is line-based, so it cannot distinguish declarations sharing a line.
 
 Java anonymous owners include a variable-based label and lexical ordinal;
 enum-constant owners include the constant name. Named methods retain their
-existing signatures. Unlabelled sibling expressions are ordered lexically;
-their reordering is not guaranteed to preserve before/after identity.
+existing signatures. Unlabelled expressions, repeated local names and initializer
+owners use lexical position and cannot establish cross-snapshot identity. Their
+comparisons are UNAVAILABLE with null delta and a path/entity warning; raw side
+measurements remain available. Their diagnostic changes are UNVERIFIED. Never
+derive a delta from these raw values merely because the definitions match.
 
 Each metric comparison is `{entity,metric,status,before,after,delta}`. Add only
 the owning file's path when normalizing into a review; preserve the two MetricValue
@@ -97,7 +101,7 @@ complete AST review. Missing required code coverage or measurements does.
 
 ## Universal tools and remaining target tools
 
-Server 0.1.6 implements `get_changes`, `analyze_changes`, `get_symbol_context`. Prefer them when discovered,
+Server 0.1.7 implements `get_changes`, `analyze_changes`, `get_symbol_context`. Prefer them when discovered,
 using their advertised schemas and returned snapshot format. Retain the existing
 `inspect_symbol_ast` and language tools as a compatibility path; do not call speculative tools or guess arguments.
 `get_symbol_definition` and `find_symbol_references` are optional/context only;
@@ -127,13 +131,33 @@ reviews/feedback. Updates use a cross-process lock, forced temporary file and
 atomic replacement without a non-atomic fallback. Invalid existing JSON is never
 silently reset. See the main README for CLI syntax, limits and verification.
 
-Remaining proposed operations for later Core work:
+History operation mapping:
 
 | Tool | Proposed request | Result / invariant |
 |---|---|---|
 | `append_review_result` | Current equivalent is `update_review_history({review,categories?})` | No extra tool is needed |
 | `record_feedback` | Currently local operator CLI only | No model-supplied feedback through MCP |
-| `propose_rule_candidate` | `{candidate}` | Idempotent candidateId, status always PROPOSED; no rule activation |
+| `propose_rule_candidate` | [rule-candidate.schema.json](rule-candidate.schema.json): `{candidate}` | Implemented; immutable candidateId, status always PROPOSED; no rule activation |
+
+Production candidates use the same named fields as the general LLM candidate:
+candidateId, categoryId, status, title, description, supportingFindingIds,
+confirmedFeedbackIds, examples and exceptions. A proposal must reference at least
+three distinct stored source/snapshot occurrences in one known category, with at
+least two distinct occurrences whose latest operator feedback is FIXED. Every
+cited feedback event must belong to a supporting finding and its review, with
+HUMAN/LOCAL_CLI provenance and nonblank confirmation evidence. Old FIXED events
+superseded by later decisions are insufficient. No MCP call can supply those
+events, counters, activation state or synthetic production evidence.
+
+Examples are objects with findingId referencing support; optional reviewId,
+snapshotId, location, description, recommendation and evidence must exactly match
+the immutable stored finding. Replaying identical ID/payload returns unchanged;
+conflicting payloads are rejected. Within a category, matching normalized title
+or supporting-ID set returns unchanged and the original candidateId; semantic
+equivalence beyond these checks remains the Skill's responsibility. Receipts add
+candidateId and candidateStatus: PROPOSED to the normal storage receipt. A saved
+proposal never activates a rule or increments finding counts. Later feedback can
+change current eligibility without rewriting historical proposal provenance.
 
 The actual Core schemas take precedence after coordination. The envelope in
 [history.schema.json](history.schema.json) remains the general/synthetic interchange, not a

@@ -29,18 +29,115 @@ def review_fixture(root, index=1, category="naming"):
     return report
 
 
-def feedback(jar, root, decision="FIXED", evidence="Explicit approval in isolated test fixture", actor="test-developer", finding_id="storage-finding-1", error=False):
+def feedback(jar, root, decision="FIXED", evidence="Explicit approval in isolated test fixture", actor="test-developer", finding_id="storage-finding-1", error=False, review_id="storage-review-1"):
     result = subprocess.run(["java", "-jar", str(jar), "--repo-root", str(root), "--record-feedback",
-                             "storage-review-1", finding_id, "--decision", decision,
+                             review_id, finding_id, "--decision", decision,
                              "--confirmed-by", actor, "--evidence", evidence], capture_output=True, text=True)
     assert bool(result.returncode) == error, result.stdout + result.stderr
     return None if error else json.loads(result.stdout)
+
+
+def candidate_checks(jar, root):
+    """All confirmations below are explicit isolated test fixtures, never user-history receipts."""
+    root.mkdir()
+    git(root, "init", "-b", "main")
+    history_path = root / ".codeclarity/review-history.json"
+    process, client = connect(jar, root)
+    try:
+        tool = next(t for t in client.send("tools/list")["tools"] if t["name"] == "propose_rule_candidate")
+        assert tool["annotations"]["readOnlyHint"] is False and tool["annotations"]["idempotentHint"] is True
+        assert tool["inputSchema"]["required"] == ["candidate"]
+        for index in range(1, 5):
+            review = review_fixture(root, index, "naming" if index < 4 else "complexity")
+            if index == 1:
+                alias = copy.deepcopy(review["findings"][0])
+                alias["findingId"] = "same-source-alias"
+                review["findings"].append(alias)
+                review["independentReview"]["findings"].append(copy.deepcopy(alias))
+            client.tool("update_review_history", {"review": review})
+        candidate = {"candidateId": "naming-candidate-1", "categoryId": "naming", "status": "PROPOSED",
+                     "title": "Use domain names", "description": "Repeated confirmed domain naming concern",
+                     "supportingFindingIds": [f"storage-finding-{i}" for i in (1, 2, 3)],
+                     "confirmedFeedbackIds": ["unknown-1", "unknown-2"],
+                     "examples": [{"findingId": "storage-finding-1"}], "exceptions": ["Externally fixed API names"]}
+        def reject(value):
+            before = history_path.read_bytes()
+            client.tool("propose_rule_candidate", {"candidate": value}, error=True)
+            assert history_path.read_bytes() == before, value
+        reject(candidate)
+        for index in (1, 2):
+            feedback(jar, root, review_id=f"storage-review-{index}", finding_id=f"storage-finding-{index}")
+        data = client.tool("get_review_history", {})
+        candidate["confirmedFeedbackIds"] = [e["feedbackId"] for e in data["feedback"]]
+        # A superseded FIXED event and two events for one finding cannot establish two fixes.
+        feedback(jar, root, "REJECTED", "Explicit rejection of second isolated fixture",
+                 review_id="storage-review-2", finding_id="storage-finding-2")
+        reject(candidate)
+        feedback(jar, root, evidence="New isolated confirmation for second finding",
+                 review_id="storage-review-2", finding_id="storage-finding-2")
+        data = client.tool("get_review_history", {})
+        old_fixed = candidate["confirmedFeedbackIds"][1]
+        candidate["confirmedFeedbackIds"][1] = data["feedback"][-1]["feedbackId"]
+        invalid = []
+        for field, value in (("status", "ACTIVE"), ("synthetic", True), ("fixedCount", 99),
+                             ("categoryId", "unknown"), ("confirmedFeedbackIds", [old_fixed, candidate["confirmedFeedbackIds"][1]]),
+                             ("supportingFindingIds", ["storage-finding-1", "same-source-alias", "storage-finding-2"]),
+                             ("supportingFindingIds", ["storage-finding-1", "storage-finding-2", "storage-finding-4"]),
+                             ("supportingFindingIds", ["storage-finding-1", "storage-finding-2", "unknown"]),
+                             ("examples", [{"findingId": "storage-finding-4"}]),
+                             ("examples", [{"findingId": "storage-finding-1", "snapshotId": "invented"}]),
+                             ("examples", [{"findingId": "storage-finding-1", "confirmed": True}])):
+            value_candidate = copy.deepcopy(candidate)
+            value_candidate[field] = value
+            invalid.append(value_candidate)
+        for value in invalid: reject(value)
+        receipt = client.tool("propose_rule_candidate", {"candidate": candidate})
+        assert receipt["status"] == "saved" and receipt["candidateId"] == candidate["candidateId"]
+        assert receipt["candidateStatus"] == "PROPOSED" and receipt["statistics"]["fixedCount"] == 2
+        before, stamp = history_path.read_bytes(), history_path.stat().st_mtime_ns
+        replay = client.tool("propose_rule_candidate", {"candidate": copy.deepcopy(candidate)})
+        assert replay["status"] == "unchanged" and replay["revision"] == receipt["revision"]
+        assert history_path.read_bytes() == before and history_path.stat().st_mtime_ns == stamp
+        conflict = copy.deepcopy(candidate)
+        conflict["description"] = "Changed immutable proposal"
+        reject(conflict)
+        equivalent = copy.deepcopy(candidate)
+        equivalent.update(candidateId="different-candidate-id", title=" USE   DOMAIN NAMES ")
+        duplicate = client.tool("propose_rule_candidate", {"candidate": equivalent})
+        assert duplicate["status"] == "unchanged" and duplicate["candidateId"] == candidate["candidateId"]
+        assert history_path.read_bytes() == before
+        # Later feedback changes current counts without rewriting historical proposal evidence.
+        feedback(jar, root, "REJECTED", "Later explicit reversal of isolated fixture")
+        stored = client.tool("get_review_history", {})
+        assert stored["statistics"]["fixedCount"] == 1 and stored["ruleCandidates"] == [candidate]
+        assert client.tool("propose_rule_candidate", {"candidate": candidate})["status"] == "unchanged"
+    finally:
+        close(process)
+    process, client = connect(jar, root)
+    try:
+        stored = client.tool("get_review_history", {})
+        assert stored["ruleCandidates"] == [candidate] and stored["statistics"]["fixedCount"] == 1
+        valid = history_path.read_bytes()
+        for field, value in (("status", "ACTIVE"), ("confirmedFeedbackIds", ["fake-1", "fake-2"]),
+                             ("supportingFindingIds", ["storage-finding-1", "storage-finding-2", "storage-finding-4"])):
+            corrupt = copy.deepcopy(stored)
+            corrupt["ruleCandidates"][0][field] = value
+            bad = json.dumps(corrupt).encode()
+            history_path.write_bytes(bad)
+            client.tool("get_review_history", {}, error=True)
+            assert history_path.read_bytes() == bad
+        history_path.write_bytes(valid)
+    finally:
+        close(process)
 
 
 def main():
     jar = Path(sys.argv[1] if len(sys.argv) > 1 else "target/codeclarity-mcp.jar").resolve()
     with TemporaryDirectory(prefix="codeclarity-history-") as directory:
         project = Path(__file__).resolve().parents[1]
+        proposal_schema = json.loads((project / "plugin/contracts/rule-candidate.schema.json").read_text(encoding="utf-8"))
+        history_schema = json.loads((project / "plugin/contracts/review-history.schema.json").read_text(encoding="utf-8"))
+        assert all(history_schema["$defs"][key] == value for key, value in proposal_schema["$defs"].items())
         classes = Path(directory) / "classes"
         classes.mkdir()
         subprocess.run(["javac", "--release", "21", "-encoding", "UTF-8", "-cp", str(jar), "-d", str(classes),
@@ -142,12 +239,13 @@ def main():
                 assert history_path.read_bytes() == bad, "Corrupt history must not be overwritten"
             history_path.write_bytes(valid_bytes)
 
-            # Atomic replacement must never expose partially written JSON, even across independent JVMs.
+            # Public reads take the storage lock. A raw Windows file handle can deny atomic replacement.
             done, reader_errors = Event(), []
+            reader_process, reader_client = connect(jar, root)
             def reader():
                 while not done.is_set():
                     try:
-                        snapshot = json.loads(history_path.read_bytes())
+                        snapshot = reader_client.tool("get_review_history", {})
                         assert snapshot["statistics"]["reviewCount"] == len(snapshot["reviews"])
                         assert snapshot["statistics"]["occurrenceCount"] == len(snapshot["findings"])
                     except Exception as error:
@@ -170,6 +268,7 @@ def main():
             finally:
                 done.set()
                 thread.join()
+                close(reader_process)
             assert not reader_errors, reader_errors
             final = client.tool("get_review_history", {})
             assert final["statistics"]["reviewCount"] == 11 and final["statistics"]["occurrenceCount"] == 11
@@ -177,8 +276,10 @@ def main():
             assert not list(history_path.parent.glob("review-history-*.tmp"))
         finally:
             close(process)
+        candidate_checks(jar, Path(directory) / "candidate-repo")
     print("Passed: first-save creation, category merges, review/scope idempotency, conflict/JSON rejection, "
-          "explicit feedback, restart persistence, atomic readers, four concurrent JVM writers and no lost updates.")
+          "explicit feedback, restart persistence, concurrent MCP readers, four JVM writers, "
+          "evidence-backed PROPOSED candidates, candidate replay/conflicts and no lost updates.")
 
 
 if __name__ == "__main__":

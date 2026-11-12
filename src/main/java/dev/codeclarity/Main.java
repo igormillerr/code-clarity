@@ -64,6 +64,10 @@ public final class Main {
                         + "Replay identical review IDs safely; conflicting payloads are rejected. New findings are DETECTED. "
                         + "This tool cannot confirm FIXED feedback or accept client-supplied statistics.",
                 ReviewHistoryStore.updateInputSchema(), history::update, false));
+        tools.add(tool("propose_rule_candidate", "Atomically store a PROPOSED rule candidate backed by at least three distinct stored occurrences "
+                        + "of one category and two distinct findings with latest operator-confirmed FIXED feedback. "
+                        + "Replay is idempotent; this tool cannot create feedback, supply counters or activate rules.",
+                ReviewHistoryStore.candidateInputSchema(), history::proposeRuleCandidate, false));
         var positionProperties = Map.of("path", STRING, "line", Map.of("type", "integer", "minimum", 1),
                 "column", Map.of("type", "integer", "minimum", 1));
         tools.add(tool("get_symbol_definition", "Optional LSP definition in the current WORKTREE, not a Git commit snapshot. "
@@ -79,7 +83,7 @@ public final class Main {
         var transport = new StdioServerTransportProvider(McpJsonDefaults.getMapper());
 
         McpServer.sync(transport)
-                .serverInfo("codeclarity", "0.1.6")
+                .serverInfo("codeclarity", "0.1.7")
                 .capabilities(ServerCapabilities.builder().tools(false).build())
                 .tools(tools.toArray(SyncToolSpecification[]::new))
                 .build();

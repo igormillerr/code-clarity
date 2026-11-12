@@ -33,7 +33,7 @@ public final class JavaLanguageSupport implements LanguageSupport {
     public AnalysisResult analyze(String path, String source) {
         var methods = JavaSource.methods(source);
         var entities = methods.stream()
-                .map(method -> new SourceEntity(method.signature(), method.lines())).toList();
+                .map(method -> new SourceEntity(method.signature(), method.lines(), method.matchingWarning())).toList();
         var result = pmd.analyze(path, source);
         List<MetricMeasurement> metrics = new ArrayList<>();
         for (var method : methods) {

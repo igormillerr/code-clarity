@@ -16,7 +16,7 @@ from python_smoke_test import close
 def connect(jar, root, **extra):
     env = dict(os.environ, CODECLARITY_PYTHON=sys.executable, **extra)
     process = subprocess.Popen(["java", "-jar", str(jar), "--repo-root", str(root)],
-                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=env)
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8", env=env)
     client = Client(process)
     client.send("initialize", {"protocolVersion": "2025-11-25", "capabilities": {},
                                "clientInfo": {"name": "lsp-smoke", "version": "1"}})
@@ -45,16 +45,16 @@ def main():
         (root / "src/main/java/demo").mkdir(parents=True)
         helper = "    public static int twice(int value) { return value * 2; }"
         head = "    public int total() { /* 🚀 */ return Helper.twice(3); }"
-        (root / "src/main/java/demo/Helper.java").write_text("package demo;\npublic class Helper {\n" + helper + "\n}\n")
-        (root / "src/main/java/demo/App.java").write_text("package demo;\npublic class App {\n" + head.replace("twice(3)", "twice(1)") + "\n}\n")
-        (root / "other.py").write_text("def other():\n    return 1\n")
+        (root / "src/main/java/demo/Helper.java").write_text("package demo;\npublic class Helper {\n" + helper + "\n}\n", encoding="utf-8")
+        (root / "src/main/java/demo/App.java").write_text("package demo;\npublic class App {\n" + head.replace("twice(3)", "twice(1)") + "\n}\n", encoding="utf-8")
+        (root / "other.py").write_text("def other():\n    return 1\n", encoding="utf-8")
         git(root, "init", "-b", "main")
         git(root, "config", "user.name", "LSP smoke")
         git(root, "config", "user.email", "lsp@example.test")
         git(root, "add", ".")
         git(root, "commit", "-m", "base")
         git(root, "switch", "-c", "feature")
-        (root / "src/main/java/demo/App.java").write_text("package demo;\npublic class App {\n" + head + "\n}\n")
+        (root / "src/main/java/demo/App.java").write_text("package demo;\npublic class App {\n" + head + "\n}\n", encoding="utf-8")
         git(root, "add", ".")
         git(root, "commit", "-m", "head")
         query = {"path": "src/main/java/demo/App.java", "line": 3, "column": column(head, "twice")}
@@ -101,19 +101,21 @@ def main():
                 assert all(not l["external"] for l in references["locations"]), references
                 helper_path = root / "src/main/java/demo/Helper.java"
                 app_path = root / "src/main/java/demo/App.java"
-                original_helper, original_app = helper_path.read_text(), app_path.read_text()
+                original_helper, original_app = helper_path.read_text(encoding="utf-8"), app_path.read_text(encoding="utf-8")
                 try:
-                    helper_path.write_text(original_helper.replace("twice", "triple"))
-                    app_path.write_text(original_app.replace("twice", "triple"))
+                    helper_path.write_text(original_helper.replace("twice", "triple"), encoding="utf-8")
+                    app_path.write_text(original_app.replace("twice", "triple"), encoding="utf-8")
                     refreshed = client.tool("get_symbol_definition", query)
                     assert refreshed["status"] == "ok" and any(
                         l["path"] == "src/main/java/demo/Helper.java"
                         and l["range"]["end"]["column"] - l["range"]["start"]["column"] == len("triple")
                         for l in refreshed["locations"]), refreshed
                 finally:
-                    helper_path.write_text(original_helper)
-                    app_path.write_text(original_app)
-                assert not git(root, "status", "--porcelain"), "LSP must not alter project source/config"
+                    helper_path.write_text(original_helper, encoding="utf-8")
+                    app_path.write_text(original_app, encoding="utf-8")
+                status = subprocess.run(["git", "-C", str(root), "status", "--porcelain"],
+                                        check=True, capture_output=True).stdout
+                assert not status, "LSP must not alter project source/config"
                 evidence.update(realJdtLs="PASS", definition=definition, references=references, refreshed=refreshed,
                                 coldSeconds=round(cold_seconds, 3), warmSeconds=round(warm_seconds, 3))
             finally:
@@ -121,7 +123,7 @@ def main():
         evidence["status"] = "PASS"
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
+            args.output.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("Passed: lazy LSP startup, missing/bad JDT LS isolation, six Java metrics retained, navigation validation; real JDT LS:", evidence["realJdtLs"])
 
 

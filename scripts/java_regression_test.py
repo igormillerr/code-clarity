@@ -18,6 +18,19 @@ def covered_lines(side):
             for line in range(span["startLine"], span["endLine"] + 1)}
 
 
+def expression_source(name, markers):
+    callbacks = {
+        "A": 'if (true) System.out.println("A");',
+        "B": 'System.out.println("B");',
+        "N": " ".join(f'if (true) System.out.println("N{i}");' for i in range(10)),
+    }
+    lines = [f"class {name} {{", "    void configure() {"]
+    for marker in markers:
+        lines += ["        accept(new Runnable() {", "            public void run() {",
+                  "                " + callbacks[marker], "            }", "        });"]
+    return "\n".join(lines + ["    }", "    void accept(Runnable task) {}", "}", ""])
+
+
 def main():
     jar = Path(sys.argv[1] if len(sys.argv) > 1 else "target/codeclarity-mcp.jar").resolve()
     anonymous = """class Anonymous {
@@ -67,6 +80,10 @@ enum Choices {
                    "Body.java": coverage.replace("Coverage", "Body"),
                    "Deleted.java": "class Deleted { int field = 1; }\n",
                    "Broken.java": "class Broken { void work() {} }\n"}
+        shifts = {"Insert": ["N", "A", "B"], "Reorder": ["B", "A"],
+                  "Delete": ["B"], "Replace": ["N", "B"]}
+        for name in shifts:
+            sources[name + ".java"] = expression_source(name, ["A", "B"])
         for path, source in sources.items():
             (root / path).write_text(source, encoding="utf-8")
         git(root, "add", ".")
@@ -83,6 +100,8 @@ enum Choices {
         sources["Body.java"] = sources["Body.java"].replace("return value;", "return value + 1;")
         sources["Broken.java"] = "class Broken { void work( }\n"
         sources["Added.java"] = "class Added { int field = 1; }\n"
+        for name, markers in shifts.items():
+            sources[name + ".java"] = expression_source(name, markers)
         del sources["Deleted.java"]
         (root / "Deleted.java").unlink()
         for path, source in sources.items():
@@ -94,7 +113,7 @@ enum Choices {
             changes = client.tool("get_changes", {"baseRef": "main", "headRef": "HEAD"})
             shas = {key: changes[key] for key in ("baseSha", "headSha")}
             report = client.tool("analyze_changes", {**shas, "paths": ["Anonymous.java"]})
-            assert report["status"] == "ok" and not report["warnings"], report
+            assert report["status"] == "partial" and report["warnings"], report
             file = report["files"][0]
             runs = [entity for entity in file["changedMethods"] if entity.endswith("#run()")]
             assert len(runs) == len(set(runs)) == 12, runs
@@ -105,13 +124,34 @@ enum Choices {
             for entity in file["changedMethods"]:
                 metrics = [m for m in file["metrics"] if m["entity"] == entity]
                 assert {m["metric"] for m in metrics} == METRICS, metrics
-                assert len(metrics) == 6 and all(m["status"] == "COMPARED" for m in metrics), metrics
+                positional = ("anonymous(expression:" in entity or "initializer(" in entity
+                              or "anonymous(repeated" in entity)
+                assert len(metrics) == 6, metrics
+                assert all(m["status"] == ("UNAVAILABLE" if positional else "COMPARED") for m in metrics), metrics
+                if positional:
+                    assert all(m["delta"] is None for m in metrics), metrics
+                    assert all(m[side]["status"] == "AVAILABLE" for m in metrics for side in ("before", "after")), metrics
             for snapshot, source in ((shas["baseSha"], anonymous), (shas["headSha"], updated_anonymous)):
                 for marker in ("first", "second"):
                     line = next(i for i, text in enumerate(source.splitlines(), 1) if 'println("' in text and marker in text)
                     context = client.tool("get_symbol_context", {"commitSha": snapshot, "path": "Anonymous.java", "line": line})
                     assert context["signature"] == f"Anonymous.anonymous({marker}:1)#run()", context
                     assert "println" in context["source"], context
+
+            for name in shifts:
+                shifted = client.tool("analyze_changes", {**shas, "paths": [name + ".java"]})
+                assert shifted["status"] == "partial" and any("identity is unverified" in w for w in shifted["warnings"]), shifted
+                metrics = shifted["files"][0]["metrics"]
+                callbacks = [m for m in metrics if "anonymous(expression:" in m["entity"]]
+                assert callbacks and all(m["status"] == "UNAVAILABLE" and m["delta"] is None for m in callbacks), shifted
+                both = [m for m in callbacks if all(m[side]["status"] == "AVAILABLE" for side in ("before", "after"))]
+                assert both, shifted  # Measured values survive even when identity cannot be established.
+                outer = [m for m in metrics if m["entity"] == name + "#configure()"]
+                assert len(outer) == 6 and all(m["status"] == "COMPARED" for m in outer), shifted
+                if name in ("Insert", "Replace"):
+                    diagnostics = [f for f in shifted["files"][0]["findings"]
+                                   if "anonymous(expression:" in f["method"]]
+                    assert diagnostics and all(f["status"] == "UNVERIFIED" for f in diagnostics), shifted
 
             report = client.tool("analyze_changes", {**shas, "paths": ["Fields.java", "Mixed.java", "Body.java", "Added.java", "Deleted.java", "Broken.java"]})
             assert report["status"] == "partial", report
@@ -139,7 +179,8 @@ enum Choices {
         finally:
             close(process)
     print("Passed: unique/stable field, local and expression anonymous owners, enum owners, six comparable metrics, "
-          "committed contexts, field/initializer/mixed/body-only/add/delete coverage and unknown coverage on parse failure.")
+          "committed contexts, conservative positional identity on insertion/reorder/deletion/replacement, "
+          "field/initializer/mixed/body-only/add/delete coverage and unknown coverage on parse failure.")
 
 
 if __name__ == "__main__":

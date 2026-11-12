@@ -2,7 +2,10 @@ package dev.codeclarity.history;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import static dev.codeclarity.history.HistoryJson.*;
 
@@ -16,6 +19,7 @@ final class HistoryValidator {
     private static final Schema REVIEW_SCHEMA = schema("/contracts/review.schema.json");
     private static final Schema HISTORY_SCHEMA = schema("/contracts/review-history.schema.json");
     private static final Schema UPDATE_SCHEMA = schema("/contracts/history-update.schema.json");
+    private static final Schema CANDIDATE_SCHEMA = schema("/contracts/rule-candidate.schema.json");
     private final Path root;
 
     HistoryValidator(Path root) { this.root = root; }
@@ -26,12 +30,83 @@ final class HistoryValidator {
 
     static void validateUpdate(Map<String, Object> request) { validate(UPDATE_SCHEMA, request); }
 
+    static Map<String, Object> candidateInputSchema() {
+        return object(JSON.readValue(CANDIDATE_SCHEMA.getSchemaNode().toString(), Map.class));
+    }
+
+    static void validateCandidateRequest(Map<String, Object> request) { validate(CANDIDATE_SCHEMA, request); }
+
     void validateState(Map<String, Object> history) {
         validate(HISTORY_SCHEMA, history);
         for (var review : array(history.get("reviews"))) { validateReview(object(review)); }
         var derived = copy(history);
         HistoryProjection.derive(derived);
         require(derived.equals(history), "History statistics/findings/examples are inconsistent with reviews and feedback.");
+        var candidates = index(array(history.get("ruleCandidates")), "candidateId");
+        for (var candidate : candidates.values()) { validateCandidate(candidate, history, false); }
+        var seen = new java.util.ArrayList<Map<String, Object>>();
+        for (var candidate : candidates.values()) {
+            require(seen.stream().noneMatch(previous -> equivalentCandidate(previous, candidate)), "Duplicate equivalent rule candidate.");
+            seen.add(candidate);
+        }
+    }
+
+    /** Validate eligibility at creation; historical proposals retain their original feedback provenance. */
+    void validateCandidate(Map<String, Object> candidate, Map<String, Object> history, boolean requireLatestFeedback) {
+        validateCandidateRequest(Map.of("candidate", candidate));
+        for (var key : List.of("candidateId", "categoryId", "title", "description")) { text(candidate, key); }
+        var categoryId = text(candidate, "categoryId");
+        require(index(array(history.get("categories")), "categoryId").containsKey(categoryId), "Unknown candidate category.");
+        var findings = index(array(history.get("findings")), "findingId");
+        var supportingIds = new HashSet<>(array(candidate.get("supportingFindingIds")));
+        var occurrences = new HashSet<List<Object>>();
+        for (var value : supportingIds) {
+            var finding = findings.get(value);
+            require(finding != null && categoryId.equals(finding.get("categoryId")), "Candidate support must reference known findings of its category.");
+            occurrences.add(occurrence(finding));
+        }
+        require(occurrences.size() >= 3, "Candidate requires at least three distinct source/snapshot occurrences.");
+        var feedback = index(array(history.get("feedback")), "feedbackId");
+        var latest = new LinkedHashMap<String, Map<String, Object>>();
+        for (var event : feedback.values()) { latest.put(text(event, "findingId"), event); }
+        var fixedOccurrences = new HashSet<List<Object>>();
+        for (var value : array(candidate.get("confirmedFeedbackIds"))) {
+            var event = feedback.get(value);
+            require(event != null && supportingIds.contains(event.get("findingId")), "Candidate feedback must reference a supporting finding.");
+            var finding = findings.get(text(event, "findingId"));
+            require(event.get("reviewId").equals(finding.get("reviewId")) && "FIXED".equals(event.get("decision"))
+                    && "HUMAN".equals(event.get("source")) && "LOCAL_CLI".equals(event.get("authority")),
+                    "Candidate requires independently recorded operator FIXED feedback.");
+            text(event, "confirmedBy");
+            text(event, "confirmationEvidence");
+            require(!requireLatestFeedback || event.equals(latest.get(text(event, "findingId"))),
+                    "Candidate must cite the latest authoritative FIXED event for every confirmed finding.");
+            fixedOccurrences.add(occurrence(finding));
+        }
+        require(fixedOccurrences.size() >= 2, "Candidate requires two distinct operator-confirmed FIXED occurrences.");
+        for (var example : index(array(candidate.get("examples")), "findingId").values()) {
+            var id = text(example, "findingId");
+            require(supportingIds.contains(id), "Candidate example must reference a supporting finding.");
+            var finding = findings.get(id);
+            for (var entry : example.entrySet()) {
+                require(entry.getValue().equals(finding.get(entry.getKey())), "Candidate example must match stored source evidence: " + entry.getKey());
+            }
+        }
+    }
+
+    static boolean equivalentCandidate(Map<String, Object> first, Map<String, Object> second) {
+        return first.get("categoryId").equals(second.get("categoryId"))
+                && (normalizedTitle(first).equals(normalizedTitle(second))
+                || new HashSet<>(array(first.get("supportingFindingIds"))).equals(new HashSet<>(array(second.get("supportingFindingIds")))));
+    }
+
+    private static String normalizedTitle(Map<String, Object> candidate) {
+        return text(candidate, "title").strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    private static List<Object> occurrence(Map<String, Object> finding) {
+        var location = object(finding.get("location"));
+        return List.of(finding.get("snapshotId"), location.get("path"), location.get("startLine"), location.get("endLine"));
     }
 
     void validateReview(Map<String, Object> review) {

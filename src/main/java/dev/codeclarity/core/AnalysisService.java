@@ -120,6 +120,11 @@ public final class AnalysisService {
         long entityCount(String signature) {
             return entities.stream().filter(method -> method.signature().equals(signature)).count();
         }
+
+        List<String> matchingWarnings(String signature) {
+            return entities.stream().filter(entity -> entity.signature().equals(signature))
+                    .map(SourceEntity::matchingWarning).filter(java.util.Objects::nonNull).distinct().toList();
+        }
     }
 
     private record RoutedFile(GitRepository.ChangedFile file, LanguageSupport language) {}
@@ -228,14 +233,20 @@ public final class AnalysisService {
         List<Diagnostic> findings = new ArrayList<>();
         List<MetricComparison> metrics = new ArrayList<>();
         for (String signature : touched) {
+            var matchingWarnings = java.util.stream.Stream.concat(before.matchingWarnings(signature).stream(),
+                    after.matchingWarnings(signature).stream()).distinct().toList();
+            boolean reliableMatch = matchingWarnings.isEmpty();
+            matchingWarnings.forEach(reason -> warnings.add(file.path() + ": " + signature + ": " + reason));
             Map<String, MetricDefinition> definitions = new LinkedHashMap<>();
             language.metricDefinitions().forEach(definition -> definitions.put(definition.id(), definition));
             java.util.stream.Stream.concat(before.metrics.stream(), after.metrics.stream())
                     .filter(value -> value.entity().equals(signature))
                     .forEach(value -> definitions.putIfAbsent(value.metric().definition().id(), value.metric().definition()));
             for (var definition : definitions.values()) {
-                metrics.add(MetricComparison.compare(signature, definition.id(),
-                        before.metric(signature, definition), after.metric(signature, definition)));
+                var comparison = MetricComparison.compare(signature, definition.id(),
+                        before.metric(signature, definition), after.metric(signature, definition));
+                metrics.add(reliableMatch ? comparison : new MetricComparison(signature, definition.id(),
+                        "UNAVAILABLE", comparison.before(), comparison.after(), null));
             }
             if (before.entityCount(signature) > 1 || after.entityCount(signature) > 1) {
                 warnings.add(file.path() + ": ambiguous entity signature " + signature);
@@ -249,7 +260,7 @@ public final class AnalysisService {
                 var oldFinding = oldRules.get(rule);
                 var newFinding = newRules.get(rule);
                 String status;
-                if (!before.complete || !after.complete) {
+                if (!before.complete || !after.complete || !reliableMatch) {
                     status = "UNVERIFIED";
                 } else if (oldFinding == null) {
                     status = change.oldPath() == null || before.entityCount(signature) == 1

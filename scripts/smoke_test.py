@@ -135,7 +135,7 @@ def main():
                 client.send("notifications/initialized", notification=True)
                 assert {tool["name"] for tool in client.send("tools/list")["tools"]} == {
                     "get_changes", "analyze_changes", "get_symbol_context", "inspect_symbol_ast",
-                    "get_review_history", "update_review_history",
+                    "get_review_history", "update_review_history", "propose_rule_candidate",
                     "get_symbol_definition", "find_symbol_references",
                     "list_java_changes", "analyze_java_changes", "inspect_java_method",
                     "list_python_changes", "analyze_python_changes", "inspect_python_function"

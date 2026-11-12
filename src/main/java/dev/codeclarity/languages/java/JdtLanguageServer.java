@@ -100,7 +100,7 @@ public final class JdtLanguageServer implements LanguageServerClient {
         long deadline = System.nanoTime() + startupTimeout.toNanos();
         try {
             var result = connection.request("initialize", Map.of("processId", ProcessHandle.current().pid(),
-                    "clientInfo", Map.of("name", "codeclarity", "version", "0.1.6"), "rootUri", root.toUri().toString(),
+                    "clientInfo", Map.of("name", "codeclarity", "version", "0.1.7"), "rootUri", root.toUri().toString(),
                     "workspaceFolders", folders, "capabilities", Map.of("workspace", Map.of("configuration", true,
                             "workspaceFolders", true, "applyEdit", false), "general", Map.of("positionEncodings", List.of("utf-16")),
                             "textDocument", Map.of("definition", Map.of("linkSupport", true))),

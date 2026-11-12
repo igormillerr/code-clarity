@@ -29,7 +29,7 @@ import java.util.List;
 
 final class JavaSource {
     record Method(String signature, SourceRange lines, Node node, SimpleName name,
-                  BlockStmt body, int parameterCount) {}
+                  BlockStmt body, int parameterCount, String matchingWarning) {}
 
     static List<Method> methods(String source) {
         var configuration = new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21)
@@ -65,7 +65,25 @@ final class JavaSource {
                                  BlockStmt body, int parameters) {
         var range = node.getRange().orElseThrow();
         return new Method(prefix + owner(node) + "#" + signature,
-                new SourceRange(range.begin.line, range.end.line), node, name, body, parameters);
+                new SourceRange(range.begin.line, range.end.line), node, name, body, parameters,
+                matchingWarning(node));
+    }
+
+    private static String matchingWarning(Node node) {
+        for (Node parent = node.getParentNode().orElse(null); parent != null;
+                parent = parent.getParentNode().orElse(null)) {
+            if (parent instanceof ObjectCreationExpr creation && creation.getAnonymousClassBody().isPresent()) {
+                var anchor = anonymousAnchor(creation);
+                if (!(anchor instanceof VariableDeclarator variable)
+                        || variableSiblings(variable).size() > 1
+                        || anonymousSiblings(creation, anchor).size() > 1) {
+                    return "Anonymous owner uses lexical position; cross-snapshot identity is unverified.";
+                }
+            } else if (parent instanceof InitializerDeclaration) {
+                return "Initializer owner uses lexical position; cross-snapshot identity is unverified.";
+            }
+        }
+        return null;
     }
 
     private static String owner(Node node) {
@@ -109,10 +127,14 @@ final class JavaSource {
         // A variable name survives edits and unrelated field insertions. Within an unlabelled
         // expression use lexical order, never absolute line numbers, to distinguish siblings.
         String label = anchor instanceof VariableDeclarator variable ? variableLabel(variable) : "expression";
-        var siblings = anchor.findAll(ObjectCreationExpr.class).stream()
+        var siblings = anonymousSiblings(creation, anchor);
+        return "anonymous(" + label + ":" + identityOrdinal(siblings, creation) + ")";
+    }
+
+    private static List<ObjectCreationExpr> anonymousSiblings(ObjectCreationExpr creation, Node anchor) {
+        return anchor.findAll(ObjectCreationExpr.class).stream()
                 .filter(candidate -> candidate.getAnonymousClassBody().isPresent() && anonymousAnchor(candidate) == anchor)
                 .sorted(Comparator.comparing(candidate -> candidate.getBegin().orElseThrow())).toList();
-        return "anonymous(" + label + ":" + identityOrdinal(siblings, creation) + ")";
     }
 
     private static Node lexicalScope(Node node) {
@@ -127,13 +149,16 @@ final class JavaSource {
     }
 
     private static String variableLabel(VariableDeclarator variable) {
+        int ordinal = identityOrdinal(variableSiblings(variable), variable);
+        return variable.getNameAsString() + (ordinal == 1 ? "" : "~" + ordinal);
+    }
+
+    private static List<VariableDeclarator> variableSiblings(VariableDeclarator variable) {
         var scope = lexicalScope(variable);
-        var siblings = scope.findAll(VariableDeclarator.class).stream()
+        return scope.findAll(VariableDeclarator.class).stream()
                 .filter(candidate -> candidate.getNameAsString().equals(variable.getNameAsString())
                         && lexicalScope(candidate) == scope)
                 .sorted(Comparator.comparing(candidate -> candidate.getBegin().orElseThrow())).toList();
-        int ordinal = identityOrdinal(siblings, variable);
-        return variable.getNameAsString() + (ordinal == 1 ? "" : "~" + ordinal);
     }
 
     private static int identityOrdinal(List<? extends Node> siblings, Node node) {

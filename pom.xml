@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.codeclarity</groupId>
     <artifactId>codeclarity-mcp</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -49,6 +49,7 @@
                     <include>review.schema.json</include>
                     <include>review-history.schema.json</include>
                     <include>history-update.schema.json</include>
+                    <include>rule-candidate.schema.json</include>
                 </includes>
             </resource>
         </resources>

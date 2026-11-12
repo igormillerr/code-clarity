@@ -25,7 +25,7 @@ def main():
     if environment.get("JAVA_HOME"):
         environment["PATH"] = str(Path(environment["JAVA_HOME"]) / "bin") + os.pathsep + environment.get("PATH", "")
     jar_checks = ["mcp_smoke_test", "smoke_test", "python_smoke_test", "java_metrics_test",
-                  "language_integration_test", "history_test", "lsp_client_test", "java_regression_test"]
+                  "language_integration_test", "history_test", "history_storage_test", "lsp_client_test", "java_regression_test"]
     plain_checks = ["python_worker_test", "core_test", "llm_artifact_test"]
     commands = [(name, [sys.executable, "scripts/" + name + ".py", str(jar)]) for name in jar_checks]
     commands += [(name, [sys.executable, "scripts/" + name + ".py"]) for name in plain_checks]
