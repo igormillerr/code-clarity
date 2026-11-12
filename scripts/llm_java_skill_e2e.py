@@ -15,6 +15,7 @@ from tempfile import TemporaryDirectory
 
 from llm_evals import METRICS, check_report, git, prepare, write_json
 from llm_codex_evidence import objects
+from python_smoke_test import connect, close
 
 PROJECT = Path(__file__).resolve().parents[1]
 
@@ -156,6 +157,52 @@ class ReviewSchemaCheck {
     for name in ("skill", "jar"):
         if hashlib.sha256(Path(attempt[name]).read_bytes()).hexdigest() != attempt[name + "Sha256"]:
             errors.append("Tested " + name + " changed since the agent invocation")
+    history_proof = None
+    if attempt.get("withHistory"):
+        writes = [call for call in calls if call["tool"] == "update_review_history" and "review" in call["arguments"]]
+        if not writes or "get_review_history" not in tools:
+            errors.append("Agent did not read and save history through native MCP tools")
+        elif report:
+            payload = writes[0]["arguments"]
+            history_path = Path(attempt["repo"]) / ".codeclarity/review-history.json"
+            try:
+                original = history_path.read_bytes()
+                stamp = history_path.stat().st_mtime_ns
+                # Each connect starts a new JVM: verify persistence independently of the agent process.
+                process, client = connect(Path(attempt["jar"]), Path(attempt["repo"]))
+                try:
+                    restored = client.tool("get_review_history", {})
+                    replay = client.tool("update_review_history", payload)
+                    after_replay = client.tool("get_review_history", {})
+                finally:
+                    close(process)
+                process, client = connect(Path(attempt["jar"]), Path(attempt["repo"]))
+                try:
+                    second_restart = client.tool("get_review_history", {})
+                finally:
+                    close(process)
+                assert restored == json.loads(original) == after_replay == second_restart, "History changed across restart/replay"
+                assert restored["reviews"] == [payload["review"]], "Stored review differs from agent's MCP payload"
+                assert payload["review"]["reviewId"] == report["reviewId"]
+                assert payload["review"]["ruleDiscovery"]["status"] == "NOT_RUN"
+                assert replay["status"] == "unchanged" and replay["revision"] == restored["revision"]
+                assert history_path.read_bytes() == original and history_path.stat().st_mtime_ns == stamp
+                assert restored["statistics"]["reviewCount"] == 1
+                assert restored["statistics"]["occurrenceCount"] == len(report["findings"])
+                assert restored["statistics"]["fixedCount"] == 0 and not restored["feedback"]
+                assert all(f["status"] == "DETECTED" for f in restored["findings"])
+                history_proof = {"status": "PASS", "path": str(history_path), "revision": restored["revision"],
+                                 "statistics": restored["statistics"], "replay": replay,
+                                 "restartReads": 2, "bytesAndMtimeUnchangedOnReplay": True,
+                                 "sha256": hashlib.sha256(original).hexdigest()}
+            except (AssertionError, OSError, ValueError, KeyError) as error:
+                errors.append("History E2E: " + str(error))
+    if attempt.get("navigationConfiguration"):
+        for name, target in (("get_symbol_definition", "Totals.java"), ("find_symbol_references", "Usage.java")):
+            receipts = [c["result"] for c in calls if c["tool"] == name]
+            if not any(r.get("scope") == "WORKTREE" and r.get("status") == "ok" and
+                       any(loc.get("path") == target for loc in r.get("locations", [])) for r in receipts):
+                errors.append("Missing successful real JDT LS navigation receipt: " + name)
     summary = {"schemaVersion": 1, "executionLevel": "CODEX_CLI_WITH_REAL_MCP",
                "status": "FAIL" if errors else "PASS", "errors": errors,
                "attempt": attempt, "eventsSha256": hashlib.sha256(raw).hexdigest(),
@@ -168,8 +215,10 @@ class ReviewSchemaCheck {
                "coverage": report.get("coverage") if report else None,
                "findingsCount": len(report.get("findings", [])) if report else None,
                "verdict": report.get("verdict") if report else None,
+               "history": history_proof,
                "limitations": ["Tests repository Skill and JAR via process-local MCP configuration; does not verify installed plugin cache.",
-                               "No history persistence E2E claim; one agent run does not guarantee deterministic future behavior."]}
+                               "Disposable synthetic source repository; its history is not the user's production history.",
+                               "One agent run does not guarantee deterministic future behavior."]}
     write_json(output / "evidence.json", summary)
     print(json.dumps({k: summary[k] for k in ("status", "errors", "entitiesMeasured", "metricComparisons", "verdict", "report")}, indent=2))
     return not errors
@@ -181,6 +230,9 @@ def main():
     parser.add_argument("--codex", default=shutil.which("codex"))
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--verify-only", action="store_true")
+    parser.add_argument("--with-history", action="store_true", help="Authorize native MCP history writes in the disposable fixture and verify restart/replay")
+    parser.add_argument("--jdtls-home", type=Path, help="Also require actual agent definition/references calls with this JDT LS distribution")
+    parser.add_argument("--jdtls-java", default="java")
     args = parser.parse_args()
     output = args.output.resolve()
     if args.verify_only:
@@ -196,6 +248,12 @@ def main():
                 target = Path(staging) / side / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(PROJECT / "evals/fixtures" / case / side / name, target)
+        for side in ("before", "after"):
+            (Path(staging) / side / ".gitignore").write_text("/.codeclarity/\n")
+            if args.jdtls_home:
+                (Path(staging) / side / "Usage.java").write_text(
+                    "final class Usage {\n    static long price(long quantity, long cents) {\n"
+                    "        return Totals.lineTotal(quantity, cents);\n    }\n}\n")
         manifest = prepare({"id": "java-six-metrics-skill", "kind": "code-review", "fixture": staging,
                             "languages": ["java"], "request": "Review committed Java changes main..HEAD using readability-review."},
                            output / "fixture")
@@ -210,17 +268,35 @@ def main():
         "Use the real codeclarity MCP tools exposed to this session; do not emulate MCP with shell clients. "
         "Read source from the resolved Git commits, preserve the independent review before requesting measured results, "
         "and follow the Skill's report validation/rendering workflow. All source files here are synthetic test inputs. "
-        "Do not edit the input repository, write history, change configuration, install anything, or read evaluator "
+        "Do not edit input source/configuration, install anything, or read evaluator "
         "scripts/expected answers. If MCP is unavailable, report the blocker honestly. Return artifact paths and the review verdict."
     )
+    if args.with_history:
+        prompt += (" Run the Rule Discovery stage with real get_review_history/update_review_history calls: "
+                   "history writes through MCP are authorized ONLY in this disposable test repository. "
+                   "Retain the stable pre-discovery payload and read back history as the Skill instructs. "
+                   "Do not record human feedback or confirm any finding as FIXED.")
+    else:
+        prompt += " Do not write history."
+    navigation = None
+    if args.jdtls_home:
+        navigation = {"CODECLARITY_JDTLS_HOME": str(args.jdtls_home.resolve()), "CODECLARITY_JDTLS_JAVA": args.jdtls_java}
+        prompt += (" Also exercise get_symbol_definition on the Totals.lineTotal call in Usage.java and "
+                   "find_symbol_references on its declaration. First verify the worktree matches the head snapshot; "
+                   "keep WORKTREE navigation evidence distinct from committed source evidence. "
+                   "Save the navigation receipts with the review artifacts.")
     (output / "prompt.txt").write_text(prompt + "\n")
-    server = '{codeclarity={command="java",args=' + json.dumps(["-jar", str(jar), "--repo-root", str(repo)]) + '}}'
+    server = '{codeclarity={command="java",args=' + json.dumps(["-jar", str(jar), "--repo-root", str(repo)])
+    if navigation:
+        server += ',env={' + ','.join(key + '=' + json.dumps(value) for key, value in navigation.items()) + '}'
+    server += '}}'
     command = [args.codex, "exec", "--ephemeral", "--json", "--sandbox", "workspace-write",
                "-C", str(repo), "--add-dir", str(artifacts), "-c", "mcp_servers=" + server,
                "-o", str(output / "last-message.md"), prompt]
     attempt = {"status": "FAILED", "repo": str(repo), "skill": str(skill),
                "skillSha256": hashlib.sha256(skill.read_bytes()).hexdigest(),
                "jar": str(jar), "jarSha256": hashlib.sha256(jar.read_bytes()).hexdigest(),
+               "withHistory": args.with_history, "navigationConfiguration": navigation,
                "command": command[:-1] + ["<see prompt.txt>"], "configuration": "process-local MCP override"}
     try:
         with (output / "events.jsonl").open("w") as stdout, (output / "stderr.log").open("w") as stderr:

@@ -5,10 +5,11 @@ LLM-часть в ветке `codex/llm-workflow`: четыре Skills, неза
 [контракты и границы задач команды](docs/llm-handoff.md),
 [Evals](evals/README.md), [демонстрация](docs/llm-demo.md),
 [презентация](docs/presentation/README.md), [фактический статус](docs/llm-status.md).
-Сервер 0.1.4 предоставляет шесть Java-метрик и единый анализ Java/Python
+Сервер 0.1.6 предоставляет шесть Java-метрик и единый анализ Java/Python
 с автоматическим выбором адаптера по пути файла.
 Для Python пока доступны Cyclomatic Complexity и явный UNSUPPORTED для Cognitive
-Complexity; остальные Python-метрики и history Tools ещё не реализованы.
+Complexity; остальные Python-метрики ещё не реализованы. История ревью сохраняется
+в `.codeclarity/review-history.json` через MCP; подтверждения исправлений записывает оператор.
 
 Локальный Java-сервер для проверки читаемости Java- и Python-изменений между Git-коммитами. Он отдаёт Codex факты о diff, диагностике сложности и структуре функций и методов. Итоговый комментарий формулирует агент.
 
@@ -30,7 +31,27 @@ codex mcp list
 ## Сборка и проверка
 
 ```bash
-mvn clean package
+mvn clean verify
+```
+
+`verify` собирает JAR и запускает обязательный набор локальных проверок, включая
+регрессии Java, MCP, историю, LSP-протокол и проверку артефактов. Ошибка проверки
+завершает сборку с ошибкой; логи и сводка находятся в `target/workflow-checks/`.
+Нужны Java/Javac 21+, Git и Python 3.10+ без дополнительных пакетов.
+На Windows можно указать `mvn verify -Dpython.executable=python`.
+Проверки используют Java из Maven `JAVA_HOME`; модель и настоящий JDT LS не требуются.
+Для сборки без полного прогона есть `mvn package`, для явного пропуска проверок
+при `verify` — `-DskipTests`. CI запускает `mvn verify` без пропуска.
+
+Тот же набор после сборки можно запустить напрямую:
+
+```bash
+python3 scripts/verify.py
+```
+
+Отдельные проверки для диагностики:
+
+```bash
 python3 scripts/mcp_smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/python_worker_test.py
@@ -38,10 +59,13 @@ python3 scripts/python_smoke_test.py target/codeclarity-mcp.jar
 python3 scripts/java_metrics_test.py target/codeclarity-mcp.jar
 python3 scripts/core_test.py
 python3 scripts/language_integration_test.py target/codeclarity-mcp.jar
+python3 scripts/history_test.py target/codeclarity-mcp.jar
+python3 scripts/lsp_client_test.py target/codeclarity-mcp.jar
+python3 scripts/lsp_smoke_test.py
 ```
 
-Java-проверки содержат исполняемые `main`, поэтому Maven Surefire сам их не запускает.
-Для полной проверки запускай приведённые скрипты после сборки. Общий интеграционный
+Java-проверки содержат исполняемые `main`: их запускает общий runner на фазе
+Maven `verify`, а не Surefire. Общий интеграционный
 тест проверяет оба адаптера в одном смешанном вызове MCP, автоматическую маршрутизацию,
 одинаковый формат результатов, одинаковые Git-снимки, шесть Java-метрик,
 положительные/нулевые/отрицательные дельты, конструкторы, методы без тела,
@@ -56,6 +80,10 @@ Java-проверки содержат исполняемые `main`, поэто
 | `get_changes` | `baseRef`, `headRef` | SHA, статус, изменённые Java/Python-файлы, диапазоны строк, предупреждения |
 | `analyze_changes` | `baseSha`, `headSha`, опционально смешанный `paths` | Единый отчёт по Java и Python с автоматическим выбором адаптера |
 | `get_symbol_context` | `commitSha`, `path`, `line` | SHA, путь, язык, исходник сущности, диапазон строк, вызовы, условия, статус и предупреждения |
+| `get_review_history` | Без аргументов | Ревью, категории, замечания, подтверждения, статистика и примеры |
+| `update_review_history` | `review` и/или `categories` | Атомарное сохранение; статус `saved`/`unchanged`, ревизия и статистика |
+| `get_symbol_definition` | `path`, `line`, `column` | Определения символа через LSP, явно в текущем WORKTREE |
+| `find_symbol_references` | `path`, `line`, `column`, опционально `includeDeclaration` | Использования символа через LSP, явно в текущем WORKTREE |
 | `inspect_symbol_ast` | `commitSha`, `path`, `line` | Прежняя компактная форма контекста: сигнатура, строки, вызовы и условия |
 | `list_java_changes` | `baseRef`, `headRef` | `baseSha` общего предка, `headSha`, старые и новые пути, диапазоны строк для обеих сторон |
 | `analyze_java_changes` | `baseSha`, `headSha`, опционально `paths` | Статус анализа, изменённые методы, результаты PMD до и после, предупреждения |
@@ -66,7 +94,7 @@ Java-проверки содержат исполняемые `main`, поэто
 
 Строки считаются с единицы, обе границы диапазона включены. У добавленного файла отсутствует `oldPath`, у удалённого отсутствует `newPath`. Для переименований при выборе `paths` используется новый путь, для удалений — старый.
 
-Один STDIO-процесс предоставляет три основных универсальных инструмента и семь
+Один STDIO-процесс предоставляет семь основных инструментов и семь
 инструментов совместимости. Универсальным инструментам
 не нужен параметр языка. Например, после `get_changes` можно вызвать
 `analyze_changes` с `paths: ["src/Example.java", "scripts/example.py"]` и полученными
@@ -76,10 +104,26 @@ Java-проверки содержат исполняемые `main`, поэто
 
 Формат `get_changes` и языковых list-инструментов:
 `{baseSha, headSha, status, files, warnings}`. Формат анализа тот же;
-его `files[]` содержит `{oldPath, newPath, language, changedMethods, findings, metrics}`.
+его `files[]` содержит `{oldPath, newPath, language, changedMethods, findings, metrics, coverage}`.
 Поле `language` — идентификатор выбранного адаптера. Структура одинакова для обоих
 языков и универсальных/языковых инструментов. Поля `method`/`changedMethods`
 сохранены для совместимости и обозначают также Python-функции.
+
+`coverage.base` и `coverage.head` описывают покрытие изменённых строк диапазонами
+поддерживаемых сущностей. Каждая сторона содержит `{status, outsideEntityLines, reason}`:
+`COMPLETE` — все изменённые строки входят в такие диапазоны;
+`OUTSIDE_SUPPORTED_ENTITIES` — `outsideEntityLines` перечисляет непокрытые диапазоны
+(например, поля, импорты, инициализаторы); `UNKNOWN` — анализ не завершился.
+Нумерация строк с единицы, границы включены. Это покрытие диапазонами сущностей,
+а не оценка полноты AI-ревью или доступности всех метрик. На одной строке могут
+находиться и метод, и другая декларация: гранулярность покрытия остаётся построчной.
+`status: ok` у запроса не скрывает эти ограничения и не означает полного ревью.
+
+Для методов анонимных классов владелец включает `anonymous(имяПеременной:номер)`;
+для enum-констант — `enum(имя)`. Перенос строк и добавление несвязанного поля не
+меняют такой идентификатор. Для выражений без имени и повторяющихся владельцев
+используется лексический порядок: перестановка таких выражений может нарушить
+сопоставление. Сигнатуры обычных именованных методов сохраняют прежний формат.
 
 `get_symbol_context` возвращает
 `{commitSha, path, language, status, signature, lines, source, calls, truncated, warnings}`.
@@ -129,6 +173,10 @@ Codex CLI: `python3 scripts/mcp_codex_smoke.py --output .codeclarity/evals/api-r
 - `core/AnalysisService.java` — маршрутизация файлов, затронутые сущности, сравнение диагностик и метрик, изоляция ошибок и полнота отчёта.
 - `core/LanguageRegistry.java` — регистрация модулей, выбор по пути файла или идентификатору языка.
 - `core/model/` — диапазоны строк, сущности, диагностики, определения и значения метрик, контекст без объектов AST.
+- `history/ReviewHistoryStore.java` — операции добавления ревью, категорий и подтверждений; `HistoryFileStorage` — блокировка и атомарная запись; `HistoryValidator` — контракты и целостность; `HistoryProjection` — производные статистика и примеры; `HistoryJson` — строгая сериализация. `ReviewScope` и `FeedbackEvent` задают типизированные внутренние значения.
+- `lsp/LanguageServerClient.java` — общий контракт семантической навигации; `JsonRpcProcess` — ограниченный по времени STDIO JSON-RPC с Content-Length.
+- `lsp/SemanticNavigationService.java` — маршрутизация к LSP и перевод координат; `languages/java/JdtLanguageServer.java` — запуск и настройка Eclipse JDT LS.
+- `lsp/LanguageServerSessions.java` — ленивое переиспользование сессий, последовательные запросы к одному серверу, сброс после ошибки и закрытие при простое.
 - `languages/java/JavaLanguageSupport.java` — адаптер Java, реализующий общий контракт.
 - `languages/java/JavaSource.java` и `PmdAnalyzer.java` — детали работы с JavaParser и PMD.
 - `languages/java/JavaParserMetrics.java` — SLOC, вложенность, параметры и возвраты Java.
@@ -307,6 +355,140 @@ java -jar target/codeclarity-mcp.jar --repo-root 'C:\work\my-project'
 Если определения различаются, статус — `INCOMPATIBLE`; если недоступна одна из сторон —
 `UNAVAILABLE`. В обоих случаях `delta` отсутствует или равна `null`.
 Метрики разных языков нельзя автоматически считать эквивалентными по совпадению `id`.
+
+## Семантическая навигация Java (минимальный JDT LS, P1)
+
+`get_symbol_definition` и `find_symbol_references` используют общий интерфейс
+`LanguageServerClient`. Для Java реализовано подключение Eclipse JDT LS, для
+Python LSP-провайдер пока не зарегистрирован. JDT LS — отдельный необязательный
+дистрибутив: он не загружается при сборке или старте MCP и не входит в JAR.
+Распакуй официальный дистрибутив и укажи его каталог процессу сервера:
+
+```bash
+export CODECLARITY_JDTLS_HOME=/path/to/extracted/jdtls
+export CODECLARITY_JDTLS_JAVA=/path/to/compatible/jdk/bin/java
+java -jar target/codeclarity-mcp.jar --repo-root /path/to/project
+```
+
+Если `CODECLARITY_JDTLS_JAVA` не задан, используется JVM текущего MCP-процесса.
+Требуемая JVM зависит от версии JDT LS: текущая документация проекта требует
+Java 25, приложение CodeClarity продолжает собираться с `release=21`.
+Реальный тест выполнен с JDT LS 1.54.0 и JDK 25.
+[Официальный запуск JDT LS](https://github.com/eclipse-jdtls/eclipse.jdt.ls#running-from-the-command-line).
+
+Пример: `get_symbol_definition({path: "src/demo/App.java", line: 3, column: 49})`.
+Входные координаты и координаты ответа — с единицы, колонки измеряются в UTF-16.
+**Конец диапазона исключён**, как в LSP; это отличается от включительных
+`SourceRange` в результатах AST/diff. Ответ содержит
+`{scope: WORKTREE, status, language, path, line, column, locations, warnings}`.
+Каждая location содержит URI, путь, `external` и диапазон start/end. Для файлов
+репозитория путь относительный; внешний файл имеет абсолютный путь, а URI вида
+`jdt:` возвращается с `path: null` и `external: true`. Пустые locations при `ok`
+означают, что сервер не нашёл цель. `includeDeclaration` у references по умолчанию false.
+
+LSP работает с текущими файлами рабочего дерева и не принимает commitSha.
+Коммитные Git/AST/метрические инструменты продолжают работать по SHA. Во время
+ревью нельзя выдавать WORKTREE-навигацию за доказательство о другом снимке;
+нужно сверить файлы с проверяемым коммитом либо ограничиться AST/Git-контекстом.
+
+Сессия JDT LS создаётся лениво и переиспользуется для последовательных запросов
+одного языка в репозитории. Временные конфигурация и workspace находятся вне
+репозитория. initialize, initialized и ожидание ServiceReady выполняются один раз
+на сессию. Каждый запрос отправляет свежий текст через didOpen, выполняет
+definition/references и didClose; одновременные запросы к одному серверу
+сериализуются, чтобы не смешивать документы. Через две минуты простоя сессия
+закрывается; следующий запрос создаёт новую. Ошибка или таймаут сбрасывают сессию
+без скрытого повтора запроса: следующий запрос запускает сервер заново.
+При закрытии выполняются shutdown и exit. При зависании процесс принудительно завершается; очистка также
+предусмотрена при завершении MCP-процесса. По возможности завершаются и дочерние
+процессы; запрет перечисления процессов не мешает остановке самого сервера.
+Импорт Maven/Gradle, autobuild и применение workspace edits отключены. Поэтому
+полноценные classpath, зависимости и навигация сложных multi-module проектов
+остаются за пределами минимальной интеграции. Исходники/настройки проекта не меняются.
+
+Таймауты задаются `CODECLARITY_LSP_STARTUP_TIMEOUT_MS` (по умолчанию 30000) и
+`CODECLARITY_LSP_REQUEST_TIMEOUT_MS` (10000), допустимый диапазон 100–120000 мс.
+Запуск, запись сообщений и ожидание ответов ограничены по времени; закрытие
+сессии также имеет ограниченные ожидания с принудительной остановкой. Отсутствие
+дистрибутива, ошибка запуска или таймаут дают `unavailable`/`timeout` с предупреждением.
+Неожиданный сбой даёт `error`. Это не запускает и не отменяет анализ метрик,
+не подменяет навигацию эвристикой и само по себе не делает основное ревью INCOMPLETE.
+
+Без установки JDT LS: `lsp_client_test.py` проверяет транспорт на управляемом
+тестовом сервере (включая зависание старта/запроса/записи, неверный frame, EOF,
+усечённый stderr, shutdown/exit и отсутствие оставшихся процессов), а
+`lsp_smoke_test.py` проверяет MCP и независимость метрик от неудачного запуска.
+Проверка настоящего JDT LS:
+
+```bash
+python3 scripts/lsp_smoke_test.py --jdtls-home /path/to/jdtls \
+  --java /path/to/jdk/bin/java --output .codeclarity/evals/jdtls-live.json
+```
+
+Тест проверяет definition и references между двумя Java-файлами, UTF-16 после
+Unicode, точность путей/строк и сохранность проекта. Тестовый сервер не заменяет
+реальную интеграционную проверку. Протокол реализован по
+[LSP 3.17](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/).
+
+## История ревью
+
+`get_review_history({})` читает историю репозитория, указанного при запуске сервера.
+До первого сохранения возвращается пустая история с нулевой статистикой; файл
+при чтении не создаётся. Первый `update_review_history` автоматически создаёт
+`.codeclarity/review-history.json`. Данные сохраняются между запусками сервера.
+
+Запрос обновления содержит `review` — полный отчёт по
+[review.schema.json](plugin/contracts/review.schema.json) с `ruleDiscovery.status: NOT_RUN`,
+и/или `categories` — массив `{categoryId, name, description?}`. Новые категории из
+замечаний добавляются автоматически с именем, равным ID; метаданные можно обновить
+отдельно. История привязана к каноническому корню репозитория.
+
+Ревью неизменно после сохранения: одинаковые `reviewId` и содержимое возвращают
+`unchanged`, не увеличивая статистику и ревизию и не переписывая файл. Другое
+содержимое под тем же ID отклоняется. Повторная область SHA/языков/путей с новым
+reviewId тоже отклоняется. Категории обновляются по `categoryId`.
+
+История содержит исходные `reviews`, производные `findings`, `categories` с
+`statistics` и `examples`, журнал `feedback`, общую `statistics`, `revision` и
+пустой резерв `ruleCandidates`. Статистика и примеры пересчитываются из уникальных
+ревью и последних подтверждений, их нельзя передать готовыми счётчиками в MCP.
+`occurrenceCount` — все замечания, `detectedCount` — ожидающие решения,
+`fixedCount`/`rejectedCount` — замечания с последним соответствующим решением.
+Примеры включают SHA, путь/строки, описание, рекомендацию, evidence и IDs подтверждений.
+
+Новые замечания имеют статус `DETECTED`, а исходный отчёт сохраняет
+`reviewStatus: PENDING_FEEDBACK`. Исчезновение диагностики и повторный запуск
+не означают исправления. MCP-инструмент не принимает feedback или `confirmed: true`.
+Оператор явно записывает решение отдельной локальной CLI-командой:
+
+```bash
+java -jar target/codeclarity-mcp.jar --repo-root /path/to/repo \
+  --record-feedback "review-id" "finding-id" --decision FIXED \
+  --confirmed-by "Имя разработчика" --evidence "Подтверждено в коммите abc123"
+```
+
+Поддерживается также `--decision REJECTED`. Требуются существующая пара review/finding,
+непустые автор и основание. Повтор идентичной команды не добавляет событие; новое
+решение с новым основанием меняет текущий статус, сохраняя предыдущие события.
+CLI — локальная граница доверия оператора; агент не должен вызывать её для
+самоподтверждения своих замечаний. Подтверждения хранятся с `source: HUMAN` и
+`authority: LOCAL_CLI` и не сбрасываются повторным сохранением ревью.
+
+Перед чтением и сохранением проверяются JSON Schema Draft 2020-12 и целостность
+ссылок, уникальность ID, статистика и примеры. Дубли ключей и лишние JSON-документы
+отклоняются. Повреждённая история не перезаписывается и не заменяется пустой.
+Изменение выполняется под `.codeclarity/review-history.lock`, через временный файл
+в том же каталоге, `force(true)` и `ATOMIC_MOVE`; неатомарного fallback нет.
+Ожидание блокировки ограничено 15 секундами, размер истории — 32 МиБ; данные
+не обрезаются автоматически. Символические ссылки на файлы истории не принимаются.
+
+Проверка `history_test.py` использует только временные репозитории и реальные MCP/CLI:
+первое сохранение, категории, повтор/конфликт, некорректный JSON, feedback,
+перезапуск, непрерывное чтение при атомарных заменах и четыре конкурентные JVM.
+Рабочий контракт — [review-history.schema.json](plugin/contracts/review-history.schema.json),
+запрос обновления — [history-update.schema.json](plugin/contracts/history-update.schema.json).
+Rule Discovery уже читает/сохраняет историю; сохранение кандидатов правил остаётся
+отдельной будущей операцией и не имитируется прямой записью JSON.
 
 ## Установка в составе плагина
 

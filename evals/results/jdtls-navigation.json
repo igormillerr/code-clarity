@@ -1,0 +1,119 @@
+{
+  "executionLevel": "REAL_JDTLS_VIA_MCP",
+  "scope": "WORKTREE",
+  "sourceLayout": "src/main/java",
+  "realJdtLs": "PASS",
+  "checks": [
+    {
+      "configuration": "missing home",
+      "result": {
+        "scope": "WORKTREE",
+        "status": "unavailable",
+        "language": "java",
+        "path": "src/main/java/demo/App.java",
+        "line": 3,
+        "column": 49,
+        "locations": [],
+        "warnings": [
+          "Cannot start JDT LS: /var/folders/z_/ddkn9rgn3k7fbz4czblmkty40000gn/T/codeclarity-lsp-smoke-xz35g11e/missing-jdtls"
+        ]
+      },
+      "metricsPreserved": true
+    },
+    {
+      "configuration": "missing executable",
+      "result": {
+        "scope": "WORKTREE",
+        "status": "unavailable",
+        "language": "java",
+        "path": "src/main/java/demo/App.java",
+        "line": 3,
+        "column": 49,
+        "locations": [],
+        "warnings": [
+          "Cannot start LSP: Cannot run program \"codeclarity-missing-java\" (in directory \"/private/var/folders/z_/ddkn9rgn3k7fbz4czblmkty40000gn/T/codeclarity-lsp-smoke-xz35g11e\"): error=2, No such file or directory"
+        ]
+      },
+      "metricsPreserved": true
+    }
+  ],
+  "jarSha256": "f41f104ed6ffa152b0260e9104d0fdc592aaba4156aa0067a988676d6948e9e4",
+  "jdtlsHome": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/tools/jdtls-1.54.0",
+  "java": "/opt/homebrew/opt/openjdk/bin/java",
+  "definition": {
+    "scope": "WORKTREE",
+    "status": "ok",
+    "language": "java",
+    "path": "src/main/java/demo/App.java",
+    "line": 3,
+    "column": 49,
+    "locations": [
+      {
+        "uri": "file:///private/var/folders/z_/ddkn9rgn3k7fbz4czblmkty40000gn/T/codeclarity-lsp-smoke-xz35g11e/src/main/java/demo/Helper.java",
+        "path": "src/main/java/demo/Helper.java",
+        "external": false,
+        "range": {
+          "start": {
+            "line": 3,
+            "column": 23
+          },
+          "end": {
+            "line": 3,
+            "column": 28
+          }
+        }
+      }
+    ],
+    "warnings": []
+  },
+  "references": {
+    "scope": "WORKTREE",
+    "status": "ok",
+    "language": "java",
+    "path": "src/main/java/demo/Helper.java",
+    "line": 3,
+    "column": 23,
+    "locations": [
+      {
+        "uri": "file:///private/var/folders/z_/ddkn9rgn3k7fbz4czblmkty40000gn/T/codeclarity-lsp-smoke-xz35g11e/src/main/java/demo/App.java",
+        "path": "src/main/java/demo/App.java",
+        "external": false,
+        "range": {
+          "start": {
+            "line": 3,
+            "column": 49
+          },
+          "end": {
+            "line": 3,
+            "column": 57
+          }
+        }
+      },
+      {
+        "uri": "file:///private/var/folders/z_/ddkn9rgn3k7fbz4czblmkty40000gn/T/codeclarity-lsp-smoke-xz35g11e/src/main/java/demo/Helper.java",
+        "path": "src/main/java/demo/Helper.java",
+        "external": false,
+        "range": {
+          "start": {
+            "line": 3,
+            "column": 23
+          },
+          "end": {
+            "line": 3,
+            "column": 28
+          }
+        }
+      }
+    ],
+    "warnings": []
+  },
+  "status": "PASS",
+  "distribution": {
+    "coreVersion": "1.54.0.202511200503",
+    "url": "https://download.eclipse.org/jdtls/snapshots/jdt-language-server-1.54.0-202511200503.tar.gz",
+    "sha256": "e0a31329eb402cc2f8f754983f4f06e0b96d588fdd476e134ce85582a42aba1c",
+    "officialChecksumVerified": true
+  },
+  "rawResult": "/Users/andrey_vorotnikov/Documents/code-clarity/.codeclarity/evals/jdtls-maven-layout.json",
+  "rawResultSha256": "eb59e6400cd676e9bf121aef788051c3a54b59a9253e92d78b49a57f388fb58b"
+}

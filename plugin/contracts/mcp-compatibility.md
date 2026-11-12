@@ -5,7 +5,7 @@ Owner: Java / LLM Engineer for plugin/Skills/review format; Java Core engineer f
 MCP schemas, snapshots, measurements, persistence and feedback authorization;
 Python engineer for Python analysis. Discover the actual tool schemas before use.
 
-## Current server 0.1.4
+## Current server 0.1.6
 
 The server includes the six Java metrics and both language adapters behind the
 same LanguageSupport / AnalysisService boundary. The checked-in historical eval
@@ -16,6 +16,10 @@ receipts refer to the older 0.1.1 JAR from feature/python ec6a3ed.
 | Resolve mixed scope | `get_changes(baseRef, headRef)` |
 | Mixed measurements | `analyze_changes(baseSha, headSha, paths?)` |
 | Committed source and AST context | `get_symbol_context(commitSha, path, line)` |
+| Read persistent review memory | `get_review_history()` |
+| Append review / merge category metadata | `update_review_history(review?, categories?)` |
+| Optional WORKTREE definition | `get_symbol_definition(path,line,column)` |
+| Optional WORKTREE references | `find_symbol_references(path,line,column,includeDeclaration?)` |
 | Legacy compact AST context | `inspect_symbol_ast(commitSha, path, line)` |
 | Resolve Java scope | `list_java_changes(baseRef, headRef)` |
 | Resolve Python scope | `list_python_changes(baseRef, headRef)` |
@@ -46,6 +50,21 @@ An adapter's complete=false also forces partial even with no supplied warnings.
 Failed versions have no fabricated numeric value or delta. Request/SHA/routing
 configuration errors are tool errors rather than successful empty reports.
 
+Each analysis file also has additive `coverage: {base, head}`. Each side is
+`{status, outsideEntityLines, reason}`: `COMPLETE` means changed lines fall within
+supported entity ranges; `OUTSIDE_SUPPORTED_ENTITIES` lists inclusive one-based
+ranges outside those entities (for example fields, imports and initializers);
+`UNKNOWN` means analysis failed and coverage cannot be established. An absent
+file side has COMPLETE coverage with no ranges. Request `ok` is independent of
+this coverage and does not establish a complete review. Explain uncovered code
+and inspect it separately; do not silently count it as reviewed by method metrics.
+Coverage is line-based, so it cannot distinguish declarations sharing a line.
+
+Java anonymous owners include a variable-based label and lexical ordinal;
+enum-constant owners include the constant name. Named methods retain their
+existing signatures. Unlabelled sibling expressions are ordered lexically;
+their reordering is not guaranteed to preserve before/after identity.
+
 Each metric comparison is `{entity,metric,status,before,after,delta}`. Add only
 the owning file's path when normalizing into a review; preserve the two MetricValue
 objects and delta from MCP. Definitions use `{id,language,analyzer,algorithm}`:
@@ -66,28 +85,58 @@ call list sets `truncated:true`, `status:partial` and a warning without truncati
 the source. The legacy `inspect_*` operations retain their compact signatures,
 lines, calls and enclosing if branches, without full source or semantic definitions.
 Read surrounding code and diff using read-only Git
-commands against the resolved SHAs; never substitute worktree source. No LSP or
-history tools exist in this JAR. LSP unavailability alone need not invalidate a
+commands against the resolved SHAs; never substitute worktree source. Optional LSP
+tools explicitly operate on WORKTREE, with one-based UTF-16 line/column input and
+end-exclusive returned ranges. Use them as commit evidence only after verifying
+the relevant working-tree files match the reviewed snapshot. Missing providers,
+startup failure and timeouts return unavailable/timeout warnings without blocking
+metrics. Maven/Gradle imports and automatic builds are disabled in the minimal JDT
+integration. Returned locations include URI, path (relative inside repo, absolute
+outside, null for non-file URIs), external flag and range. LSP unavailability alone need not invalidate a
 complete AST review. Missing required code coverage or measurements does.
 
 ## Universal tools and remaining target tools
 
-Server 0.1.4 implements `get_changes`, `analyze_changes`, `get_symbol_context`. Prefer them when discovered,
+Server 0.1.6 implements `get_changes`, `analyze_changes`, `get_symbol_context`. Prefer them when discovered,
 using their advertised schemas and returned snapshot format. Retain the existing
 `inspect_symbol_ast` and language tools as a compatibility path; do not call speculative tools or guess arguments.
-`get_symbol_definition` and `find_symbol_references` are optional/context only.
+`get_symbol_definition` and `find_symbol_references` are optional/context only;
+they require separately configured JDT LS for Java and never accept commitSha.
 
-Proposed history operations for Core review:
+## Persistent history API
+
+`get_review_history({})` returns the whole repository-local envelope defined in
+[review-history.schema.json](review-history.schema.json), including revision,
+immutable reviews, derived findings/categories/statistics/examples and feedback.
+No file is created on an empty read. `update_review_history` accepts only the
+[history-update.schema.json](history-update.schema.json) request: `review` (a full
+review-schema report with pre-discovery `NOT_RUN`) and/or category metadata
+`{categoryId,name,description?}`. Replay an identical review ID/payload safely;
+conflicting payloads or a duplicate scope with another ID are rejected. Read-back
+uses get_review_history and client-side reviewId lookup. A successful receipt is
+`{status: saved|unchanged, revision, historyPath, statistics}`.
+
+New history findings are DETECTED; the immutable report retains PENDING_FEEDBACK.
+Only the explicit local operator CLI records FIXED/REJECTED with author/evidence;
+MCP updates cannot supply confirmations or counters. The latest feedback event
+per finding determines derived state, preserving prior events. This is a local
+operator trust boundary, not authentication of an agent-supplied confirmedBy.
+
+Both stored/input JSON are validated; derived state is checked against its source
+reviews/feedback. Updates use a cross-process lock, forced temporary file and
+atomic replacement without a non-atomic fallback. Invalid existing JSON is never
+silently reset. See the main README for CLI syntax, limits and verification.
+
+Remaining proposed operations for later Core work:
 
 | Tool | Proposed request | Result / invariant |
 |---|---|---|
-| `get_review_history` | Optional bounded category/review filters as advertised | Schema v1 envelope; errors explicit, no source dumps |
-| `append_review_result` | `{review, categories}` | Same reviewId/findingId is idempotent; conflicting payload rejected, not silently overwritten |
-| `record_feedback` | `{feedback}` from explicit developer decision or verified external process | Core verifies provenance; an agent-supplied `confirmedBy` string is not authorization |
+| `append_review_result` | Current equivalent is `update_review_history({review,categories?})` | No extra tool is needed |
+| `record_feedback` | Currently local operator CLI only | No model-supplied feedback through MCP |
 | `propose_rule_candidate` | `{candidate}` | Idempotent candidateId, status always PROPOSED; no rule activation |
 
 The actual Core schemas take precedence after coordination. The envelope in
-[history.schema.json](history.schema.json) is an interchange proposal, not a
+[history.schema.json](history.schema.json) remains the general/synthetic interchange, not a
 security boundary. Core must obtain/verify human feedback independently of model
 assertions; the Skill never records its own findings as human-confirmed.
 Do not write `.codeclarity/review-history.json` directly to compensate for missing

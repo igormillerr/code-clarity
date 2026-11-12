@@ -38,7 +38,7 @@ def check(client):
     mixed = client.tool("analyze_changes", {**snapshots["java"], "paths": ["Sample.java", "sample.py"]})
     assert mixed["status"] == "ok" and not mixed["warnings"], mixed
     assert {f["language"] for f in mixed["files"]} == {"java", "python"}, mixed
-    file_keys = {"oldPath", "newPath", "language", "changedMethods", "findings", "metrics"}
+    file_keys = {"oldPath", "newPath", "language", "changedMethods", "findings", "metrics", "coverage"}
     metric_keys = {"entity", "metric", "status", "before", "after", "delta"}
     for file in mixed["files"]:
         assert set(file) == file_keys, file

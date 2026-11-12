@@ -42,6 +42,26 @@ The 12.11.2026 run is retained in
 [`results/unified-mcp-api.json`](results/unified-mcp-api.json): PASS, four native
 Codex MCP calls covering all three required operations and both languages.
 
+## Optional JDT LS navigation
+
+```bash
+python3 scripts/lsp_client_test.py target/codeclarity-mcp.jar
+python3 scripts/lsp_smoke_test.py
+python3 scripts/lsp_smoke_test.py --jdtls-home /path/to/extracted/jdtls --java /path/to/jdk/bin/java --output .codeclarity/evals/jdtls-live.json
+```
+
+The controlled protocol peer checks framing, duplex configuration requests,
+Location/LocationLink, references, startup/request/write timeouts, invalid input,
+stderr draining, graceful shutdown and forced process termination. It does not
+stand in for the last command, which starts real JDT LS through MCP and verifies
+cross-file definition/references, UTF-16 positions after Unicode, a clean working
+tree and metric isolation from failed startup. No Maven/Gradle import is enabled.
+The tools explicitly return WORKTREE scope, not a committed snapshot.
+
+[`results/jdtls-navigation.json`](results/jdtls-navigation.json) retains the
+12.11.2026 real-server run using JDT LS 1.54.0, a SHA-256-verified official archive,
+JDK 25 and server 0.1.6. Both semantic requests and the metric-isolation checks passed.
+
 ## Live Java Skill check with six metrics
 
 For server 0.1.3, run a fresh agent against the repository's current
@@ -137,6 +157,25 @@ recommendation: record whether the finding explains the labelled problem and
 whether its proposed change preserves intended behavior.
 
 ## Rule Discovery fixtures
+
+For a complete fresh-agent Java review with real MCP history writes, restart and
+idempotent replay checks, plus optional real JDT LS navigation, run:
+
+```sh
+python3 scripts/llm_java_skill_e2e.py --codex /path/to/codex --output .codeclarity/evals/full-workflow-01 --with-history --jdtls-home /path/to/jdtls --jdtls-java /path/to/java
+```
+
+The runner uses existing CLI authentication/default model and a process-local MCP
+configuration. History is written only in its disposable fixture repository; no
+human confirmations are manufactured. Omit both JDT LS options to test the core
+review/history workflow alone. Without `--with-history`, history writes remain
+forbidden. Retain `events.jsonl`, reports, `evidence.json` and the fixture history.
+Verification checks the frozen review precedes metrics, all 12 Java comparisons
+match MCP receipts, the final report schema/Markdown, two fresh-process history
+reads, and unchanged file bytes/mtime and counters on an identical review replay.
+With JDT LS configured, actual native agent definition/references calls must
+resolve the unchanged caller to the reviewed declaration and back. This checks
+the repository Skill/JAR, not the installed plugin cache.
 
 `fixtures/history/sufficient.json` and `insufficient.json` are explicitly
 synthetic. Every confirmation has `source: DEMO_FIXTURE`, a test identity and

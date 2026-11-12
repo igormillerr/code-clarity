@@ -41,6 +41,12 @@ without current measurements. Do not fetch the full history to search for issues
 2. Use the matching AST tool for syntactic context where it helps. Query LSP
    definition/references only if advertised and needed. AST `if` guards describe
    syntax, not proven reachability, dynamic dispatch, or hidden dependencies.
+   The current LSP tools explicitly return `scope: WORKTREE`, not a Git snapshot;
+   use their locations as commit evidence only after verifying the relevant files
+   match the reviewed commit. Otherwise retain Git/AST evidence and state the
+   optional LSP limitation. LSP columns are one-based UTF-16 and range ends are
+   exclusive. Do not interpret unavailable/timeout or unresolved targets as proof
+   that a symbol has no definition or uses.
 3. Examine naming, responsibility, abstraction, readability, hidden behavior, and
    maintainability. Prefer a concrete consequence for understanding this code over
    personal style preferences. A short function can still conceal meaning; clear

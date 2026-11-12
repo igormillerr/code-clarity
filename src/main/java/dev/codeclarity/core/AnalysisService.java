@@ -39,7 +39,22 @@ public final class AnalysisService {
 
     public record FileAnalysis(String oldPath, String newPath, String language,
                                List<String> changedMethods, List<Diagnostic> findings,
-                               List<MetricComparison> metrics) {}
+                               List<MetricComparison> metrics, Coverage coverage) {
+        public FileAnalysis(String oldPath, String newPath, String language, List<String> changedMethods,
+                            List<Diagnostic> findings, List<MetricComparison> metrics) {
+            this(oldPath, newPath, language, changedMethods, findings, metrics,
+                    new Coverage(CoverageSide.unknown(), CoverageSide.unknown()));
+        }
+    }
+
+    public record Coverage(CoverageSide base, CoverageSide head) {}
+
+    /** Line-based entity coverage, independent of transport success and metric availability. */
+    public record CoverageSide(String status, List<SourceRange> outsideEntityLines, String reason) {
+        static CoverageSide unknown() {
+            return new CoverageSide("UNKNOWN", List.of(), "Source or file analysis did not complete.");
+        }
+    }
 
     public record Review(String baseSha, String headSha, String status, List<FileAnalysis> files, List<String> warnings) {}
 
@@ -208,6 +223,7 @@ public final class AnalysisService {
         Version after = load(snapshot.headSha(), change.newPath(), "head", language, warnings);
         Set<String> touched = before.touched(change.baseLines());
         touched.addAll(after.touched(change.headLines()));
+        var coverage = new Coverage(coverage(before, change.baseLines()), coverage(after, change.headLines()));
 
         List<Diagnostic> findings = new ArrayList<>();
         List<MetricComparison> metrics = new ArrayList<>();
@@ -246,7 +262,29 @@ public final class AnalysisService {
                 findings.add(new Diagnostic(signature, rule, status, oldFinding, newFinding));
             }
         }
-        return new FileAnalysis(change.oldPath(), change.newPath(), language.languageId(), List.copyOf(touched), findings, metrics);
+        return new FileAnalysis(change.oldPath(), change.newPath(), language.languageId(), List.copyOf(touched), findings, metrics, coverage);
+    }
+
+    private static CoverageSide coverage(Version version, List<SourceRange> changes) {
+        if (!version.complete()) { return CoverageSide.unknown(); }
+        var entities = version.entities().stream().map(SourceEntity::lines)
+                .sorted(java.util.Comparator.comparingInt(SourceRange::startLine)).toList();
+        List<SourceRange> outside = new ArrayList<>();
+        for (var change : changes) {
+            int cursor = change.startLine();
+            for (var entity : entities) {
+                if (entity.endLine() < cursor) { continue; }
+                if (entity.startLine() > change.endLine()) { break; }
+                if (entity.startLine() > cursor) {
+                    outside.add(new SourceRange(cursor, entity.startLine() - 1));
+                }
+                cursor = Math.max(cursor, entity.endLine() + 1);
+                if (cursor > change.endLine()) { break; }
+            }
+            if (cursor <= change.endLine()) { outside.add(new SourceRange(cursor, change.endLine())); }
+        }
+        return new CoverageSide(outside.isEmpty() ? "COMPLETE" : "OUTSIDE_SUPPORTED_ENTITIES", List.copyOf(outside),
+                outside.isEmpty() ? null : "Changed lines outside supported entity ranges; entity metrics do not cover these lines.");
     }
 
     private Version load(String sha, String path, String side, LanguageSupport language, List<String> warnings) {

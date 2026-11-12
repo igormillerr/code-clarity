@@ -4,12 +4,24 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.codeclarity</groupId>
     <artifactId>codeclarity-mcp</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.6</version>
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <python.executable>python3</python.executable>
+        <skipTests>false</skipTests>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>3.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>3.1.4</version>
+        </dependency>
         <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp</artifactId>
@@ -28,11 +40,48 @@
     </dependencies>
     <build>
         <finalName>codeclarity-mcp</finalName>
+        <resources>
+            <resource><directory>src/main/resources</directory></resource>
+            <resource>
+                <directory>plugin/contracts</directory>
+                <targetPath>contracts</targetPath>
+                <includes>
+                    <include>review.schema.json</include>
+                    <include>review-history.schema.json</include>
+                    <include>history-update.schema.json</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>workflow-checks</id>
+                        <phase>verify</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <skip>${skipTests}</skip>
+                            <target>
+                                <exec executable="${python.executable}" dir="${project.basedir}" failonerror="true">
+                                    <env key="JAVA_HOME" value="${java.home}"/>
+                                    <arg value="scripts/verify.py"/>
+                                    <arg value="--jar"/>
+                                    <arg value="${project.build.directory}/${project.build.finalName}.jar"/>
+                                    <arg value="--output"/>
+                                    <arg value="${project.build.directory}/workflow-checks"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

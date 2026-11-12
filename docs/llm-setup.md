@@ -1,8 +1,11 @@
 # CodeClarity: локальная установка и запуск LLM-части
 
-Эта ветка реализует Task 03 (Java / LLM Engineer). Основа — `feature/python`
-`ec6a3ed`; сервер и анализаторы не изменены. Версия пакета плагина — `0.2.0`,
-версия существующего сервера — `0.1.1`. Требуются Java 21+, Git, Python 3.10+
+Пакет плагина — `0.2.0`, текущий сервер — `0.1.6`. Он включает единый MCP API,
+шесть Java-метрик и JSON-память через get_review_history/update_review_history.
+Для необязательных LSP definition/references настрой CODECLARITY_JDTLS_HOME и
+при необходимости CODECLARITY_JDTLS_JAVA. Это WORKTREE-контекст; запуск JDT LS
+не требуется для метрик или основного ревью. Подробности и ограничения — в README.
+Основа исторической LLM-части — `feature/python ec6a3ed`. Требуются Java 21+, Git, Python 3.10+
 и локальный Codex с поддержкой плагинов. Проверяемая здесь версия CLI:
 `0.167.0-alpha.3.2`.
 
@@ -59,7 +62,7 @@ Java должна быть в PATH. Плагин сам подключает о�
 | Skills есть, MCP нет | PATH Java; наличие JAR; абсолютный repo-root.txt; запуск JAR вручную с `--repo-root`; stderr MCP |
 | Инструменты отображаются дважды | Сравнить plugin connection и ручную регистрацию `codex mcp list` |
 | Python partial | PATH/`CODECLARITY_PYTHON`, синтаксис и предупреждения; не терять Java-результат |
-| История UNAVAILABLE | В переданном JAR пока нет history Tools; это зависимость Task 02, не повод писать JSON напрямую |
+| История UNAVAILABLE | Проверить наличие get_review_history/update_review_history и версию подключённого JAR. Операция сохранения кандидатов правил пока отсутствует; JSON напрямую не подменять |
 | Сервер ok, отчёт INCOMPLETE | В прототипе не хватает обязательных метрик; полнота MVP проверяется отдельно |
 
 Успешный запуск JAR без протокольного клиента может просто ожидать stdin.
